@@ -17,6 +17,13 @@ const dbConfig = defineConfig({
         naturalSort: true,
         paths: ['database/migrations'],
       },
+      pool: {
+        afterCreate: (conn, done) => {
+          conn.query('SET default_storage_engine=InnoDB', (err: any) => {
+            done(err, conn)
+          })
+        },
+      },
     },
   },
 })

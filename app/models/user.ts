@@ -1,11 +1,13 @@
 import { DateTime } from 'luxon'
 import { BaseModel, column, hasOne, hasMany } from '@adonisjs/lucid/orm'
-import SubInfo from './sub_info.js'
-import Contact from './contact.js'
+import SubInfo from '#models/sub_info'
+import Contact from '#models/contact'
 import { withAuthFinder } from '@adonisjs/auth/mixins/lucid'
 import hash from '@adonisjs/core/services/hash'
 import { compose } from '@adonisjs/core/helpers'
 import type { HasMany, HasOne } from '@adonisjs/lucid/types/relations'
+import { DbRememberMeTokensProvider } from '@adonisjs/auth/session'
+import { UserRole } from '#enums/user_role'
 
 const AuthFinder = withAuthFinder(() => hash.use('argon'), {
   uids: ['email'],
@@ -13,6 +15,8 @@ const AuthFinder = withAuthFinder(() => hash.use('argon'), {
 })
 
 export default class User extends compose(BaseModel, AuthFinder) {
+  static rememberMeTokens = DbRememberMeTokensProvider.forModel(User)
+
   @column({ isPrimary: true })
   declare id: number
 
@@ -26,7 +30,7 @@ export default class User extends compose(BaseModel, AuthFinder) {
   declare password: string
 
   @column()
-  declare role: 'admin' | 'visitor'
+  declare role: UserRole
 
   @column({ columnName: 'is_active' })
   declare isActive: boolean
