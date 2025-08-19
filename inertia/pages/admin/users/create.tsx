@@ -1,56 +1,23 @@
 import React, { useState } from 'react'
 import { useForm, Link } from '@inertiajs/react'
 import AdminLayout from '~/layout/AdminLayout'
-import { 
-  UserPlus, 
-  Mail, 
-  Lock, 
-  User, 
-  Shield,
-  ArrowLeft,
-  Eye,
-  EyeOff
-} from 'lucide-react'
+import { UserPlus, Mail, Lock, User, Shield, ArrowLeft, Eye, EyeOff } from 'lucide-react'
 import { UserRole, USER_ROLE_LABELS } from '~/enums/user_role'
-
 
 export default function CreateUser() {
   const [showPassword, setShowPassword] = useState(false)
-  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({})
 
   const { data, setData, post, processing, errors } = useForm({
     email: '',
     password: '',
-    first_name: '',
-    last_name: '',
+    username: '',
     role: UserRole.VISITOR,
-    is_active: true as boolean
+    is_active: true as boolean,
   })
-
-  const validateForm = async () => {
-    // Validation basique côté client
-    const newErrors: Record<string, string> = {}
-    
-    if (!data.email) newErrors.email = 'Email requis'
-    if (!data.password) newErrors.password = 'Mot de passe requis'
-    if (!data.first_name) newErrors.first_name = 'Prénom requis'
-    if (!data.last_name) newErrors.last_name = 'Nom requis'
-    
-    if (data.password && data.password.length < 8) {
-      newErrors.password = 'Le mot de passe doit contenir au moins 8 caractères'
-    }
-    
-    setValidationErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     post('/admin/users')
-  }
-
-  const getFieldError = (field: string) => {
-    return validationErrors[field] || (errors as any)[field]
   }
 
   return (
@@ -81,47 +48,23 @@ export default function CreateUser() {
           {/* Informations personnelles */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label htmlFor="first_name" className="block text-sm font-medium text-gray-700 mb-2">
-                Prénom
+              <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
+                Nom utiliateur
               </label>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <input
                   type="text"
-                  id="first_name"
-                  value={data.first_name}
-                  onChange={(e) => setData('first_name', e.target.value)}
+                  id="username"
+                  value={data.username}
+                  onChange={(e) => setData('username', e.target.value)}
                   className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                    getFieldError('first_name') ? 'border-red-300' : 'border-gray-300'
+                    errors?.username ? 'border-red-300' : 'border-gray-300'
                   }`}
                   placeholder="Prénom"
                 />
               </div>
-              {getFieldError('first_name') && (
-                <p className="mt-1 text-sm text-red-600">{getFieldError('first_name')}</p>
-              )}
-            </div>
-
-            <div>
-              <label htmlFor="last_name" className="block text-sm font-medium text-gray-700 mb-2">
-                Nom
-              </label>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input
-                  type="text"
-                  id="last_name"
-                  value={data.last_name}
-                  onChange={(e) => setData('last_name', e.target.value)}
-                  className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                    getFieldError('last_name') ? 'border-red-300' : 'border-gray-300'
-                  }`}
-                  placeholder="Nom"
-                />
-              </div>
-              {getFieldError('last_name') && (
-                <p className="mt-1 text-sm text-red-600">{getFieldError('last_name')}</p>
-              )}
+              {errors?.username && <p className="mt-1 text-sm text-red-600">{errors.username}</p>}
             </div>
           </div>
 
@@ -138,14 +81,12 @@ export default function CreateUser() {
                 value={data.email}
                 onChange={(e) => setData('email', e.target.value)}
                 className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                  getFieldError('email') ? 'border-red-300' : 'border-gray-300'
+                  errors?.email ? 'border-red-300' : 'border-gray-300'
                 }`}
                 placeholder="email@exemple.com"
               />
             </div>
-            {getFieldError('email') && (
-              <p className="mt-1 text-sm text-red-600">{getFieldError('email')}</p>
-            )}
+            {errors?.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
           </div>
 
           {/* Mot de passe */}
@@ -161,7 +102,7 @@ export default function CreateUser() {
                 value={data.password}
                 onChange={(e) => setData('password', e.target.value)}
                 className={`w-full pl-10 pr-12 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                  getFieldError('password') ? 'border-red-300' : 'border-gray-300'
+                  errors?.password ? 'border-red-300' : 'border-gray-300'
                 }`}
                 placeholder="Mot de passe"
               />
@@ -173,9 +114,7 @@ export default function CreateUser() {
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
-            {getFieldError('password') && (
-              <p className="mt-1 text-sm text-red-600">{getFieldError('password')}</p>
-            )}
+            {errors?.password && <p className="mt-1 text-sm text-red-600">{errors.password}</p>}
             <p className="mt-1 text-xs text-gray-500">
               Au moins 8 caractères avec une minuscule, une majuscule et un chiffre
             </p>
@@ -205,9 +144,7 @@ export default function CreateUser() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Statut
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Statut</label>
               <div className="flex items-center">
                 <input
                   type="checkbox"
@@ -236,7 +173,7 @@ export default function CreateUser() {
               disabled={processing}
               className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              {processing ? 'Création...' : 'Créer l\'utilisateur'}
+              {processing ? 'Création...' : "Créer l'utilisateur"}
             </button>
           </div>
         </form>

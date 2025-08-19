@@ -6,7 +6,7 @@ import { useGSAP } from '@gsap/react'
 import gsap from 'gsap'
 import { useEffect, useRef, useState, MouseEvent } from 'react'
 import Project from './Project'
-import { ensureGsapScrollTrigger } from '~/utils/gsapClient'
+import { ensureGsapScrollTrigger } from '~/utils/gsap_client'
 
 const ProjectList = () => {
   const containerRef = useRef<HTMLDivElement>(null)

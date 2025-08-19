@@ -1,11 +1,11 @@
 import React, { useState } from 'react'
 import { HeadLayout } from './HeadLayout'
-import { usePage } from '@inertiajs/react'
+import { usePage, Link, router } from '@inertiajs/react'
 import { InertiaProps } from '~/types'
 import { cn } from '@/utils'
 import {
   LayoutDashboard,
-  User,
+  User as UserIcon, // Renommage de l'icône pour éviter le conflit
   Users,
   FileText,
   Settings,
@@ -17,7 +17,7 @@ import {
   Briefcase,
   Award,
 } from 'lucide-react'
-import { router, Link } from '@inertiajs/react'
+import { getInitials } from '~/utils/utils_string'
 
 interface AdminLayoutProps {
   children: React.ReactNode
@@ -27,8 +27,8 @@ interface AdminLayoutProps {
 }
 
 const adminMenuItems = [
-  { name: 'Dashboard', icon: LayoutDashboard, href: '/dashboard' },
-  { name: 'Profil', icon: User, href: '/admin/profile' },
+  { name: 'Dashboard', icon: LayoutDashboard, href: '/admin/dashboard' },
+  { name: 'Profil', icon: UserIcon, href: '/admin/profile' }, // Utilisation de l'icône renommée
   { name: 'Utilisateurs', icon: Users, href: '/admin/users' },
   { name: 'Projets', icon: Briefcase, href: '/admin/projects' },
   { name: 'Compétences', icon: Award, href: '/admin/skills' },
@@ -47,7 +47,7 @@ export default function AdminLayout({
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   const handleLogout = () => {
-    router.post('/auth/logout')
+    router.post('/admin/auth/logout')
   }
 
   const goHome = () => {
@@ -89,12 +89,12 @@ export default function AdminLayout({
 
               <div className="flex items-center gap-3">
                 <div className="text-right">
-                  <p className="text-sm font-medium text-gray-900">{auth?.user?.username}</p>
-                  <p className="text-xs text-gray-500">{auth?.user?.email}</p>
+                  <p className="text-sm font-medium text-gray-900">{auth.user!.username}</p>
+                  <p className="text-xs text-gray-500">{auth.user!.email}</p>
                 </div>
                 <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center">
                   <span className="text-sm font-medium text-white">
-                    {auth?.user?.username?.charAt(0).toUpperCase()}
+                    {getInitials(auth.user!.username)}
                   </span>
                 </div>
               </div>

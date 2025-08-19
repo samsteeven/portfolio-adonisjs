@@ -9,6 +9,8 @@
 
 import router from '@adonisjs/core/services/router'
 import { middleware } from '#start/kernel'
+import { limitter } from '#start/limiter'
+const UserController = () => import('#controllers/user_controller')
 
 // Routes publiques avec silent_auth pour avoir accès à l'utilisateur connecté
 router.on('/').renderInertia('home').as('home')
@@ -16,34 +18,21 @@ router.on('/').renderInertia('home').as('home')
 // Routes d'authentification
 router
   .group(() => {
-    router.get('auth/login', '#controllers/auth_controller.showLogin')
-    router.post('auth/login', '#controllers/auth_controller.login')
+    router.get('/auth/login', '#controllers/auth_controller.showLogin')
+    router.post('/auth/login', '#controllers/auth_controller.login').use(limitter)
   })
   .middleware(middleware.guest())
 
-// Routes protégées (exemple)
+// Routes protégées
 router
   .group(() => {
-    router.post('auth/logout', '#controllers/auth_controller.logout')
+    router.post('/auth/logout', '#controllers/auth_controller.logout')
     router.get('/dashboard', '#controllers/dashboard_controller.index').as('dashboard')
-    router.get('/admin/profile', '#controllers/admin_controller.profile').as('admin.profile')
+    router.get('/profile', '#controllers/admin_controller.profile').as('admin.profile')
 
-    // ===== CRUD UTILISATEURS =====
-    router
-      .group(() => {
-        router.get('/', '#controllers/user_controller.index').as('admin.users')
-        router.get('/create', '#controllers/user_controller.create').as('admin.users.create')
-        router.post('/', '#controllers/user_controller.store').as('admin.users.store')
-        router.get('/:id', '#controllers/user_controller.show').as('admin.users.show')
-        router.get('/:id/edit', '#controllers/user_controller.edit').as('admin.users.edit')
-        router.put('/:id', '#controllers/user_controller.update').as('admin.users.update')
-        router.delete('/:id', '#controllers/user_controller.destroy').as('admin.users.destroy')
-        router
-          .patch('/:id/toggle-status', '#controllers/user_controller.toggleStatus')
-          .as('admin.users.toggle-status')
-      })
-      .prefix('/admin/users')
-      .use(middleware.auth())
+    // ===== UTILISATEURS =====
+    router.resource('users', UserController)
+    router.patch('users/:id/toggle-status', '#controllers/user_controller.toggleStatus')
 
     // ===== CRUD PROJETS =====
     router
@@ -132,4 +121,5 @@ router
       .prefix('/admin/contacts')
       .use(middleware.auth())
   })
+  .prefix('/admin')
   .use(middleware.auth())

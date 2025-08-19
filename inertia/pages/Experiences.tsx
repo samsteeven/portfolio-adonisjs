@@ -1,26 +1,26 @@
-'use client';
-import SectionTitle from '@/components/SectionTitle';
-import { MY_EXPERIENCE } from '@/data';
-import { useGSAP } from '@gsap/react';
-import gsap from 'gsap';
-import { useEffect, useRef, useState } from 'react';
-import { ensureGsapScrollTrigger } from '~/utils/gsapClient';
+'use client'
+import SectionTitle from '@/components/SectionTitle'
+import { MY_EXPERIENCE } from '@/data'
+import { useGSAP } from '@gsap/react'
+import gsap from 'gsap'
+import { useEffect, useRef, useState } from 'react'
+import { ensureGsapScrollTrigger } from '~/utils/gsap_client'
 
 const Experiences = () => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [ready, setReady] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [ready, setReady] = useState(false)
 
   useEffect(() => {
-    let mounted = true;
-    ensureGsapScrollTrigger().then((ok) => mounted && setReady(ok));
+    let mounted = true
+    ensureGsapScrollTrigger().then((ok) => mounted && setReady(ok))
     return () => {
-      mounted = false;
-    };
-  }, []);
+      mounted = false
+    }
+  }, [])
 
   useGSAP(
     () => {
-      if (!ready) return;
+      if (!ready) return
       const tl = gsap.timeline({
         scrollTrigger: {
           trigger: containerRef.current,
@@ -29,15 +29,15 @@ const Experiences = () => {
           toggleActions: 'restart none none reverse',
           scrub: 1,
         },
-      });
-      tl.from('.experience-item', { y: 50, opacity: 0, stagger: 0.3 });
+      })
+      tl.from('.experience-item', { y: 50, opacity: 0, stagger: 0.3 })
     },
-    { scope: containerRef, dependencies: [ready] },
-  );
+    { scope: containerRef, dependencies: [ready] }
+  )
 
   useGSAP(
     () => {
-      if (!ready) return;
+      if (!ready) return
       const tl = gsap.timeline({
         scrollTrigger: {
           trigger: containerRef.current,
@@ -45,11 +45,11 @@ const Experiences = () => {
           end: 'bottom 20%',
           scrub: 1,
         },
-      });
-      tl.to(containerRef.current, { y: -150, opacity: 0 });
+      })
+      tl.to(containerRef.current, { y: -150, opacity: 0 })
     },
-    { scope: containerRef, dependencies: [ready] },
-  );
+    { scope: containerRef, dependencies: [ready] }
+  )
 
   return (
     <section className="py-section mb-72" id="my-experience">
@@ -66,7 +66,7 @@ const Experiences = () => {
         </div>
       </div>
     </section>
-  );
-};
+  )
+}
 
-export default Experiences;
+export default Experiences

@@ -2,6 +2,7 @@ import { HttpContext } from '@adonisjs/core/http'
 import { inject } from '@adonisjs/core'
 import { UserService } from '#services/user_service'
 import { UserRole } from '#enums/user_role'
+import { createUserSchema, updateUserSchema } from '#validators/user_validator'
 
 @inject()
 export default class UserController {
@@ -11,12 +12,10 @@ export default class UserController {
    * Affiche la liste des utilisateurs avec pagination et filtres
    */
   async index({ inertia, request }: HttpContext) {
-    const page = request.input('page', 1)
-    const limit = request.input('limit', 10)
     const search = request.input('search', '')
-    const role = request.input('role', 'all') as 'all' | UserRole
+    const role = request.input('role') as UserRole
 
-    const users = await this.userService.getUsers({ page, limit, search, role })
+    const users = await this.userService.getUsers({ search, role })
 
     return inertia.render('admin/users', { users })
   }
@@ -32,16 +31,8 @@ export default class UserController {
    * Enregistre un nouvel utilisateur
    */
   async store({ request, response, session }: HttpContext) {
+    const userData = await request.validateUsing(createUserSchema)
     try {
-      const userData = request.only([
-        'email',
-        'password',
-        'first_name',
-        'last_name',
-        'role',
-        'is_active',
-      ])
-
       await this.userService.createUser(userData)
 
       session.flash('success', 'Utilisateur créé avec succès')
@@ -72,21 +63,8 @@ export default class UserController {
    * Met à jour un utilisateur
    */
   async update({ request, response, params, session }: HttpContext) {
+    const userData = await request.validateUsing(updateUserSchema)
     try {
-      const userData = request.only([
-        'email',
-        'first_name',
-        'last_name',
-        'role',
-        'is_active',
-        'password',
-      ])
-
-      // Gestion du mot de passe séparément
-      if (request.input('password')) {
-        userData.password = request.input('password')
-      }
-
       await this.userService.updateUser(params.id, userData)
 
       session.flash('success', 'Utilisateur mis à jour avec succès')

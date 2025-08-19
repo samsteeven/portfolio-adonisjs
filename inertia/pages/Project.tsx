@@ -1,71 +1,71 @@
-import TransitionLink from '@/components/TransitionLink';
-import { cn } from '@/utils';
-import { Project } from '~/types';
-import { useGSAP } from '@gsap/react';
-import gsap from 'gsap';
-import { useEffect, useRef, useState } from 'react';
-import { ensureGsapScrollTrigger } from '~/utils/gsapClient';
+import TransitionLink from '@/components/TransitionLink'
+import { cn } from '@/utils'
+import { Project } from '~/types'
+import { useGSAP } from '@gsap/react'
+import gsap from 'gsap'
+import { useEffect, useRef, useState } from 'react'
+import { ensureGsapScrollTrigger } from '~/utils/gsap_client'
 
 interface Props {
-  index: number;
-  projet: Project;
-  selectedProject: string | null;
-  onMouseEnter: (_slug: string) => void;
+  index: number
+  projet: Project
+  selectedProject: string | null
+  onMouseEnter: (_slug: string) => void
 }
 
 const Projet = ({ index, projet, selectedProject, onMouseEnter }: Props) => {
-  const externalLinkSVGRef = useRef<SVGSVGElement>(null);
-  const [ready, setReady] = useState(false);
+  const externalLinkSVGRef = useRef<SVGSVGElement>(null)
+  const [ready, setReady] = useState(false)
 
   useEffect(() => {
-    let mounted = true;
-    ensureGsapScrollTrigger().then((ok) => mounted && setReady(ok));
+    let mounted = true
+    ensureGsapScrollTrigger().then((ok) => mounted && setReady(ok))
     return () => {
-      mounted = false;
-    };
-  }, []);
+      mounted = false
+    }
+  }, [])
 
   const { context, contextSafe } = useGSAP(() => {}, {
     scope: externalLinkSVGRef,
     revertOnUpdate: true,
     dependencies: [ready],
-  });
+  })
 
   const handleMouseEnter = contextSafe?.(() => {
-    if (!ready) return;
-    onMouseEnter(projet.slug);
+    if (!ready) return
+    onMouseEnter(projet.slug)
 
-    const arrowLine = externalLinkSVGRef.current?.querySelector('#arrow-line') as SVGPathElement;
-    const arrowCurb = externalLinkSVGRef.current?.querySelector('#arrow-curb') as SVGPathElement;
-    const box = externalLinkSVGRef.current?.querySelector('#box') as SVGPathElement;
+    const arrowLine = externalLinkSVGRef.current?.querySelector('#arrow-line') as SVGPathElement
+    const arrowCurb = externalLinkSVGRef.current?.querySelector('#arrow-curb') as SVGPathElement
+    const box = externalLinkSVGRef.current?.querySelector('#box') as SVGPathElement
 
     gsap.set(box, {
       opacity: 0,
       strokeDasharray: box?.getTotalLength(),
       strokeDashoffset: box?.getTotalLength(),
-    });
+    })
     gsap.set(arrowLine, {
       opacity: 0,
       strokeDasharray: arrowLine?.getTotalLength(),
       strokeDashoffset: arrowLine?.getTotalLength(),
-    });
+    })
     gsap.set(arrowCurb, {
       opacity: 0,
       strokeDasharray: arrowCurb?.getTotalLength(),
       strokeDashoffset: arrowCurb?.getTotalLength(),
-    });
+    })
 
-    const tl = gsap.timeline({ repeat: -1, repeatDelay: 1 });
+    const tl = gsap.timeline({ repeat: -1, repeatDelay: 1 })
     tl.to(externalLinkSVGRef.current, { autoAlpha: 1 })
       .to(box, { opacity: 1, strokeDashoffset: 0 })
       .to(arrowLine, { opacity: 1, strokeDashoffset: 0 }, '<0.2')
       .to(arrowCurb, { opacity: 1, strokeDashoffset: 0 })
-      .to(externalLinkSVGRef.current, { autoAlpha: 0 }, '+=1');
-  });
+      .to(externalLinkSVGRef.current, { autoAlpha: 0 }, '+=1')
+  })
 
   const handleMouseLeave = contextSafe?.(() => {
-    context.kill();
-  });
+    context.kill()
+  })
 
   return (
     <TransitionLink
@@ -86,7 +86,9 @@ const Projet = ({ index, projet, selectedProject, onMouseEnter }: Props) => {
         />
       )}
       <div className="flex gap-2 md:gap-5">
-        <div className="font-anton text-muted-foreground">_{(index + 1).toString().padStart(2, '0')}.</div>
+        <div className="font-anton text-muted-foreground">
+          _{(index + 1).toString().padStart(2, '0')}.
+        </div>
         <div className="">
           <h4 className="text-4xl xs:text-6xl flex gap-4 font-anton transition-all duration-700 bg-gradient-to-r from-primary to-foreground from-[50%] to-[50%] bg-[length:200%] bg-right bg-clip-text text-transparent group-hover:bg-left">
             {projet.title}
@@ -122,7 +124,7 @@ const Projet = ({ index, projet, selectedProject, onMouseEnter }: Props) => {
         </div>
       </div>
     </TransitionLink>
-  );
-};
+  )
+}
 
-export default Projet;
+export default Projet

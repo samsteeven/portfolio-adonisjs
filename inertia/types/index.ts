@@ -1,3 +1,5 @@
+import { UserRole } from '~/enums/user_role'
+
 export type Variant =
   | 'primary'
   | 'secondary'
@@ -27,7 +29,7 @@ export interface Project {
 // Types pour les props d'Inertia
 export interface InertiaProps {
   errors?: ValidationErrors
-  auth?: {
+  auth: {
     user?: AuthenticatedUser
   }
   [key: string]: any
@@ -40,11 +42,11 @@ export interface ValidationErrors {
 
 // Type pour l'utilisateur authentifié
 export interface AuthenticatedUser {
-  id: number
+  id?: number
   username: string
   email: string
-  role: 'admin' | 'visitor'
+  role: UserRole
   isActive: boolean
-  createdAt: string
-  updatedAt: string | null
+  createdAt: Date | string
+  updatedAt?: Date | string
 }

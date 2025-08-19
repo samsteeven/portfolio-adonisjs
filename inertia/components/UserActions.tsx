@@ -2,22 +2,15 @@ import { useState } from 'react'
 import { useForm, Link } from '@inertiajs/react'
 import { Eye, Edit, Trash2, Power, PowerOff } from 'lucide-react'
 import DeleteConfirmationModal from './DeleteConfirmationModal'
-import { UserRole } from '~/enums/user_role'
+import { AuthenticatedUser } from '~/types'
 
 interface UserActionsProps {
-  user: {
-    id: number
-    first_name: string
-    last_name: string
-    email: string
-    role: UserRole
-    is_active: boolean
-  }
+  user: AuthenticatedUser
 }
 
 export default function UserActions({ user }: UserActionsProps) {
   const [showDeleteModal, setShowDeleteModal] = useState(false)
-  
+
   const { delete: deleteUser, processing: isDeleting } = useForm()
   const { patch: toggleStatus, processing: isToggling } = useForm()
 
@@ -25,7 +18,7 @@ export default function UserActions({ user }: UserActionsProps) {
     deleteUser(`/admin/users/${user.id}`, {
       onSuccess: () => {
         setShowDeleteModal(false)
-      }
+      },
     })
   }
 
@@ -59,15 +52,15 @@ export default function UserActions({ user }: UserActionsProps) {
           onClick={handleToggleStatus}
           disabled={isToggling}
           className={`p-2 rounded-lg transition-colors ${
-            user.is_active
+            user.isActive
               ? 'text-orange-600 hover:text-orange-900 hover:bg-orange-50'
               : 'text-green-600 hover:text-green-900 hover:bg-green-50'
           }`}
-          title={user.is_active ? 'Désactiver l\'utilisateur' : 'Activer l\'utilisateur'}
+          title={user.isActive ? "Désactiver l'utilisateur" : "Activer l'utilisateur"}
         >
           {isToggling ? (
             <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-          ) : user.is_active ? (
+          ) : user.isActive ? (
             <PowerOff className="w-4 h-4" />
           ) : (
             <Power className="w-4 h-4" />
@@ -91,8 +84,8 @@ export default function UserActions({ user }: UserActionsProps) {
         onClose={() => setShowDeleteModal(false)}
         onConfirm={handleDelete}
         title="Supprimer l'utilisateur"
-        message={`Êtes-vous sûr de vouloir supprimer l'utilisateur "${user.first_name} ${user.last_name}" ?`}
-        itemName={`${user.first_name} ${user.last_name}`}
+        message={`Êtes-vous sûr de vouloir supprimer l'utilisateur "${user.username}" ?`}
+        itemName={`${user.username}`}
         isLoading={isDeleting}
       />
     </>

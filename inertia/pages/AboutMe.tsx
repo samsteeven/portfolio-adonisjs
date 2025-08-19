@@ -1,24 +1,24 @@
-'use client';
-import { useGSAP } from '@gsap/react';
-import gsap from 'gsap';
-import { useEffect, useRef, useState } from 'react';
-import { ensureGsapScrollTrigger } from '~/utils/gsapClient';
+'use client'
+import { useGSAP } from '@gsap/react'
+import gsap from 'gsap'
+import { useEffect, useRef, useState } from 'react'
+import { ensureGsapScrollTrigger } from '~/utils/gsap_client'
 
 const AboutMe = () => {
-  const container = useRef<HTMLDivElement>(null);
-  const [ready, setReady] = useState(false);
+  const container = useRef<HTMLDivElement>(null)
+  const [ready, setReady] = useState(false)
 
   useEffect(() => {
-    let mounted = true;
-    ensureGsapScrollTrigger().then((ok) => mounted && setReady(ok));
+    let mounted = true
+    ensureGsapScrollTrigger().then((ok) => mounted && setReady(ok))
     return () => {
-      mounted = false;
-    };
-  }, []);
+      mounted = false
+    }
+  }, [])
 
   useGSAP(
     () => {
-      if (!ready) return;
+      if (!ready) return
       const tl = gsap.timeline({
         scrollTrigger: {
           id: 'about-me-in',
@@ -27,15 +27,15 @@ const AboutMe = () => {
           end: 'bottom bottom',
           scrub: 0.5,
         },
-      });
-      tl.from('.slide-up-and-fade', { y: 150, opacity: 0, stagger: 0.05 });
+      })
+      tl.from('.slide-up-and-fade', { y: 150, opacity: 0, stagger: 0.05 })
     },
-    { scope: container, dependencies: [ready] },
-  );
+    { scope: container, dependencies: [ready] }
+  )
 
   useGSAP(
     () => {
-      if (!ready) return;
+      if (!ready) return
       const tl = gsap.timeline({
         scrollTrigger: {
           id: 'about-me-out',
@@ -44,19 +44,18 @@ const AboutMe = () => {
           end: 'bottom 10%',
           scrub: 0.5,
         },
-      });
-      tl.to('.slide-up-and-fade', { y: -150, opacity: 0, stagger: 0.02 });
+      })
+      tl.to('.slide-up-and-fade', { y: -150, opacity: 0, stagger: 0.02 })
     },
-    { scope: container, dependencies: [ready] },
-  );
+    { scope: container, dependencies: [ready] }
+  )
 
   return (
     <section className="pb-section mb-72" id="about-me">
       <div className="container" ref={container}>
         <h2 className="text-4xl md:text-6xl font-thin mb-20 slide-up-and-fade">
-          I believe in a user centered design approach, ensuring that
-          every project I work on is tailored to meet the specific
-          needs of its users.
+          I believe in a user centered design approach, ensuring that every project I work on is
+          tailored to meet the specific needs of its users.
         </h2>
 
         <p className="pb-3 border-b text-muted-foreground slide-up-and-fade">This is me.</p>
@@ -68,20 +67,21 @@ const AboutMe = () => {
           <div className="md:col-span-7">
             <div className="text-lg text-muted-foreground max-w-[450px]">
               <p className="slide-up-and-fade">
-                I&apos;m a frontend web developer dedicated to turning ideas into creative solutions. I specialize in creating
-                seamless and intuitive user experiences.
+                I&apos;m a frontend web developer dedicated to turning ideas into creative
+                solutions. I specialize in creating seamless and intuitive user experiences.
               </p>
               <p className="mt-3 slide-up-and-fade">
-                My approach focuses on creating scalable, high-performing solutions tailored to both user needs and business
-                objectives. By prioritizing performance, accessibility, and responsiveness, I strive to deliver experiences that
-                not only engage users but also drive tangible results.
+                My approach focuses on creating scalable, high-performing solutions tailored to both
+                user needs and business objectives. By prioritizing performance, accessibility, and
+                responsiveness, I strive to deliver experiences that not only engage users but also
+                drive tangible results.
               </p>
             </div>
           </div>
         </div>
       </div>
     </section>
-  );
-};
+  )
+}
 
-export default AboutMe;
+export default AboutMe

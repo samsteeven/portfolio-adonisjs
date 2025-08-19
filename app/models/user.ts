@@ -32,7 +32,7 @@ export default class User extends compose(BaseModel, AuthFinder) {
   @column()
   declare role: UserRole
 
-  @column({ columnName: 'is_active' })
+  @column({ columnName: 'is_active', consume: (value: number) => Boolean(value) })
   declare isActive: boolean
 
   @hasOne(() => SubInfo, { foreignKey: 'userId' })

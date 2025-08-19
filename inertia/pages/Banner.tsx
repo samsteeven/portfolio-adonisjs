@@ -1,27 +1,27 @@
-'use client';
-import ArrowAnimation from '@/components/ArrowAnimation';
-import Button from '@/components/Button';
-import { GENERAL_INFO } from '@/data';
-import { useGSAP } from '@gsap/react';
-import gsap from 'gsap';
-import { useEffect, useRef, useState } from 'react';
-import { ensureGsapScrollTrigger } from '~/utils/gsapClient';
+'use client'
+import ArrowAnimation from '@/components/ArrowAnimation'
+import Button from '@/components/Button'
+import { GENERAL_INFO } from '@/data'
+import { useGSAP } from '@gsap/react'
+import gsap from 'gsap'
+import { useEffect, useRef, useState } from 'react'
+import { ensureGsapScrollTrigger } from '~/utils/gsap_client'
 
 const Banner = () => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [ready, setReady] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [ready, setReady] = useState(false)
 
   useEffect(() => {
-    let mounted = true;
-    ensureGsapScrollTrigger().then((ok) => mounted && setReady(ok));
+    let mounted = true
+    ensureGsapScrollTrigger().then((ok) => mounted && setReady(ok))
     return () => {
-      mounted = false;
-    };
-  }, []);
+      mounted = false
+    }
+  }, [])
 
   useGSAP(
     () => {
-      if (!ready) return;
+      if (!ready) return
       const tl = gsap.timeline({
         scrollTrigger: {
           trigger: containerRef.current,
@@ -29,11 +29,11 @@ const Banner = () => {
           end: 'bottom 10%',
           scrub: 1,
         },
-      });
-      tl.fromTo('.slide-up-and-fade', { y: 0 }, { y: -150, opacity: 0, stagger: 0.02 });
+      })
+      tl.fromTo('.slide-up-and-fade', { y: 0 }, { y: -150, opacity: 0, stagger: 0.02 })
     },
-    { scope: containerRef, dependencies: [ready] },
-  );
+    { scope: containerRef, dependencies: [ready] }
+  )
 
   return (
     <section className="relative overflow-hidden" id="banner">
@@ -48,13 +48,14 @@ const Banner = () => {
             <br /> <span className="ml-4">DEVELOPER</span>
           </h1>
           <p className="banner-description slide-up-and-fade mt-6 text-lg text-muted-foreground">
-            Hi! I&apos;m <span className="font-medium text-foreground">Tajmirul</span>. A creative Frontend Developer with 3+ years of
-            experience in building high-performance, scalable, and responsive web solutions.
+            Hi! I&apos;m <span className="font-medium text-foreground">Tajmirul</span>. A creative
+            Frontend Developer with 3+ years of experience in building high-performance, scalable,
+            and responsive web solutions.
           </p>
           <h1
             className={`heading text-[35px] text-darkslateblue font-medium mx-28 md:mx-5 cursor-default font-caveat`}
           >
-            {" < Vikas />"}
+            {' < Vikas />'}
           </h1>
           <Button
             as="link"
@@ -84,7 +85,7 @@ const Banner = () => {
         </div>
       </div>
     </section>
-  );
-};
+  )
+}
 
-export default Banner;
+export default Banner

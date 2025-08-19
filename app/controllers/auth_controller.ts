@@ -10,9 +10,10 @@ export default class AuthController {
   async login({ request, response, auth, session }: HttpContext) {
     const { email, password, rememberMe } = await request.validateUsing(loginValidator)
 
-    const user = await User.verifyCredentials(email, password)
-    await auth.use('web').login(user, rememberMe)
     try {
+      const user = await User.verifyCredentials(email, password)
+      await auth.use('web').login(user, rememberMe)
+
       return response.redirect().toRoute('dashboard')
     } catch (error) {
       session.flashErrors({

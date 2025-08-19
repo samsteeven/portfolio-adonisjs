@@ -1,30 +1,30 @@
-'use client';
-import SectionTitle from '@/components/SectionTitle';
-import { MY_STACK } from '@/data';
-import { useGSAP } from '@gsap/react';
-import gsap from 'gsap';
-import { useEffect, useRef, useState } from 'react';
-import { ensureGsapScrollTrigger } from '~/utils/gsapClient';
+'use client'
+import SectionTitle from '@/components/SectionTitle'
+import { MY_STACK } from '@/data'
+import { useGSAP } from '@gsap/react'
+import gsap from 'gsap'
+import { useEffect, useRef, useState } from 'react'
+import { ensureGsapScrollTrigger } from '~/utils/gsap_client'
 
 const Skills = () => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [ready, setReady] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [ready, setReady] = useState(false)
 
   useEffect(() => {
-    let mounted = true;
-    ensureGsapScrollTrigger().then((ok) => mounted && setReady(ok));
+    let mounted = true
+    ensureGsapScrollTrigger().then((ok) => mounted && setReady(ok))
     return () => {
-      mounted = false;
-    };
-  }, []);
+      mounted = false
+    }
+  }, [])
 
   useGSAP(
     () => {
-      if (!ready) return;
-      const els = containerRef.current?.querySelectorAll('.slide-up');
-      if (!els?.length) return;
+      if (!ready) return
+      const els = containerRef.current?.querySelectorAll('.slide-up')
+      if (!els?.length) return
 
-      gsap.set(els, { willChange: 'transform, opacity' });
+      gsap.set(els, { willChange: 'transform, opacity' })
 
       const tl = gsap.timeline({
         scrollTrigger: {
@@ -33,16 +33,16 @@ const Skills = () => {
           end: 'bottom 80%',
           scrub: 0.5,
         },
-      });
+      })
 
-      tl.from('.slide-up', { opacity: 0, y: 40, ease: 'none', stagger: 0.4 });
+      tl.from('.slide-up', { opacity: 0, y: 40, ease: 'none', stagger: 0.4 })
     },
-    { scope: containerRef, dependencies: [ready] },
-  );
+    { scope: containerRef, dependencies: [ready] }
+  )
 
   useGSAP(
     () => {
-      if (!ready) return;
+      if (!ready) return
       const tl = gsap.timeline({
         scrollTrigger: {
           trigger: containerRef.current,
@@ -50,14 +50,14 @@ const Skills = () => {
           end: 'bottom 10%',
           scrub: 1,
         },
-      });
-      tl.to(containerRef.current, { y: -150, opacity: 0 });
+      })
+      tl.to(containerRef.current, { y: -150, opacity: 0 })
     },
-    { scope: containerRef, dependencies: [ready] },
-  );
+    { scope: containerRef, dependencies: [ready] }
+  )
 
   return (
-    <section id="my-stack" className='mb-72' ref={containerRef}>
+    <section id="my-stack" className="mb-72" ref={containerRef}>
       <div className="container">
         <SectionTitle title="My Stack" />
         <div className="space-y-20">
@@ -72,7 +72,13 @@ const Skills = () => {
                 {value.map((item) => (
                   <div className="slide-up flex gap-3.5 items-center leading-none" key={item.name}>
                     <div>
-                      <img src={item.icon} alt={item.name} width="40" height="40" className="max-h-10" />
+                      <img
+                        src={item.icon}
+                        alt={item.name}
+                        width="40"
+                        height="40"
+                        className="max-h-10"
+                      />
                     </div>
                     <span className="text-2xl capitalize">{item.name}</span>
                   </div>
@@ -83,7 +89,7 @@ const Skills = () => {
         </div>
       </div>
     </section>
-  );
-};
+  )
+}
 
-export default Skills;
+export default Skills
