@@ -28,7 +28,7 @@ router
   .group(() => {
     router.post('/auth/logout', '#controllers/auth_controller.logout')
     router.get('/dashboard', '#controllers/dashboard_controller.index').as('dashboard')
-    router.get('/profile', '#controllers/admin_controller.profile').as('admin.profile')
+    router.get('/settings/profile', '#controllers/admin_controller.profile').as('admin.profile')
 
     // ===== UTILISATEURS =====
     router.resource('users', UserController)
@@ -122,4 +122,4 @@ router
       .use(middleware.auth())
   })
   .prefix('/admin')
-  .use(middleware.auth())
+  .middleware([middleware.auth(), middleware.isActive()])

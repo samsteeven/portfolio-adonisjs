@@ -12,13 +12,17 @@ export default class AuthController {
 
     try {
       const user = await User.verifyCredentials(email, password)
+
+      if (!user.isActive) {
+        session.flash('error', "Votre compte est désactivé. Veuillez contacter l'administrateur.")
+        return response.redirect().back()
+      }
+
       await auth.use('web').login(user, rememberMe)
 
       return response.redirect().toRoute('dashboard')
     } catch (error) {
-      session.flashErrors({
-        password: 'Email ou mot de passe invalide',
-      })
+      session.flash('error', 'Email ou mot de passe invalide')
       return response.redirect().back()
     }
   }

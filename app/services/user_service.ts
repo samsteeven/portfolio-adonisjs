@@ -1,22 +1,8 @@
-import { Exception } from '@adonisjs/core/exceptions'
 import User from '#models/user'
 import { UserRole } from '#enums/user_role'
 import { CreateUserDTO, UpdateUserDTO } from '#validators/user_validator'
 
 export class UserService {
-  /**
-   * Vérifie si l'email est unique (sinon lève une Exception)
-   */
-  private async ensureEmailUnique(email: string, excludeUserId?: number | string) {
-    const existingUser = await User.findBy('email', email)
-    if (existingUser && existingUser.id !== excludeUserId) {
-      throw new Exception('Un utilisateur avec cet email existe déjà', {
-        status: 400,
-        code: 'EMAIL_ALREADY_EXISTS',
-      })
-    }
-  }
-
   /**
    * Liste des utilisateurs (avec recherche et filtre par rôle)
    */
@@ -45,7 +31,6 @@ export class UserService {
    * Créer un utilisateur
    */
   async createUser(data: CreateUserDTO) {
-    await this.ensureEmailUnique(data.email)
     return User.create(data)
   }
 
@@ -54,8 +39,6 @@ export class UserService {
    */
   async updateUser(id: string | number, data: UpdateUserDTO) {
     const user = await User.findOrFail(id)
-
-    if (data.email) await this.ensureEmailUnique(data.email, user.id)
 
     user.merge(data)
     await user.save()
