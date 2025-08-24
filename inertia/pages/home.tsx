@@ -5,7 +5,7 @@ import Experiences from '~/pages/Experiences'
 import ProjectList from '~/pages/ProjectList'
 import { useEffect } from 'react'
 import { HeadLayout } from '~/layout/HeadLayout'
-
+import '~/css/app.css'
 export default function Home() {
   useEffect(() => {
     const originalTitle = document.title

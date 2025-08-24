@@ -32,7 +32,9 @@ router
 
     // ===== UTILISATEURS =====
     router.resource('users', UserController)
-    router.patch('users/:id/toggle-status', '#controllers/user_controller.toggleStatus')
+    router
+      .patch('users/:id/toggle-status', '#controllers/user_controller.toggleStatus')
+      .middleware(middleware.authorizeUser('toggleStatus'))
 
     // ===== CRUD PROJETS =====
     router

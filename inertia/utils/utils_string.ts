@@ -13,7 +13,7 @@ export const getInitials = (username: string): string => {
 export const formatMemberSince = (dateString: string): string => {
   try {
     const date = DateTime.fromISO(dateString)
-    return `Membre depuis ${date.toFormat('dd LLL yyyy', { locale: 'fr' })}`
+    return `Membre depuis le ${date.toFormat('dd LLL yyyy', { locale: 'fr' })}`
   } catch {
     return "Date d'inscription inconnue"
   }

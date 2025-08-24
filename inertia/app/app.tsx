@@ -2,7 +2,6 @@ import React, { StrictMode } from 'react'
 import { createInertiaApp } from '@inertiajs/react'
 import { hydrateRoot } from 'react-dom/client'
 import RootLayout from '~/layout/RootLayout'
-import '~/css/app.css'
 
 createInertiaApp({
   progress: { color: '#5468FF' },

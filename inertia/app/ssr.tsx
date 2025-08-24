@@ -2,7 +2,6 @@ import ReactDOMServer from 'react-dom/server'
 import { createInertiaApp } from '@inertiajs/react'
 import React, { StrictMode } from 'react'
 import RootLayout from '~/layout/RootLayout'
-import '~/css/app.css'
 
 export default function render(page: any) {
   return createInertiaApp({

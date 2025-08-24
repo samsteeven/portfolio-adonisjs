@@ -1,5 +1,5 @@
 import { DateTime } from 'luxon'
-import { BaseModel, column, belongsTo } from '@adonisjs/lucid/orm'
+import { BaseModel, column, belongsTo, computed } from '@adonisjs/lucid/orm'
 import User from '#models/user'
 import type { BelongsTo } from '@adonisjs/lucid/types/relations'
 
@@ -39,4 +39,11 @@ export default class SubInfo extends BaseModel {
 
   @column.dateTime({ columnName: 'updated_at', autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime | null
+
+  @computed()
+  public get photoPathPublicUrl(): string | null {
+    if (!this.photoPath) return null
+    // await drive.use('fs').getUrl(this.photoPath)
+    return `uploads/${this.photoPath}`
+  }
 }

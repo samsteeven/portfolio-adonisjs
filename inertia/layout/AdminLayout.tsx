@@ -23,6 +23,7 @@ import { getInitials } from '~/utils/utils_string'
 import { AnimatePresence, motion } from 'framer-motion'
 import { toast } from 'sonner'
 import { Toaster as Sonner } from '@/components/ui/sonner'
+import '~/css/admin.css'
 
 interface AdminLayoutProps {
   children: React.ReactNode
@@ -33,7 +34,7 @@ interface AdminLayoutProps {
 
 const adminMenuItems = [
   { name: 'Dashboard', icon: Home, href: '/admin/dashboard', badge: null },
-  { name: 'Utilisateurs', icon: Users, href: '/admin/users', badge: '12' },
+  { name: 'Utilisateurs', icon: Users, href: '/admin/users' },
   { name: 'Projets', icon: Briefcase, href: '/admin/projects', badge: null },
   { name: 'Compétences', icon: Award, href: '/admin/skills', badge: null },
   { name: 'Technologies', icon: Cpu, href: '/admin/technologies', badge: null },
@@ -216,7 +217,7 @@ export default function AdminLayout({
 
                   {/* Bouton settings rapide */}
                   <Link
-                    href="/admin/settings"
+                    href={'/admin/settings'}
                     className="p-2 rounded-lg hover:bg-gray-100 transition-colors group"
                   >
                     <Settings className="w-5 h-5 text-gray-600 group-hover:text-gray-800" />
@@ -242,17 +243,17 @@ export default function AdminLayout({
                     {/* Avatar plus grand */}
                     <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center shadow-sm">
                       <span className="text-sm font-semibold text-white">
-                        {getInitials(auth.user!.username)}
+                        {getInitials(auth!.user.username)}
                       </span>
                     </div>
 
                     {/* Info utilisateur - Visible dès md */}
                     <div className="hidden md:block text-left">
                       <p className="text-sm font-medium text-gray-900 truncate max-w-[120px] xl:max-w-[140px]">
-                        {auth.user!.username}
+                        {auth!.user.username}
                       </p>
                       <p className="text-xs text-gray-500 truncate max-w-[120px] xl:max-w-[140px]">
-                        {auth.user!.email}
+                        {auth!.user.email}
                       </p>
                     </div>
 
@@ -284,14 +285,14 @@ export default function AdminLayout({
                           <div className="flex items-center gap-3">
                             <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
                               <span className="text-sm font-semibold text-white">
-                                {getInitials(auth.user!.username)}
+                                {getInitials(auth!.user.username)}
                               </span>
                             </div>
                             <div>
                               <p className="text-sm font-medium text-gray-900 truncate">
-                                {auth.user!.username}
+                                {auth!.user.username}
                               </p>
-                              <p className="text-xs text-gray-500 truncate">{auth.user!.email}</p>
+                              <p className="text-xs text-gray-500 truncate">{auth!.user.email}</p>
                             </div>
                           </div>
                         </div>
@@ -299,7 +300,7 @@ export default function AdminLayout({
                         {/* Menu items */}
                         <div className="py-1">
                           <Link
-                            href="/admin/settings/profile"
+                            href={'/admin/settings/profile'}
                             className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                           >
                             <Settings className="w-4 h-4" />
@@ -346,20 +347,20 @@ export default function AdminLayout({
                       'relative inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm whitespace-nowrap font-medium',
                       'transition-all duration-200 active:scale-95 flex-shrink-0',
                       isActive
-                        ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/25'
+                        ? 'bg-blue-500 text-white shadow-lg shadow-blue-600/25'
                         : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                     )}
                   >
                     <Icon className="w-4 h-4" />
                     <span>{item.name}</span>
-                    {item.badge && (
+                    {item.name === 'Utilisateurs' && (
                       <span
                         className={cn(
                           'ml-1 px-2 py-0.5 rounded-full text-xs font-semibold',
                           isActive ? 'bg-blue-100 text-blue-700' : 'bg-red-100 text-red-700'
                         )}
                       >
-                        {item.badge}
+                        {auth!.usersCount}
                       </span>
                     )}
                   </Link>
@@ -444,7 +445,7 @@ export default function AdminLayout({
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4 }}
-              className="rounded-xl border shadow-sm transition-all duration-300 bg-white border-gray-200"
+              className="rounded-sm border shadow-sm transition-all duration-300 bg-white border-gray-200"
             >
               <div className="p-6 lg:p-8">{children}</div>
             </motion.div>

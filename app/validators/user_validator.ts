@@ -2,6 +2,24 @@ import vine from '@vinejs/vine'
 import { UserRole } from '#enums/user_role'
 
 /**
+ * Schéma pour les informations supplémentaires de l'utilisateur
+ */
+const subInfoSchema = vine.object({
+  profilGithub: vine.string().url().optional(),
+  profilLinkedin: vine.string().url().optional(),
+  profilTwitter: vine.string().url().optional(),
+  profilMail: vine.string().email().optional(),
+  photoPath: vine
+    .file({
+      size: '2mb',
+      extnames: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
+    })
+    .optional(),
+  phone: vine.string().optional(),
+  bio: vine.string().optional(),
+})
+
+/**
  * Schéma de validation pour la création d'utilisateur
  */
 export const createUserSchema = vine.compile(
@@ -12,14 +30,12 @@ export const createUserSchema = vine.compile(
       .normalizeEmail()
       .trim()
       .toLowerCase()
-      .unique(async (db, value) => {
-        const user = db.from('users').where('email', value).first()
-        return !user
-      }),
+      .unique({ table: 'users', column: 'email' }),
     password: vine.string().minLength(4),
     username: vine.string().minLength(2).maxLength(50).trim(),
     role: vine.enum(Object.values(UserRole)),
     isActive: vine.boolean().optional(),
+    subInfo: subInfoSchema.clone().optional(),
   })
 )
 
@@ -33,14 +49,22 @@ export const updateUserSchema = vine.compile(
       .email()
       .normalizeEmail()
       .trim()
+      .toLowerCase()
       .unique(async (db, value, field) => {
-        const user = db.from('users').where('email', value).whereNot('id', field.meta.userId)
+        if (!field.meta.userId) return false
+        const user = await db
+          .from('users')
+          .where('email', value)
+          .whereNot('id', field.meta.userId)
+          .first()
         return !user
-      }),
+      })
+      .optional(),
     password: vine.string().minLength(4).optional(),
     username: vine.string().minLength(2).maxLength(50).trim().optional(),
     role: vine.enum(Object.values(UserRole)).optional(),
     isActive: vine.boolean().optional(),
+    subInfo: subInfoSchema.clone().optional(),
   })
 )
 
@@ -53,6 +77,15 @@ export type CreateUserDTO = {
   username: string
   role: UserRole
   isActive?: boolean
+  subInfo?: {
+    profilGithub?: string
+    profilLinkedin?: string
+    profilTwitter?: string
+    profilMail?: string
+    photoPath?: string
+    phone?: string
+    bio?: string
+  }
 }
 
 export type UpdateUserDTO = Partial<CreateUserDTO>

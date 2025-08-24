@@ -3,6 +3,7 @@ import { useForm, Link } from '@inertiajs/react'
 import { Eye, Edit, Trash2, Power, PowerOff } from 'lucide-react'
 import DeleteConfirmationModal from './DeleteConfirmationModal'
 import { AuthenticatedUser } from '~/types'
+import UserInfoModal from '~/components/UserInfoModal'
 
 interface UserActionsProps {
   user: AuthenticatedUser
@@ -10,6 +11,7 @@ interface UserActionsProps {
 
 export default function UserActions({ user }: UserActionsProps) {
   const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [showInfoModal, setShowInfoModal] = useState(false)
 
   const { delete: deleteUser, processing: isDeleting } = useForm()
   const { patch: toggleStatus, processing: isToggling } = useForm()
@@ -30,13 +32,13 @@ export default function UserActions({ user }: UserActionsProps) {
     <>
       <div className="flex items-center justify-end gap-2">
         {/* Voir l'utilisateur */}
-        <Link
-          href={`/admin/users/${user.id}`}
-          className="p-2 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-lg transition-colors"
+        <button
+          onClick={() => setShowInfoModal(true)}
+          className="p-2 text-blue-600 hover:text-blue-900 hover:cursor-pointer hover:bg-blue-50 rounded-lg transition-colors"
           title="Voir l'utilisateur"
         >
           <Eye className="w-4 h-4" />
-        </Link>
+        </button>
 
         {/* Éditer l'utilisateur */}
         <Link
@@ -84,10 +86,11 @@ export default function UserActions({ user }: UserActionsProps) {
         onClose={() => setShowDeleteModal(false)}
         onConfirm={handleDelete}
         title="Supprimer l'utilisateur"
-        message={`Êtes-vous sûr de vouloir supprimer l'utilisateur "${user.username}" ?`}
+        message={`Êtes-vous sûr de vouloir le supprimer ?`}
         itemName={`${user.username}`}
         isLoading={isDeleting}
       />
+      <UserInfoModal isOpen={showInfoModal} onClose={() => setShowInfoModal(false)} user={user} />
     </>
   )
 }

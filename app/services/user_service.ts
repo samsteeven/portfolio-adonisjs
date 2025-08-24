@@ -1,6 +1,8 @@
 import User from '#models/user'
 import { UserRole } from '#enums/user_role'
 import { CreateUserDTO, UpdateUserDTO } from '#validators/user_validator'
+import db from '@adonisjs/lucid/services/db'
+import FileUploadService from '#services/file_upload_service'
 
 export class UserService {
   /**
@@ -17,41 +19,81 @@ export class UserService {
 
     if (role) query.where('role', role)
 
-    return query.orderBy('created_at', 'desc')
+    return query.orderBy('created_at', 'desc').preload('subInfo')
   }
 
   /**
    * Trouver un utilisateur par ID
    */
   async getUserById(id: string | number) {
-    return await User.findOrFail(id)
+    const user = await this.findUser(id)
+    await user.load('subInfo')
+    return user
   }
 
   /**
    * Créer un utilisateur
    */
   async createUser(data: CreateUserDTO) {
-    return User.create(data)
+    const { subInfo, ...userPayload } = data
+    return db.transaction(async (trx) => {
+      // On utilise le client de transaction (trx) pour toutes les opérations DB
+      const user = await User.create(userPayload, { client: trx })
+
+      if (subInfo) await user.related('subInfo').create(subInfo, { client: trx })
+
+      return user
+    })
   }
 
   /**
    * Mettre à jour un utilisateur
    */
   async updateUser(id: string | number, data: UpdateUserDTO) {
-    const user = await User.findOrFail(id)
+    const user = await this.findUser(id)
 
-    user.merge(data)
-    await user.save()
+    const { subInfo, ...userPayload } = data
 
-    return user
+    return await db.transaction(async (trx) => {
+      user.useTransaction(trx)
+      // Mise à jour des données utilisateur
+      user.merge(userPayload)
+      if (user.isDirty()) {
+        await user.save()
+      }
+
+      // Mise à jour/création subInfo
+      if (subInfo) {
+        await user.load('subInfo')
+        let subInfoModel = user.subInfo
+
+        if (!subInfoModel) {
+          // Création
+          await user.related('subInfo').create(subInfo, { client: trx })
+        } else {
+          // Mise à jour avec vérification isDirty
+          subInfoModel.useTransaction(trx)
+          subInfoModel.merge(subInfo)
+          if (subInfoModel.isDirty()) {
+            // Évite l'UPDATE inutile
+            await subInfoModel.save()
+          }
+        }
+      }
+
+      return user
+    })
   }
 
   /**
    * Supprimer un utilisateur
    */
   async deleteUser(id: string | number) {
-    const user = await User.findOrFail(id)
+    let user = await this.findUser(id)
+    await user.load('subInfo')
+    if (user.subInfo?.photoPath) await FileUploadService.deleteFile(`${user.subInfo?.photoPath}`)
     await user.delete()
+
     return true
   }
 
@@ -59,7 +101,7 @@ export class UserService {
    * Activer/désactiver un utilisateur
    */
   async toggleUserStatus(id: string | number) {
-    const user = await User.findOrFail(id)
+    const user = await this.findUser(id)
     user.isActive = !user.isActive
     await user.save()
     return user
@@ -82,5 +124,9 @@ export class UserService {
       admins: admins?.$extras.count || 0,
       visitors: visitors?.$extras.count || 0,
     }
+  }
+
+  async findUser(id: string | number) {
+    return await User.findOrFail(id)
   }
 }
