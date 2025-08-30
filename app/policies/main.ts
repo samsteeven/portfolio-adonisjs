@@ -13,13 +13,16 @@
 */
 
 import UserPolicy from '#policies/user_policy'
+import TechnologyPolicy from '#policies/technologie_policy'
 
 export const policies = {
+  TechnologyPolicy: () => import('#policies/technologie_policy'),
   UserPolicy: () => import('#policies/user_policy'),
 }
 // Types pour l'autocomplétion
 declare module '@adonisjs/bouncer/types' {
   interface Policies {
     UserPolicy: UserPolicy
+    TechnologyPolicy: TechnologyPolicy
   }
 }

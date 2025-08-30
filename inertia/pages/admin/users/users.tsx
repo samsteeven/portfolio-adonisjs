@@ -20,15 +20,18 @@ export default function AdminUsers({ users }: AdminUsersProps) {
   const filteredUsers = useMemo(() => {
     if (!users) return []
 
-    return users.filter((user) => {
-      const matchesSearch =
-        user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.email.toLowerCase().includes(searchTerm.toLowerCase())
+    if (searchTerm.trim()) {
+      return users.filter((user) => {
+        const matchesSearch =
+          user.username.toLowerCase().includes(searchTerm.toLowerCase().trim()) ||
+          user.email.toLowerCase().includes(searchTerm.toLowerCase().trim())
 
-      const matchesRole = selectedRole === 'all' || user.role === selectedRole
+        const matchesRole = selectedRole === 'all' || user.role === selectedRole
 
-      return matchesSearch && matchesRole
-    })
+        return matchesSearch && matchesRole
+      })
+    }
+    return users
   }, [users, searchTerm, selectedRole])
 
   const GridView = () => (

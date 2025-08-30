@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react'
-import { Link, useForm } from '@inertiajs/react'
+import { Head, Link, useForm } from '@inertiajs/react'
 import {
   ArrowLeft,
   Upload,
@@ -10,31 +10,42 @@ import {
   ExternalLink,
   Save,
   Loader2,
+  Eye,
 } from 'lucide-react'
 import AdminLayout from '~/layout/AdminLayout'
+import { Technology } from '~/types/technology'
 
-export default function TechnologiesCreate({ categories }: { categories: string[] }) {
-  const [imagePreview, setImagePreview] = useState<string | null>(null)
+export default function TechnologiesEdit({
+  technology,
+  categories,
+}: {
+  technology: Technology
+  categories: string[]
+}) {
+  const [imagePreview, setImagePreview] = useState(technology.imgPathPublicUrl || null)
+  const [hasNewImage, setHasNewImage] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const { data, setData, post, processing, errors, reset, isDirty } = useForm<{
+  const { data, setData, patch, processing, errors, reset, isDirty } = useForm<{
     name: string
     category: string
     imgPath: File | null
     lienOrigin: string
     description: string
   }>({
-    name: '',
-    category: '',
+    name: technology.name,
+    category: technology.category,
     imgPath: null,
-    lienOrigin: '',
-    description: '',
+    lienOrigin: technology.lienOrigin || '',
+    description: technology.description || '',
   })
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (!file) return
+    if (!file) return null
+
     setData('imgPath', file)
+    setHasNewImage(true)
 
     // Créer un aperçu de l'image
     const reader = new FileReader()
@@ -47,7 +58,16 @@ export default function TechnologiesCreate({ categories }: { categories: string[
   const removeImage = () => {
     setData('imgPath', null)
     setImagePreview(null)
-    // Reset l'input file
+    setHasNewImage(true)
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
+  }
+
+  const restoreOriginalImage = () => {
+    setData('imgPath', null)
+    setImagePreview(technology.imgPathPublicUrl || null)
+    setHasNewImage(false)
     if (fileInputRef.current) {
       fileInputRef.current.value = ''
     }
@@ -55,14 +75,15 @@ export default function TechnologiesCreate({ categories }: { categories: string[
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    post('/admin/technologies', {
-      onSuccess: () => reset(),
+    patch(`/admin/technologies/${technology.id}`, {
+      preserveScroll: true,
     })
   }
 
-  const handleReset = () => {
+  const resetForm = () => {
     reset()
-    setImagePreview(null)
+    setImagePreview(technology.imgPathPublicUrl || null)
+    setHasNewImage(false)
     if (fileInputRef.current) {
       fileInputRef.current.value = ''
     }
@@ -70,6 +91,8 @@ export default function TechnologiesCreate({ categories }: { categories: string[
 
   return (
     <>
+      <Head title={`Modifier - ${technology.name}`} />
+
       <div className="min-h-screen bg-gray-50">
         {/* Header */}
         <div className="bg-white border-b border-gray-200">
@@ -84,13 +107,21 @@ export default function TechnologiesCreate({ categories }: { categories: string[
                 </Link>
                 <div>
                   <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
-                    Ajouter une technologie
+                    Modifier {technology.name}
                   </h1>
                   <p className="text-sm sm:text-base text-gray-600">
-                    Ajoutez une nouvelle technologie à votre portfolio
+                    Modifiez les informations de cette technologie
                   </p>
                 </div>
               </div>
+
+              <Link
+                href={`/admin/technologies/${technology.id}`}
+                className="flex items-center justify-center sm:justify-start gap-2 px-3 sm:px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <Eye className="w-4 h-4" />
+                <span className="hidden sm:inline">Voir</span>
+              </Link>
             </div>
           </div>
         </div>
@@ -98,6 +129,18 @@ export default function TechnologiesCreate({ categories }: { categories: string[
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
           <div className="bg-white rounded-xl shadow-sm border border-gray-200">
             <div className="p-4 sm:p-6">
+              {/* Indicateur de modification */}
+              {isDirty && (
+                <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                  <div className="flex items-center gap-2 text-amber-800">
+                    <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse" />
+                    <span className="text-sm font-medium">
+                      Vous avez des modifications non sauvegardées
+                    </span>
+                  </div>
+                </div>
+              )}
+
               <form onSubmit={handleSubmit}>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
                   {/* Colonne gauche - Informations principales */}
@@ -127,22 +170,20 @@ export default function TechnologiesCreate({ categories }: { categories: string[
                         Catégorie *
                       </label>
                       <div className="flex-col">
-                        {categories.length > 0 && (
-                          <select
-                            value={data.category}
-                            onChange={(e) => setData('category', e.target.value)}
-                            className={`w-full mb-3 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
-                              errors.category ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                            }`}
-                          >
-                            <option value="">Sélectionner une catégorie</option>
-                            {categories.map((category) => (
-                              <option key={category} value={category}>
-                                {category}
-                              </option>
-                            ))}
-                          </select>
-                        )}
+                        <select
+                          value={data.category}
+                          onChange={(e) => setData('category', e.target.value)}
+                          className={`w-full mb-3 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
+                            errors.category ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                          }`}
+                        >
+                          <option value="">Sélectionner une catégorie</option>
+                          {categories.map((category) => (
+                            <option key={category} value={category}>
+                              {category}
+                            </option>
+                          ))}
+                        </select>
                         <input
                           type="text"
                           value={data.category}
@@ -230,20 +271,40 @@ export default function TechnologiesCreate({ categories }: { categories: string[
                               alt="Aperçu"
                               className="w-full h-full object-contain"
                             />
-                            <button
-                              type="button"
-                              onClick={removeImage}
-                              className="absolute top-2 right-2 p-1 bg-red-100 text-red-600 rounded-full hover:bg-red-200 transition-colors"
-                            >
-                              <X className="w-3 h-3 sm:w-4 sm:h-4" />
-                            </button>
+                            <div className="absolute top-2 right-2 flex gap-1">
+                              {hasNewImage && !technology.imgPathPublicUrl && (
+                                <button
+                                  type="button"
+                                  onClick={restoreOriginalImage}
+                                  className="p-1 bg-blue-100 text-blue-600 rounded-full hover:bg-blue-200 transition-colors text-xs"
+                                  title="Restaurer l'image originale"
+                                >
+                                  ↺
+                                </button>
+                              )}
+                              <button
+                                type="button"
+                                onClick={removeImage}
+                                className="p-1 bg-red-100 text-red-600 rounded-full hover:bg-red-200 transition-colors"
+                                title="Supprimer l'image"
+                              >
+                                <X className="w-3 h-3 sm:w-4 sm:h-4" />
+                              </button>
+                            </div>
+                            {hasNewImage && (
+                              <div className="absolute bottom-2 left-2 bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full font-medium">
+                                Nouvelle image
+                              </div>
+                            )}
                           </div>
                         ) : (
                           /* Zone de drop */
                           <div className="aspect-square flex flex-col items-center justify-center p-4 sm:p-6">
                             <Upload className="w-8 h-8 sm:w-12 sm:h-12 text-gray-400 mb-3 sm:mb-4" />
                             <p className="text-gray-600 text-center mb-2 text-sm sm:text-base">
-                              Cliquez pour sélectionner une image
+                              {technology.imgPathPublicUrl
+                                ? "Remplacer l'image"
+                                : 'Ajouter une image'}
                             </p>
                             <p className="text-xs sm:text-sm text-gray-500 text-center">
                               JPG, PNG, SVG ou WebP • Max 2MB
@@ -264,18 +325,13 @@ export default function TechnologiesCreate({ categories }: { categories: string[
                         <p className="mt-1 text-sm text-red-600">{errors.imgPath}</p>
                       )}
 
-                      {/* Conseils pour l'image */}
-                      <div className="mt-4 p-3 sm:p-4 bg-blue-50 rounded-lg border border-blue-200">
-                        <h4 className="text-sm font-medium text-blue-900 mb-2">
-                          Conseils pour une meilleure image :
-                        </h4>
-                        <ul className="text-xs sm:text-sm text-blue-800 space-y-1">
-                          <li>• Utilisez le logo officiel de la technologie</li>
-                          <li>• Préférez un fond transparent (PNG/SVG)</li>
-                          <li>• Format carré recommandé (1:1)</li>
-                          <li>• Résolution minimum 200x200px</li>
-                        </ul>
-                      </div>
+                      {/* Informations sur l'image actuelle */}
+                      {technology.imgPathPublicUrl && !hasNewImage && (
+                        <div className="mt-2 text-xs sm:text-sm text-gray-600">
+                          Image actuelle :{' '}
+                          {technology.imgPathPublicUrl?.split('/').pop() || 'Image existante'}
+                        </div>
+                      )}
                     </div>
 
                     {/* Aperçu de la carte */}
@@ -315,6 +371,23 @@ export default function TechnologiesCreate({ categories }: { categories: string[
                         </div>
                       </div>
                     </div>
+
+                    {/* Historique */}
+                    <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
+                      <h4 className="text-sm font-medium text-gray-700 mb-2">Informations</h4>
+                      <div className="space-y-1 text-xs sm:text-sm text-gray-600">
+                        <div>
+                          Créé le : {new Date(technology.createdAt).toLocaleDateString('fr-FR')}
+                        </div>
+                        {technology.updatedAt && (
+                          <div>
+                            Modifié le :{' '}
+                            {new Date(technology.updatedAt).toLocaleDateString('fr-FR')}
+                          </div>
+                        )}
+                        <div>ID : {technology.id}</div>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -328,24 +401,26 @@ export default function TechnologiesCreate({ categories }: { categories: string[
                   </Link>
 
                   <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3">
-                    <button
-                      type="button"
-                      onClick={handleReset}
-                      className="w-full sm:w-auto px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
-                    >
-                      Réinitialiser
-                    </button>
+                    {isDirty && (
+                      <button
+                        type="button"
+                        onClick={resetForm}
+                        className="w-full sm:w-auto px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+                      >
+                        Annuler les modifications
+                      </button>
+                    )}
                     <button
                       type="submit"
                       disabled={processing || !isDirty}
-                      className="w-full sm:w-auto flex items-center justify-center gap-2 bg-blue-600 text-white px-4 sm:px-6 py-2 rounded-lg hover:cursor-pointer hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full text-sm hover:cursor-pointer sm:text-base md:text-md sm:w-auto flex items-center justify-center gap-2 bg-blue-600 text-white px-4 sm:px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {processing ? (
                         <Loader2 className="w-4 h-4 animate-spin" />
                       ) : (
                         <Save className="w-4 h-4" />
                       )}
-                      {processing ? 'Création...' : 'Créer la technologie'}
+                      {processing ? 'Sauvegarde...' : 'Sauvegarder les modifications'}
                     </button>
                   </div>
                 </div>
@@ -358,12 +433,8 @@ export default function TechnologiesCreate({ categories }: { categories: string[
   )
 }
 
-TechnologiesCreate.layout = (page: React.ReactNode) => (
-  <AdminLayout
-    title="Ajouter une tech"
-    description="Ajouter une tech"
-    currentPath="/admin/technologies"
-  >
+TechnologiesEdit.layout = (page: React.ReactNode) => (
+  <AdminLayout description="Modifier une tech" currentPath="/admin/technologies">
     {page}
   </AdminLayout>
 )

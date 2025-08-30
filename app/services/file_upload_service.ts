@@ -1,8 +1,10 @@
 import drive from '@adonisjs/drive/services/main'
 import { cuid } from '@adonisjs/core/helpers'
+import { MultipartFile } from '@adonisjs/core/bodyparser'
+import logger from '@adonisjs/core/services/logger'
 
 export default class FileUploadService {
-  static async uploadProfilePhoto(photo: any): Promise<string | undefined> {
+  static async uploadProfilePhoto(photo: MultipartFile): Promise<string | undefined> {
     const fileName = `profiles/${cuid()}.${photo.extname}`
 
     await photo.moveToDisk(fileName)
@@ -18,7 +20,7 @@ export default class FileUploadService {
       }
       return false
     } catch (error) {
-      console.error('Erreur suppression fichier:', error)
+      logger.error('Erreur suppression fichier:', error)
       return false
     }
   }

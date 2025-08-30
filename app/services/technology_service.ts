@@ -1,148 +1,161 @@
-import { inject } from '@adonisjs/core'
 import Technology from '#models/technology'
-import { Exception } from '@adonisjs/core/exceptions'
+import { ModelPaginatorContract } from '@adonisjs/lucid/types/model'
+import { CreateTechnologyDTO, UpdateTechnologyDTO } from '#validators/technologie'
 
-@inject()
+export interface TechnologyFilters {
+  search?: string
+  category?: string
+  page?: number
+  limit?: number
+}
+
 export class TechnologyService {
   /**
-   * Récupère la liste des technologies avec pagination et filtres
+   * Récupère la liste des technologies avec filtres et pagination
    */
-  async getTechnologies({
-    page,
-    limit,
-    search,
-    category,
-  }: {
-    page: number
-    limit: number
-    search: string
-    category: string
-  }) {
+  async getTechnologies(
+    filters: TechnologyFilters = {}
+  ): Promise<ModelPaginatorContract<Technology>> {
+    const { search, category, page = 1, limit = 20 } = filters
+
     const query = Technology.query()
 
-    // Filtre par recherche
+    // Filtre par recherche (nom ou description)
     if (search) {
-      query.where((subQuery: any) => {
-        subQuery.where('name', 'like', `%${search}%`).orWhere('description', 'like', `%${search}%`)
+      query.where((builder) => {
+        builder.whereILike('name', `%${search}%`).orWhereILike('description', `%${search}%`)
       })
     }
 
-    // Filtre par catégorie (champ string simple)
-    if (category && category !== 'all') {
+    // Filtre par catégorie
+    if (category) {
       query.where('category', category)
     }
 
-    // Pagination
-    return await query.orderBy('created_at', 'desc').paginate(page, limit)
+    // Ordre alphabétique par nom
+    query.orderBy('name', 'asc')
+
+    return await query.paginate(page, limit)
   }
 
   /**
-   * Récupère une technologie par son ID
+   * Récupère les technologies par catégorie
    */
-  async getTechnologyById(id: string | number) {
-    return await Technology.findOrFail(id)
+  async getTechnologiesByCategory(): Promise<Record<string, Technology[]>> {
+    const technologies = await Technology.query().orderBy('category', 'asc').orderBy('name', 'asc')
+
+    return technologies.reduce(
+      (acc, tech) => {
+        if (!acc[tech.category]) {
+          acc[tech.category] = []
+        }
+        acc[tech.category].push(tech)
+        return acc
+      },
+      {} as Record<string, Technology[]>
+    )
   }
 
   /**
-   * Récupère les catégories disponibles (depuis les technologies existantes)
+   * Récupère les catégories uniques
    */
-  async getCategories() {
-    const categories = await Technology.query()
+  async getCategories(): Promise<string[]> {
+    const result = await Technology.query()
       .select('category')
-      .whereNotNull('category')
-      .distinct()
+      .groupBy('category')
       .orderBy('category', 'asc')
 
-    return categories.map((cat: any) => ({ id: cat.category, name: cat.category }))
+    return result.map((item) => item.category)
+  }
+
+  /**
+   * Récupère une technologie par son ID avec ses projets associés
+   */
+  async getTechnologyById(
+    id: number | string,
+    withProjects: boolean = false
+  ): Promise<Technology | null> {
+    const query = Technology.query().where('id', id)
+
+    if (withProjects) {
+      query.preload('projects')
+    }
+
+    try {
+      return await query.firstOrFail()
+    } catch (error) {
+      return null
+    }
   }
 
   /**
    * Crée une nouvelle technologie
    */
-  async createTechnology(data: {
-    name: string
-    description: string
-    category: string
-    imgPath: string
-    lienOrigin: string
-    isActive: boolean
-  }) {
-    // Vérifier si le nom existe déjà
-    const existingTechnology = await Technology.findBy('name', data.name)
-    if (existingTechnology) {
-      throw new Exception('Une technologie avec ce nom existe déjà', {
-        status: 400,
-        code: 'NAME_ALREADY_EXISTS',
-      })
-    }
-
-    // Créer la technologie
-    return await Technology.create({
-      name: data.name,
-      description: data.description,
-      category: data.category,
-      imgPath: data.imgPath,
-      lienOrigin: data.lienOrigin,
-    })
+  async createTechnology(data: CreateTechnologyDTO): Promise<Technology> {
+    return await Technology.create(data)
   }
 
   /**
    * Met à jour une technologie
    */
-  async updateTechnology(
-    id: string | number,
-    data: {
-      name?: string
-      description?: string
-      category?: string
-      imgPath?: string
-      lienOrigin?: string
-      isActive?: boolean
+  async updateTechnology(id: number | string, data: UpdateTechnologyDTO): Promise<Technology> {
+    const technology = await this.getTechnologyById(id)
+    if (!technology) {
+      throw new Error('Technologie introuvable')
     }
-  ) {
-    const technology = await Technology.findOrFail(id)
-
-    // Vérifier si le nom existe déjà (sauf pour la technologie actuelle)
-    if (data.name && data.name !== technology.name) {
-      const existingTechnology = await Technology.findBy('name', data.name)
-      if (existingTechnology) {
-        throw new Exception('Une technologie avec ce nom existe déjà', {
-          status: 400,
-          code: 'NAME_ALREADY_EXISTS',
-        })
-      }
-    }
-
-    // Mettre à jour la technologie
-    technology.merge({
-      name: data.name,
-      description: data.description,
-      category: data.category,
-      imgPath: data.imgPath,
-      lienOrigin: data.lienOrigin,
-    })
+    technology.merge(data)
     await technology.save()
-
     return technology
-  }
-
-  /**
-   * Supprime une technologie
-   */
-  async deleteTechnology(id: string | number) {
-    const technology = await Technology.findOrFail(id)
-    await technology.delete()
-    return true
   }
 
   /**
    * Récupère les statistiques des technologies
    */
-  async getTechnologyStats() {
+  async getTechnologyStats(): Promise<{
+    total: number
+    byCategory: Record<string, number>
+    mostUsed: Array<{ technology: Technology; projectCount: number }>
+  }> {
+    // Total des technologies
     const total = await Technology.query().count('* as total').first()
 
+    // Répartition par catégorie
+    const categoriesStats = await Technology.query()
+      .select('category')
+      .count('* as count')
+      .groupBy('category')
+      .orderBy('category', 'asc')
+
+    const byCategory = categoriesStats.reduce(
+      (acc, stat) => {
+        acc[stat.category] = Number(stat.$extras.count)
+        return acc
+      },
+      {} as Record<string, number>
+    )
+
+    // Technologies les plus utilisées (avec le plus de projets)
+    const mostUsed = await Technology.query()
+      .select('technologies.*')
+      .leftJoin('project_technologies', 'technologies.id', 'project_technologies.technologies_id')
+      .groupBy('technologies.id')
+      .orderBy(Technology.query().count('project_technologies.project_id'), 'desc')
+      .limit(5)
+
+    const mostUsedWithCount = await Promise.all(
+      mostUsed.map(async (tech) => {
+        await tech.load('projects')
+        return {
+          technology: tech,
+          projectCount: tech.projects.length,
+        }
+      })
+    )
+
     return {
-      total: total?.$extras.total || 0,
+      total: Number(total?.$extras.total || 0),
+      byCategory,
+      mostUsed: mostUsedWithCount,
     }
   }
 }

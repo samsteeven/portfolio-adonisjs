@@ -22,7 +22,7 @@ export default class UserController {
 
     const users = await this.userService.getUsers({ search, role })
 
-    return inertia.render('admin/users', { users })
+    return inertia.render('admin/users/users', { users })
   }
 
   /**

@@ -10,6 +10,7 @@
 import router from '@adonisjs/core/services/router'
 import { middleware } from '#start/kernel'
 import { limitter } from '#start/limiter'
+const TechnologyController = () => import('#controllers/technology_controller')
 const UserController = () => import('#controllers/user_controller')
 
 // Routes publiques avec silent_auth pour avoir accès à l'utilisateur connecté
@@ -35,6 +36,9 @@ router
     router
       .patch('users/:id/toggle-status', '#controllers/user_controller.toggleStatus')
       .middleware(middleware.authorizeUser('toggleStatus'))
+
+    // ===== TECHNOLOGIES =====
+    router.resource('technologies', TechnologyController)
 
     // ===== CRUD PROJETS =====
     router
@@ -70,31 +74,6 @@ router
           .as('admin.skills.toggle-status')
       })
       .prefix('/admin/skills')
-      .use(middleware.auth())
-
-    // ===== CRUD TECHNOLOGIES =====
-    router
-      .group(() => {
-        router.get('/', '#controllers/technology_controller.index').as('admin.technologies')
-        router
-          .get('/create', '#controllers/technology_controller.create')
-          .as('admin.technologies.create')
-        router.post('/', '#controllers/technology_controller.store').as('admin.technologies.store')
-        router.get('/:id', '#controllers/technology_controller.show').as('admin.technologies.show')
-        router
-          .get('/:id/edit', '#controllers/technology_controller.edit')
-          .as('admin.technologies.edit')
-        router
-          .put('/:id', '#controllers/technology_controller.update')
-          .as('admin.technologies.update')
-        router
-          .delete('/:id', '#controllers/technology_controller.destroy')
-          .as('admin.technologies.destroy')
-        router
-          .patch('/:id/toggle-status', '#controllers/technology_controller.toggleStatus')
-          .as('admin.technologies.toggle-status')
-      })
-      .prefix('/admin/technologies')
       .use(middleware.auth())
 
     // ===== CRUD CONTACTS =====

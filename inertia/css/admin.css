@@ -1,5 +1,11 @@
+@import "tailwindcss";
+
+/* Dites à Tailwind où scanner les classes */
+@source "../**/*.{ts,tsx,js,jsx}";
+@source "../../resources/views/**/*.edge";
 /* Styles spécifiques pour le layout de l'administration */
 :root {
+  color-scheme: white;
   --color-background: #ffffff;
   --color-background-light: #f3f4f6;
   --color-foreground: #111827;
@@ -12,6 +18,7 @@
   background: #7ba3ec !important;   /* bleu */
   color: #ffffff !important;        /* texte blanc */
 }
+
 html, body{
   scroll-behavior: smooth;
 }

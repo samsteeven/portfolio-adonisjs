@@ -1,6 +1,6 @@
 // TypeScript
 import { DateTime } from 'luxon'
-import { BaseModel, column, manyToMany } from '@adonisjs/lucid/orm'
+import { BaseModel, column, computed, manyToMany } from '@adonisjs/lucid/orm'
 import Project from './project.js'
 import type { ManyToMany } from '@adonisjs/lucid/types/relations'
 
@@ -35,4 +35,10 @@ export default class Technology extends BaseModel {
 
   @column.dateTime({ columnName: 'updated_at', autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime | null
+
+  @computed()
+  public get imgPathPublicUrl(): string | null {
+    if (!this.imgPath) return null
+    return `/admin/uploads/${this.imgPath}`
+  }
 }
