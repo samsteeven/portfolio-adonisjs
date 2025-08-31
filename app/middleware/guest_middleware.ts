@@ -13,7 +13,7 @@ export default class GuestMiddleware {
   /**
    * The URL to redirect to when user is logged-in
    */
-  redirectTo = '/dashboard'
+  redirectTo = '/admin/dashboard'
 
   async handle(
     ctx: HttpContext,

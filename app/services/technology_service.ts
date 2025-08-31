@@ -98,13 +98,8 @@ export class TechnologyService {
   /**
    * Met à jour une technologie
    */
-  async updateTechnology(id: number | string, data: UpdateTechnologyDTO): Promise<Technology> {
-    const technology = await this.getTechnologyById(id)
-    if (!technology) {
-      throw new Error('Technologie introuvable')
-    }
-    technology.merge(data)
-    await technology.save()
+  async updateTechnology(technology: Technology, data: UpdateTechnologyDTO): Promise<Technology> {
+    await technology.merge(data).save()
     return technology
   }
 

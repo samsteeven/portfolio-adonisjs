@@ -32,14 +32,14 @@ export default function AdminProfile() {
             <div className="relative w-20 h-20 mx-auto mb-4">
               <div className="w-full h-full bg-gradient-to-br from-blue-600 to-indigo-600 rounded-full flex items-center justify-center">
                 <span className="text-xl font-bold text-white">
-                  {getInitials(auth.user!.username)}
+                  {getInitials(auth!.user!.username)}
                 </span>
               </div>
               {/* Badge de statut en ligne (optionnel) */}
               <div className="absolute bottom-0 right-0 w-5 h-5 bg-green-500 border-2 border-white rounded-full"></div>
             </div>
-            <h3 className="text-lg font-semibold text-gray-900">{auth.user!.username}</h3>
-            <p className="text-gray-600 capitalize">{auth.user!.role || 'Administrateur'}</p>
+            <h3 className="text-lg font-semibold text-gray-900">{auth!.user!.username}</h3>
+            <p className="text-gray-600 capitalize">{auth!.user!.role || 'Administrateur'}</p>
           </div>
         </div>
 
@@ -53,7 +53,7 @@ export default function AdminProfile() {
               </div>
               <div className="flex-1">
                 <p className="text-xs text-gray-500 uppercase tracking-wide">Nom d'utilisateur</p>
-                <p className="text-sm font-medium text-gray-900">{auth.user!.username}</p>
+                <p className="text-sm font-medium text-gray-900">{auth!.user!.username}</p>
               </div>
             </div>
 
@@ -63,7 +63,7 @@ export default function AdminProfile() {
               </div>
               <div className="flex-1">
                 <p className="text-xs text-gray-500 uppercase tracking-wide">Email</p>
-                <p className="text-sm font-medium text-gray-900">{auth.user!.email}</p>
+                <p className="text-sm font-medium text-gray-900">{auth!.user!.email}</p>
               </div>
             </div>
 
@@ -74,7 +74,7 @@ export default function AdminProfile() {
               <div className="flex-1">
                 <p className="text-xs text-gray-500 uppercase tracking-wide">Inscription</p>
                 <p className="text-sm font-medium text-gray-900">
-                  {formatMemberSince(auth.user!.createdAt.toString())}
+                  {formatMemberSince(auth!.user!.createdAt.toString())}
                 </p>
               </div>
             </div>

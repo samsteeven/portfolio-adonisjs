@@ -6,23 +6,33 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Card } from '@/components/ui/card'
 import { ArrowLeft, Image } from 'lucide-react'
+import { SkillType } from '~/types/skills'
 
-export default function CreateSkill({ categories }: { categories: string[] }) {
-  const [imagePreview, setImagePreview] = useState<string | null>(null)
+interface Props {
+  skill: SkillType
+  categories: string[]
+}
+
+export default function EditSkill({ skill, categories }: Props) {
+  const [imagePreview, setImagePreview] = useState<string | null>(skill.imagePathPublicUrl)
   const fileInputRef = React.useRef<HTMLInputElement | null>(null)
 
-  const { data, setData, post, processing, errors, reset, isDirty } = useForm({
-    name: '',
-    category: '',
-    description: '',
+  const { data, setData, patch, processing, errors, reset, isDirty } = useForm({
+    name: skill.name,
+    category: skill.category,
+    description: skill.description || '',
     imagePath: null as File | null,
-    isActive: true as boolean,
+    isActive: skill.isActive,
   })
 
   const handleReset = () => {
     reset()
-    setImagePreview(null)
+    setImagePreview(skill.imagePathPublicUrl)
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
   }
+
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
@@ -46,8 +56,8 @@ export default function CreateSkill({ categories }: { categories: string[] }) {
 
   const onSubmit: FormEventHandler = (e) => {
     e.preventDefault()
-    post('/admin/skills', {
-      onSuccess: () => handleReset(),
+    patch(`/admin/skills/${skill.id}`, {
+      preserveScroll: true,
     })
   }
 
@@ -66,9 +76,9 @@ export default function CreateSkill({ categories }: { categories: string[] }) {
                 Retour aux compétences
               </Link>
             </div>
-            <h1 className="text-2xl font-bold text-gray-900">Créer une nouvelle compétence</h1>
+            <h1 className="text-2xl font-bold text-gray-900">Modifier la compétence</h1>
             <p className="mt-2 text-sm text-gray-600">
-              Ajoutez une nouvelle compétence à votre portfolio
+              Modifiez les informations de la compétence "{skill.name}"
             </p>
           </div>
 
@@ -131,7 +141,7 @@ export default function CreateSkill({ categories }: { categories: string[] }) {
                         className="mt-2"
                         value={data.category}
                         onChange={(e) => setData('category', e.target.value)}
-                        placeholder="ou ajouter en. Ex: Frontend, Backend, Design, DevOps..."
+                        placeholder="ou modifier. Ex: Frontend, Backend, Design, DevOps..."
                         required
                       />
                       {errors.category && (
@@ -168,7 +178,7 @@ export default function CreateSkill({ categories }: { categories: string[] }) {
                   </h2>
 
                   <div className="space-y-4">
-                    {/* Image Preview */}
+                    {/* Current Image or Preview */}
                     {imagePreview ? (
                       <div className="relative">
                         <img
@@ -195,6 +205,11 @@ export default function CreateSkill({ categories }: { categories: string[] }) {
                             />
                           </svg>
                         </button>
+                        {data.imagePath && (
+                          <div className="absolute bottom-2 left-2 bg-blue-500 text-white px-2 py-1 rounded text-xs">
+                            Nouvelle image sélectionnée
+                          </div>
+                        )}
                       </div>
                     ) : (
                       <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
@@ -217,6 +232,25 @@ export default function CreateSkill({ categories }: { categories: string[] }) {
                             <p className="mt-1 text-sm text-gray-500">PNG, JPG, GIF jusqu'à 2MB</p>
                           </div>
                         </div>
+                      </div>
+                    )}
+
+                    {/* Change Image Button */}
+                    {imagePreview && (
+                      <div className="text-center">
+                        <label htmlFor="image-change" className="cursor-pointer">
+                          <Button type="button" variant="outline" className="mt-2">
+                            Changer l'image
+                          </Button>
+                          <input
+                            ref={fileInputRef}
+                            id="image-change"
+                            type="file"
+                            className="sr-only"
+                            accept="image/*"
+                            onChange={handleImageChange}
+                          />
+                        </label>
                       </div>
                     )}
 
@@ -245,9 +279,9 @@ export default function CreateSkill({ categories }: { categories: string[] }) {
                         type="checkbox"
                         id="isActive"
                         name="isActive"
-                        defaultChecked={data.isActive}
+                        checked={data.isActive}
                         onChange={(e) => setData('isActive', e.target.checked)}
-                        className={`w-6 h-6 text-blue-600  focus:outline-none border-gray-300 rounded focus:ring-blue-500}`}
+                        className={`w-6 h-6 text-blue-600 focus:outline-none border-gray-300 rounded focus:ring-blue-500`}
                       />
                     </div>
                   </div>
@@ -261,7 +295,7 @@ export default function CreateSkill({ categories }: { categories: string[] }) {
                       disabled={processing || !isDirty}
                       className="w-full bg-blue-600 hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {processing ? 'Création...' : 'Créer la compétence'}
+                      {processing ? 'Mise à jour...' : 'Mettre à jour'}
                     </Button>
                     {isDirty && (
                       <Button
@@ -280,10 +314,41 @@ export default function CreateSkill({ categories }: { categories: string[] }) {
                   </div>
                 </Card>
 
+                {/* Info Card */}
+                <Card className="p-6">
+                  <h3 className="text-sm font-semibold text-gray-900 mb-3">Informations</h3>
+                  <div className="space-y-2 text-sm text-gray-600">
+                    <div>
+                      <span className="font-medium">Créé le :</span>
+                      <br />
+                      {new Date(skill.createdAt).toLocaleDateString('fr-FR', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                    </div>
+                    {skill.updatedAt && (
+                      <div>
+                        <span className="font-medium">Modifié le :</span>
+                        <br />
+                        {new Date(skill.updatedAt).toLocaleDateString('fr-FR', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </div>
+                    )}
+                  </div>
+                </Card>
+
                 {/* Preview Card */}
                 <Card className="p-6">
                   <h3 className="text-sm font-semibold text-gray-900 mb-3">Aperçu</h3>
-                  <div className=" rounded-lg p-3 bg-gray-50">
+                  <div className="rounded-lg p-3 bg-gray-50">
                     {imagePreview && (
                       <img
                         src={imagePreview}
@@ -322,8 +387,8 @@ export default function CreateSkill({ categories }: { categories: string[] }) {
   )
 }
 
-CreateSkill.layout = (page: React.ReactNode) => (
-  <AdminLayout title="Nouveau skill" description="Ajouter un skill" currentPath="/admin/skills">
+EditSkill.layout = (page: React.ReactNode) => (
+  <AdminLayout title="Modifier skill" description="Modifier un skill" currentPath="/admin/skills">
     {page}
   </AdminLayout>
 )

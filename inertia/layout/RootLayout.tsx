@@ -13,7 +13,7 @@ import StickyEmail from '@/components/StickyEmail'
 import PageTransition from '@/components/PageTransition'
 import { AuthSync } from '@/components/AuthSync'
 import { InertiaProps } from '~/types'
-
+import '~/css/app.css'
 interface RootLayoutProps {
   children: React.ReactNode
 }
@@ -29,18 +29,20 @@ export default function RootLayout({ children }: RootLayoutProps) {
   }, [props.error, props.success])
 
   return (
-    <ReactLenis root options={{ lerp: 0.1, duration: 1.4 }}>
-      <Sonner className="text-black" position="top-center" />
-      <AuthSync />
-      <Navbar />
-      <PageTransition>
-        <main>{children}</main>
-      </PageTransition>
-      <Footer />
-      <Preloader />
-      <ScrollProgressIndicator />
-      <ParticleBackground />
-      <StickyEmail />
-    </ReactLenis>
+    <div className="main-layout">
+      <ReactLenis root options={{ lerp: 0.1, duration: 1.4 }}>
+        <Sonner className="text-black" position="top-center" />
+        <AuthSync />
+        <Navbar />
+        <PageTransition>
+          <main>{children}</main>
+        </PageTransition>
+        <Footer />
+        <Preloader />
+        <ScrollProgressIndicator />
+        <ParticleBackground />
+        <StickyEmail />
+      </ReactLenis>
+    </div>
   )
 }

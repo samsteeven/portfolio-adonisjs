@@ -1,79 +1,88 @@
+/* === app.css (général - garde seulement Tailwind) === */
 @import "tailwindcss";
+@plugin 'tailwindcss-animate';
 
-/* Dites à Tailwind où scanner les classes */
 @source "../**/*.{ts,tsx,js,jsx}";
 @source "../../resources/views/**/*.edge";
 
-/* Thème (design tokens) */
-@theme {
-  /* Couleurs principales */
+/* Scope tous les styles au layout principal */
+.main-layout {
+  /* Thème (design tokens) */
   --color-background: #0b0b0f;
   --color-background-light: #1f1f25;
   --color-foreground: #ffffff;
-  --color-muted-foreground: #9ca3af; /* gris clair */
-  --color-primary: #22d3ee;          /*                                                                                                                                                                                                                                cyan */
-
-  /* Bordures / anneaux (pratiques pour composants) */
+  --color-muted-foreground: #9ca3af;
+  --color-primary: #22d3ee;
   --color-border: #2b2b32;
   --color-ring: #22d3ee;
-
-  /* Breakpoints (optionnel, utile pour .container custom ci-dessous) */
   --breakpoint-sm: 640px;
   --breakpoint-md: 768px;
   --breakpoint-lg: 1024px;
   --breakpoint-xl: 1280px;
   --breakpoint-2xl: 1536px;
-
-  /* Fonts (optionnel) */
   --font-sans: Roboto Flex, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Helvetica Neue", "Apple Color Emoji", "Segoe UI Emoji";
-}
 
-/* Styles de base (appliquent les couleurs du thème) */
-:root {
+  /* Styles appliqués seulement dans le layout principal */
   color-scheme: dark;
-}
-
-html, body {
   background-color: var(--color-background);
   color: var(--color-foreground);
   font-family: var(--font-sans), serif;
   min-height: 100%;
   scroll-behavior: smooth;
-  @apply border-border;
 }
 
-/* Utilitaire .container (si tu utilises .container dans ton JSX) */
-.container {
+/* Tous les éléments enfants du layout principal */
+.main-layout html,
+.main-layout body {
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans), serif;
+  min-height: 100%;
+  scroll-behavior: smooth;
+}
+
+.main-layout .container {
   width: 100%;
   margin-inline: auto;
   padding-inline: 1rem;
   max-width: 100%;
 }
-@media (min-width: 640px) { .container { max-width: 640px; } }
-@media (min-width: 768px) { .container { max-width: 768px; } }
-@media (min-width: 1024px) { .container { max-width: 1024px; } }
-@media (min-width: 1280px) { .container { max-width: 1280px; } }
-@media (min-width: 1536px) { .container { max-width: 1536px; } }
 
-/* Classe utilitaire pour la police Anton si tu l’emploies dans le JSX */
-.font-anton {
+@media (min-width: 640px) {
+  .main-layout .container { max-width: 640px; }
+}
+@media (min-width: 768px) {
+  .main-layout .container { max-width: 768px; }
+}
+@media (min-width: 1024px) {
+  .main-layout .container { max-width: 1024px; }
+}
+@media (min-width: 1280px) {
+  .main-layout .container { max-width: 1280px; }
+}
+@media (min-width: 1536px) {
+  .main-layout .container { max-width: 1536px; }
+}
+
+.main-layout .font-anton {
   font-family: "Anton", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
 }
 
-/* Exemple: affiner la sélection (optionnel) */
-::selection {
+.main-layout ::selection {
   background-color: color-mix(in oklab, var(--color-primary) 25%, transparent);
   color: var(--color-foreground);
 }
-::-webkit-scrollbar {
+
+.main-layout ::-webkit-scrollbar {
   display: none;
 }
+
 @layer components {
-  .grid {
+  .main-layout .grid {
     @apply gap-[25px];
   }
 
-  .markdown-text ul {
+  .main-layout .markdown-text ul {
     @apply pl-5 mt-2 list-disc;
   }
 }

@@ -72,7 +72,10 @@ export default class TechnologyController {
     // Gestion de l'upload d'image
     if (data.imgPath?.isValid) {
       try {
-        imgPath = await FileUploadTechnolyService.uploadTechnologyImage(data.imgPath)
+        imgPath = await FileUploadTechnolyService.uploadTechnologyImage(
+          data.imgPath,
+          'technologies'
+        )
       } catch (error) {
         session.flash('error', error.message)
         return response.redirect().back()
@@ -80,21 +83,14 @@ export default class TechnologyController {
     }
 
     try {
-      await this.technologyService.createTechnology({
-        name: data.name,
-        category: data.category,
-        imgPath: imgPath || '',
-        lienOrigin: data.lienOrigin,
-        description: data.description,
-      })
+      await this.technologyService.createTechnology({ ...data, imgPath: imgPath || null })
 
       session.flash('success', 'Technologie créée avec succès')
       return response.redirect().back()
     } catch (error) {
       // Nettoyer l'image en cas d'erreur
       if (imgPath) {
-        const fileName = imgPath.split('/').pop()
-        if (fileName) await FileUploadTechnolyService.deleteFile(fileName)
+        await FileUploadTechnolyService.deleteFile(imgPath)
       }
 
       session.flash('error', error.message || 'Erreur lors de la création de la technologie')
@@ -167,12 +163,16 @@ export default class TechnologyController {
       // Gérer le remplacement d'image si nécessaire
       if (data.imgPath?.isValid) {
         const oldImagePath = technology.imgPath
-        imgPath = await FileUploadTechnolyService.replaceTechnologyImage(data.imgPath, oldImagePath)
+        imgPath = await FileUploadTechnolyService.replaceTechnologyImage(
+          data.imgPath,
+          oldImagePath,
+          'technologies'
+        )
       }
 
       // Mettre à jour la technologie
       try {
-        await this.technologyService.updateTechnology(params.id, {
+        await this.technologyService.updateTechnology(technology, {
           ...data,
           imgPath: imgPath || technology.imgPath,
         })

@@ -56,7 +56,7 @@ export default function TechnologiesCreate({ categories }: { categories: string[
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     post('/admin/technologies', {
-      onSuccess: () => reset(),
+      onSuccess: () => handleReset(),
     })
   }
 
@@ -131,13 +131,13 @@ export default function TechnologiesCreate({ categories }: { categories: string[
                           <select
                             value={data.category}
                             onChange={(e) => setData('category', e.target.value)}
-                            className={`w-full mb-3 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
+                            className={`w-full mb-3 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-none transition-colors ${
                               errors.category ? 'border-red-300 bg-red-50' : 'border-gray-300'
                             }`}
                           >
                             <option value="">Sélectionner une catégorie</option>
-                            {categories.map((category) => (
-                              <option key={category} value={category}>
+                            {categories.map((category, index) => (
+                              <option key={index} value={category}>
                                 {category}
                               </option>
                             ))}

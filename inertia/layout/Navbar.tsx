@@ -138,7 +138,7 @@ const Navbar = () => {
             <div className="sm:row-span-2 sm:col-span-2">
               <button className="md:mt-10 inline-block">
                 <RoughAnnotate strokeWidth={4} color="#22d3ee">
-                  <Link href={auth?.user ? '/auth/login' : '/admin/dashboard'}>
+                  <Link href={auth?.user ? '/admin/dashboard' : '/auth/login'}>
                     {auth?.user ? 'Mon Compte' : 'Se connecter'}
                   </Link>
                 </RoughAnnotate>

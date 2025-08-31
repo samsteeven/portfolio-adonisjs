@@ -262,9 +262,9 @@ export default function TechnologiesIndex({ technologies, categories, filters }:
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between py-4 sm:h-16 gap-4 sm:gap-0">
               <div>
-                <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Technologies</h1>
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Technologies</h1>
                 <p className="text-sm sm:text-base text-gray-600">
-                  Gérez les technologies de votre portfolio
+                  Gérez les technologies de mon portfolio
                 </p>
               </div>
 

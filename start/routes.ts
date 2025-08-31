@@ -10,6 +10,7 @@
 import router from '@adonisjs/core/services/router'
 import { middleware } from '#start/kernel'
 import { limitter } from '#start/limiter'
+const SkillsController = () => import('#controllers/skill_controller')
 const TechnologyController = () => import('#controllers/technology_controller')
 const UserController = () => import('#controllers/user_controller')
 
@@ -40,6 +41,10 @@ router
     // ===== TECHNOLOGIES =====
     router.resource('technologies', TechnologyController)
 
+    // ===== CRUD COMPÉTENCES =====
+    router.resource('skills', SkillsController)
+    router.patch('skills/:id/toggle-status', '#controllers/skill_controller.toggleStatus')
+
     // ===== CRUD PROJETS =====
     router
       .group(() => {
@@ -57,23 +62,6 @@ router
           .as('admin.projects.toggle-status')
       })
       .prefix('/admin/projects')
-      .use(middleware.auth())
-
-    // ===== CRUD COMPÉTENCES =====
-    router
-      .group(() => {
-        router.get('/', '#controllers/skill_controller.index').as('admin.skills')
-        router.get('/create', '#controllers/skill_controller.create').as('admin.skills.create')
-        router.post('/', '#controllers/skill_controller.store').as('admin.skills.store')
-        router.get('/:id', '#controllers/skill_controller.show').as('admin.skills.show')
-        router.get('/:id/edit', '#controllers/skill_controller.edit').as('admin.skills.edit')
-        router.put('/:id', '#controllers/skill_controller.update').as('admin.skills.update')
-        router.delete('/:id', '#controllers/skill_controller.destroy').as('admin.skills.destroy')
-        router
-          .patch('/:id/toggle-status', '#controllers/skill_controller.toggleStatus')
-          .as('admin.skills.toggle-status')
-      })
-      .prefix('/admin/skills')
       .use(middleware.auth())
 
     // ===== CRUD CONTACTS =====

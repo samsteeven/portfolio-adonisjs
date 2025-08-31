@@ -1,5 +1,5 @@
 import { DateTime } from 'luxon'
-import { BaseModel, column } from '@adonisjs/lucid/orm'
+import { BaseModel, column, computed } from '@adonisjs/lucid/orm'
 
 export default class Skill extends BaseModel {
   @column({ isPrimary: true })
@@ -25,4 +25,10 @@ export default class Skill extends BaseModel {
 
   @column.dateTime({ columnName: 'updated_at', autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime | null
+
+  @computed()
+  public get imagePathPublicUrl(): string | null {
+    if (!this.imagePath) return null
+    return `/admin/uploads/${this.imagePath}`
+  }
 }
