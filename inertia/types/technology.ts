@@ -4,8 +4,8 @@ export interface Technology {
   id: number
   name: string
   category: string
-  imgPath: string | null
-  imgPathPublicUrl: string | null
+  imgPath: string
+  imgPathPublicUrl: string
   lienOrigin: string | null
   description: string | null
   projects: ProjectType[]

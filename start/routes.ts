@@ -1,15 +1,7 @@
-/*
-|--------------------------------------------------------------------------
-| Routes file
-|--------------------------------------------------------------------------
-|
-| The routes file is used for defining the HTTP routes.
-|
-*/
-
 import router from '@adonisjs/core/services/router'
 import { middleware } from '#start/kernel'
 import { limitter } from '#start/limiter'
+const ProjectsController = () => import('#controllers/project_controller')
 const SkillsController = () => import('#controllers/skill_controller')
 const TechnologyController = () => import('#controllers/technology_controller')
 const UserController = () => import('#controllers/user_controller')
@@ -46,23 +38,8 @@ router
     router.patch('skills/:id/toggle-status', '#controllers/skill_controller.toggleStatus')
 
     // ===== CRUD PROJETS =====
-    router
-      .group(() => {
-        router.get('/', '#controllers/project_controller.index').as('admin.projects')
-        router.get('/create', '#controllers/project_controller.create').as('admin.projects.create')
-        router.post('/', '#controllers/project_controller.store').as('admin.projects.store')
-        router.get('/:id', '#controllers/project_controller.show').as('admin.projects.show')
-        router.get('/:id/edit', '#controllers/project_controller.edit').as('admin.projects.edit')
-        router.put('/:id', '#controllers/project_controller.update').as('admin.projects.update')
-        router
-          .delete('/:id', '#controllers/project_controller.destroy')
-          .as('admin.projects.destroy')
-        router
-          .patch('/:id/toggle-status', '#controllers/project_controller.toggleStatus')
-          .as('admin.projects.toggle-status')
-      })
-      .prefix('/admin/projects')
-      .use(middleware.auth())
+    router.resource('projects', ProjectsController)
+    router.patch('projects/:id/toggle-status', '#controllers/project_controller.toggleStatus')
 
     // ===== CRUD CONTACTS =====
     router

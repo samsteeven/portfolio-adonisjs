@@ -1,6 +1,6 @@
-import Contact from '#models/contact'
+import Commentaire from '#models/commentaire'
 
-export class ContactService {
+export class CommentaireService {
   /**
    * Récupère la liste des messages de contact avec pagination et filtres
    */
@@ -19,7 +19,7 @@ export class ContactService {
     dateFrom: string
     dateTo: string
   }) {
-    const query = Contact.query()
+    const query = Commentaire.query()
 
     // Filtre par recherche
     if (search) {
@@ -53,14 +53,14 @@ export class ContactService {
    * Récupère un message de contact par son ID
    */
   async getContactById(id: string | number) {
-    return await Contact.findOrFail(id)
+    return await Commentaire.findOrFail(id)
   }
 
   /**
    * Supprime un message de contact
    */
   async deleteContact(id: string | number) {
-    const contact = await Contact.findOrFail(id)
+    const contact = await Commentaire.findOrFail(id)
     await contact.delete()
     return true
   }
@@ -69,7 +69,7 @@ export class ContactService {
    * Supprime plusieurs messages en lot
    */
   async deleteMultipleContacts(ids: number[]) {
-    await Contact.query().whereIn('id', ids).delete()
+    await Commentaire.query().whereIn('id', ids).delete()
     return true
   }
 }

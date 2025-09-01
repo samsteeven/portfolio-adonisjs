@@ -20,7 +20,7 @@ export default function TechnologiesCreate({ categories }: { categories: string[
   const { data, setData, post, processing, errors, reset, isDirty } = useForm<{
     name: string
     category: string
-    imgPath: File | null
+    imgPath: File
     lienOrigin: string
     description: string
   }>({
@@ -113,6 +113,7 @@ export default function TechnologiesCreate({ categories }: { categories: string[
                         value={data.name}
                         onChange={(e) => setData('name', e.target.value)}
                         placeholder="Ex: React, Vue.js, Laravel..."
+                        required
                         className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-sm sm:text-base ${
                           errors.name ? 'border-red-300 bg-red-50' : 'border-gray-300'
                         }`}
@@ -256,6 +257,7 @@ export default function TechnologiesCreate({ categories }: { categories: string[
                           type="file"
                           accept="image/*"
                           onChange={handleImageChange}
+                          required
                           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                         />
                       </div>

@@ -1,156 +1,187 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import AdminLayout from '~/layout/AdminLayout'
-import { User, Mail, Calendar, Edit, Shield, Key, Settings } from 'lucide-react'
+import { Mail, Phone, Calendar, Edit, Github, Linkedin, Twitter } from 'lucide-react'
 import { usePage, Link } from '@inertiajs/react'
 import { getInitials, formatMemberSince } from '~/utils/utils_string'
 import { InertiaProps } from '~/types'
 
 export default function AdminProfile() {
   const { auth } = usePage<InertiaProps>().props
+  const [isClient, setIsClient] = useState(false)
+
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
+
+  const formatDate = (dateString: string) => {
+    if (!isClient) return '...'
+    return formatMemberSince(dateString)
+  }
+
+  const user = auth?.user
+  const subInfo = user?.subInfo
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Mon Profil</h1>
-          <p className="text-gray-600">Informations personnelles et sécurité</p>
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-4xl mx-auto px-4 py-8">
+        {/* Header simple */}
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-2xl font-semibold text-gray-900">Mon Profil</h1>
+            <p className="text-gray-600 text-sm mt-1">Gérez vos informations personnelles</p>
+          </div>
+          <Link
+            href={`/admin/users/${user?.id}/edit`}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500 text-white text-sm font-medium rounded-sm hover:bg-blue-600 transition-colors"
+          >
+            <Edit className="w-4 h-4" />
+            Modifier
+          </Link>
         </div>
-        <Link
-          href={`/admin/users/${auth!.user.id}/edit`}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-        >
-          <Edit className="w-4 h-4" />
-          Modifier le profil
-        </Link>
-      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Profile Card */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="text-center">
-            <div className="relative w-20 h-20 mx-auto mb-4">
-              <div className="w-full h-full bg-gradient-to-br from-blue-600 to-indigo-600 rounded-full flex items-center justify-center">
-                <span className="text-xl font-bold text-white">
-                  {getInitials(auth!.user!.username)}
+        {/* Carte de profil principale */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-6">
+          {/* Section avatar et infos principales */}
+          <div className="p-6 border-b border-gray-100">
+            <div className="flex items-start gap-6">
+              {/* Avatar */}
+              <div className="flex-shrink-0">
+                {subInfo?.photoPathPublicUrl ? (
+                  <img
+                    src={subInfo.photoPathPublicUrl}
+                    alt={user?.username}
+                    className="w-20 h-20 rounded-full object-cover ring-4 ring-gray-50"
+                  />
+                ) : (
+                  <div className="w-18 h-18 bg-blue-500 rounded-full flex items-center justify-center ring-4 ring-gray-50">
+                    <span className="text-xl font-semibold text-white">
+                      {getInitials(user?.username || '')}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Informations principales */}
+              <div className="flex-1">
+                <div className="flex items-center gap-3 mb-2">
+                  <h2 className="text-xl font-semibold text-gray-900">{user?.username}</h2>
+                  <span
+                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                      user?.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                    }`}
+                  >
+                    {user?.isActive ? 'Actif' : 'Inactif'}
+                  </span>
+                </div>
+
+                <p className="text-blue-600 font-medium text-sm capitalize mb-3">{user?.role}</p>
+
+                {subInfo?.bio && (
+                  <p className="text-gray-600 text-sm leading-relaxed max-w-md">{subInfo.bio}</p>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Informations de contact */}
+          <div className="p-6">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">Informations</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Email */}
+              <div className="flex items-center gap-3 text-sm">
+                <Mail className="w-5 h-5 text-gray-400" />
+                <span className="text-gray-700">{user?.email}</span>
+              </div>
+
+              {/* Téléphone */}
+              {subInfo?.phone && (
+                <div className="flex items-center gap-3 text-sm">
+                  <Phone className="w-5 h-5 text-gray-400" />
+                  <span className="text-gray-700">{subInfo.phone}</span>
+                </div>
+              )}
+
+              {/* Date d'inscription */}
+              <div className="flex items-center gap-3 text-sm">
+                <Calendar className="w-5 h-5 text-gray-400" />
+                <span className="text-gray-700">
+                  Membre depuis {formatDate(user?.createdAt?.toString() || '')}
                 </span>
               </div>
-              {/* Badge de statut en ligne (optionnel) */}
-              <div className="absolute bottom-0 right-0 w-5 h-5 bg-green-500 border-2 border-white rounded-full"></div>
+
+              {/* Réseaux sociaux */}
+              {(subInfo?.profilGithub || subInfo?.profilLinkedin || subInfo?.profilTwitter) && (
+                <div className="flex items-center gap-3 text-sm">
+                  <span className="w-5 h-5 text-gray-400 text-xs font-medium">Social</span>
+                  <div className="flex gap-2">
+                    {subInfo?.profilGithub && (
+                      <a
+                        href={subInfo.profilGithub}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-7 h-7 bg-gray-100 hover:bg-gray-900 rounded-md flex items-center justify-center transition-colors group"
+                      >
+                        <Github className="w-4 h-4 text-gray-600 group-hover:text-white" />
+                      </a>
+                    )}
+                    {subInfo?.profilLinkedin && (
+                      <a
+                        href={subInfo.profilLinkedin}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-7 h-7 bg-blue-100 hover:bg-blue-600 rounded-md flex items-center justify-center transition-colors group"
+                      >
+                        <Linkedin className="w-4 h-4 text-blue-600 group-hover:text-white" />
+                      </a>
+                    )}
+                    {subInfo?.profilTwitter && (
+                      <a
+                        href={subInfo.profilTwitter}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-7 h-7 bg-sky-100 hover:bg-sky-500 rounded-md flex items-center justify-center transition-colors group"
+                      >
+                        <Twitter className="w-4 h-4 text-sky-600 group-hover:text-white" />
+                      </a>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
-            <h3 className="text-lg font-semibold text-gray-900">{auth!.user!.username}</h3>
-            <p className="text-gray-600 capitalize">{auth!.user!.role || 'Administrateur'}</p>
           </div>
         </div>
 
-        {/* Profile Details */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Informations</h3>
-          <div className="space-y-4">
-            <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors">
-              <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                <User className="w-4 h-4 text-blue-600" />
-              </div>
-              <div className="flex-1">
-                <p className="text-xs text-gray-500 uppercase tracking-wide">Nom d'utilisateur</p>
-                <p className="text-sm font-medium text-gray-900">{auth!.user!.username}</p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors">
-              <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
-                <Mail className="w-4 h-4 text-green-600" />
-              </div>
-              <div className="flex-1">
-                <p className="text-xs text-gray-500 uppercase tracking-wide">Email</p>
-                <p className="text-sm font-medium text-gray-900">{auth!.user!.email}</p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors">
-              <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
-                <Calendar className="w-4 h-4 text-purple-600" />
-              </div>
-              <div className="flex-1">
-                <p className="text-xs text-gray-500 uppercase tracking-wide">Inscription</p>
-                <p className="text-sm font-medium text-gray-900">
-                  {formatMemberSince(auth!.user!.createdAt.toString())}
-                </p>
-              </div>
-            </div>
+        {/* Section paramètres du compte (optionnel, plus compact) */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-medium text-gray-900">Paramètres du compte</h3>
+            <Link
+              href={`/admin/users/${user?.id}/edit`}
+              className="text-blue-600 hover:text-blue-700 font-medium text-sm"
+            >
+              Modifier →
+            </Link>
           </div>
-        </div>
-      </div>
 
-      {/* Security Section */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">Sécurité</h3>
-          <Link
-            href="/admin/security"
-            className="text-sm text-blue-600 hover:text-blue-700 font-medium"
-          >
-            Voir tout →
-          </Link>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Link
-            href="/admin/profile/password"
-            className="flex items-center gap-3 p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors group"
-          >
-            <div className="w-10 h-10 bg-blue-100 group-hover:bg-blue-200 rounded-lg flex items-center justify-center transition-colors">
-              <Key className="w-5 h-5 text-blue-600" />
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+            <div>
+              <p className="text-gray-500 mb-1">Nom d'utilisateur</p>
+              <p className="font-medium text-gray-900">{user?.username}</p>
             </div>
-            <div className="flex-1">
-              <p className="text-sm font-medium text-gray-900">Mot de passe</p>
-              <p className="text-xs text-gray-600">Modifier votre mot de passe</p>
+            <div>
+              <p className="text-gray-500 mb-1">Email</p>
+              <p className="font-medium text-gray-900">{user?.email}</p>
             </div>
-          </Link>
-
-          <Link
-            href="/admin/profile/2fa"
-            className="flex items-center gap-3 p-4 border border-gray-200 rounded-lg hover:border-green-300 hover:bg-green-50 transition-colors group"
-          >
-            <div className="w-10 h-10 bg-green-100 group-hover:bg-green-200 rounded-lg flex items-center justify-center transition-colors">
-              <Shield className="w-5 h-5 text-green-600" />
+            <div>
+              <p className="text-gray-500 mb-1">Rôle</p>
+              <p className="font-medium text-gray-900 capitalize">{user?.role}</p>
             </div>
-            <div className="flex-1">
-              <p className="text-sm font-medium text-gray-900">Authentification 2FA</p>
-              <p className="text-xs text-gray-600">Sécuriser votre compte</p>
+            <div>
+              <p className="text-gray-500 mb-1">Statut</p>
+              <p className={`font-medium ${user?.isActive ? 'text-green-600' : 'text-red-600'}`}>
+                {user?.isActive ? 'Actif' : 'Inactif'}
+              </p>
             </div>
-          </Link>
-
-          <Link
-            href="/admin/profile/sessions"
-            className="flex items-center gap-3 p-4 border border-gray-200 rounded-lg hover:border-orange-300 hover:bg-orange-50 transition-colors group"
-          >
-            <div className="w-10 h-10 bg-orange-100 group-hover:bg-orange-200 rounded-lg flex items-center justify-center transition-colors">
-              <Settings className="w-5 h-5 text-orange-600" />
-            </div>
-            <div className="flex-1">
-              <p className="text-sm font-medium text-gray-900">Sessions</p>
-              <p className="text-xs text-gray-600">Gérer les connexions</p>
-            </div>
-          </Link>
-        </div>
-      </div>
-
-      {/* Statistics Section (optionnel) */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Activité récente</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="text-center p-4 bg-gray-50 rounded-lg">
-            <p className="text-2xl font-bold text-gray-900">12</p>
-            <p className="text-sm text-gray-600">Connexions ce mois</p>
-          </div>
-          <div className="text-center p-4 bg-gray-50 rounded-lg">
-            <p className="text-2xl font-bold text-gray-900">5</p>
-            <p className="text-sm text-gray-600">Actions effectuées</p>
-          </div>
-          <div className="text-center p-4 bg-gray-50 rounded-lg">
-            <p className="text-2xl font-bold text-gray-900">2h</p>
-            <p className="text-sm text-gray-600">Temps passé</p>
           </div>
         </div>
       </div>
@@ -159,11 +190,7 @@ export default function AdminProfile() {
 }
 
 AdminProfile.layout = (page: React.ReactNode) => (
-  <AdminLayout
-    title="Profil"
-    description="Gérer mon profil administrateur"
-    currentPath="/admin/profile"
-  >
+  <AdminLayout title="Profil" description="Gérer le profil" currentPath="/admin/profile">
     {page}
   </AdminLayout>
 )

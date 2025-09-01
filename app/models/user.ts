@@ -1,7 +1,7 @@
 import { DateTime } from 'luxon'
 import { BaseModel, column, hasOne, hasMany } from '@adonisjs/lucid/orm'
 import SubInfo from '#models/sub_info'
-import Contact from '#models/contact'
+import Commentaire from '#models/commentaire'
 import { withAuthFinder } from '@adonisjs/auth/mixins/lucid'
 import hash from '@adonisjs/core/services/hash'
 import { compose } from '@adonisjs/core/helpers'
@@ -38,8 +38,8 @@ export default class User extends compose(BaseModel, AuthFinder) {
   @hasOne(() => SubInfo, { foreignKey: 'userId' })
   declare subInfo: HasOne<typeof SubInfo>
 
-  @hasMany(() => Contact, { foreignKey: 'userId' })
-  declare contacts: HasMany<typeof Contact>
+  @hasMany(() => Commentaire, { foreignKey: 'userId' })
+  declare contacts: HasMany<typeof Commentaire>
 
   @column.dateTime({ columnName: 'created_at', autoCreate: true })
   declare createdAt: DateTime

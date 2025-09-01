@@ -1,7 +1,7 @@
 import { BaseSchema } from '@adonisjs/lucid/schema'
 
 export default class extends BaseSchema {
-  protected tableName = 'contacts'
+  protected tableName = 'commentaires'
 
   async up() {
     this.schema.createTable(this.tableName, (table) => {
@@ -10,6 +10,7 @@ export default class extends BaseSchema {
       table.string('name').notNullable()
       table.string('email', 191).notNullable()
       table.text('message').notNullable()
+      table.string('emoji', 5).nullable()
 
       // Optionnel: rattacher à un user (owner)
       table

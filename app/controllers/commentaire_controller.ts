@@ -1,10 +1,10 @@
 import { HttpContext } from '@adonisjs/core/http'
 import { inject } from '@adonisjs/core'
-import { ContactService } from '#services/contact_service'
+import { CommentaireService } from '#services/contact_service'
 
 @inject()
-export default class ContactController {
-  constructor(private contactService: ContactService) {}
+export default class CommentaireController {
+  constructor(private contactService: CommentaireService) {}
 
   /**
    * Affiche la liste des messages de contact avec pagination et filtres

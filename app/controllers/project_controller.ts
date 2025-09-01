@@ -1,57 +1,64 @@
-import { HttpContext } from '@adonisjs/core/http'
+import type { HttpContext } from '@adonisjs/core/http'
+import ProjectService from '#services/project_service'
+import { createProjectValidator, updateProjectValidator } from '#validators/project'
 import { inject } from '@adonisjs/core'
-import { ProjectService } from '#services/project_service'
 
 @inject()
-export default class ProjectController {
+export default class ProjectsController {
   constructor(private projectService: ProjectService) {}
 
   /**
-   * Affiche la liste des projets avec pagination et filtres
+   * Display a list of projects
    */
-  async index({ inertia, request }: HttpContext) {
+  async index({ request, inertia }: HttpContext) {
     const page = request.input('page', 1)
-    const limit = request.input('limit', 10)
     const search = request.input('search', '')
-    const status = request.input('status', 'all')
+    const technology = request.input('technology', '')
+    const isActive = request.input('isActive')
 
     const projects = await this.projectService.getProjects({
-      page,
-      limit,
       search,
-      status,
+      technology,
+      isActive: isActive ? Boolean(isActive) : undefined,
+      page,
+      limit: 12,
     })
 
-    return inertia.render('admin/projects', { projects })
+    const technologies = await this.projectService.getAllTechnologies()
+
+    return inertia.render('admin/projects/index', {
+      projects: projects.serialize(),
+      technologies,
+      filters: {
+        search,
+        technology,
+        isActive,
+      },
+    })
   }
 
   /**
-   * Affiche le formulaire de création de projet
+   * Show the form for creating a new project
    */
   async create({ inertia }: HttpContext) {
-    const technologies = await this.projectService.getTechnologies()
-    return inertia.render('admin/projects/create', { technologies })
+    const technologies = await this.projectService.getAllTechnologies()
+
+    return inertia.render('admin/projects/create', {
+      technologies,
+    })
   }
 
   /**
-   * Enregistre un nouveau projet
+   * Handle form submission for the create action
    */
   async store({ request, response, session }: HttpContext) {
     try {
-      const projectData = request.only([
-        'title',
-        'description',
-        'imgPath',
-        'demoPath',
-        'githubPath',
-        'isActive',
-        'technologies',
-      ])
+      const payload = await request.validateUsing(createProjectValidator)
 
-      await this.projectService.createProject(projectData)
+      await this.projectService.createProject(payload)
 
       session.flash('success', 'Projet créé avec succès')
-      return response.redirect().toRoute('admin.projects')
+      return response.redirect().back()
     } catch (error) {
       session.flash('error', 'Erreur lors de la création du projet')
       return response.redirect().back()
@@ -59,45 +66,69 @@ export default class ProjectController {
   }
 
   /**
-   * Affiche un projet spécifique
+   * Display a single project
    */
-  async show({ inertia, params }: HttpContext) {
+  async show({ params, inertia, session, response }: HttpContext) {
     const project = await this.projectService.getProjectById(params.id)
-    return inertia.render('admin/projects/show', { project })
+
+    if (!project) {
+      session.flash('error', 'Projet non trouvé')
+      return response.redirect().back()
+    }
+
+    return inertia.render('admin/projects/show', {
+      project: project.serialize({
+        relations: {
+          technologies: {
+            fields: ['id', 'name', 'category', 'imgPathPublicUrl', 'lienOrigin'],
+          },
+        },
+      }),
+    })
   }
 
   /**
-   * Affiche le formulaire d'édition de projet
+   * Show the form for editing a project
    */
-  async edit({ inertia, params }: HttpContext) {
+  async edit({ params, inertia }: HttpContext) {
     const project = await this.projectService.getProjectById(params.id)
-    const technologies = await this.projectService.getTechnologies()
+
+    if (!project) {
+      return
+    }
+
+    const technologies = await this.projectService.getAllTechnologies()
 
     return inertia.render('admin/projects/edit', {
-      project,
+      project: project.serialize({
+        relations: {
+          technologies: {
+            fields: ['id', 'name', 'category', 'imgPathPublicUrl'],
+          },
+        },
+      }),
       technologies,
     })
   }
 
   /**
-   * Met à jour un projet
+   * Handle form submission for the edit action
    */
-  async update({ request, response, params, session }: HttpContext) {
-    try {
-      const projectData = request.only([
-        'title',
-        'description',
-        'imgPath',
-        'demoPath',
-        'githubPath',
-        'isActive',
-        'technologies',
-      ])
+  async update({ params, request, response, session, bouncer }: HttpContext) {
+    await bouncer.with('ProjectPolicy').authorize('update')
 
-      await this.projectService.updateProject(params.id, projectData)
+    try {
+      const payload = await request.validateUsing(updateProjectValidator)
+
+      const project = await this.projectService.updateProject(params.id, payload)
+
+      if (!project) {
+        session.flash('error', 'Projet non trouvé')
+        return response.redirect().back()
+      }
 
       session.flash('success', 'Projet mis à jour avec succès')
-      return response.redirect().toRoute('admin.projects')
+      return response.redirect().back()
     } catch (error) {
       session.flash('error', 'Erreur lors de la mise à jour du projet')
       return response.redirect().back()
@@ -105,14 +136,21 @@ export default class ProjectController {
   }
 
   /**
-   * Supprime un projet
+   * Delete a project
    */
-  async destroy({ response, params, session }: HttpContext) {
+  async destroy({ params, response, session, bouncer }: HttpContext) {
+    await bouncer.with('ProjectPolicy').authorize('delete')
+
     try {
-      await this.projectService.deleteProject(params.id)
+      const deleted = await this.projectService.deleteProject(params.id)
+
+      if (!deleted) {
+        session.flash('error', 'Projet non trouvé')
+        return response.redirect().back()
+      }
 
       session.flash('success', 'Projet supprimé avec succès')
-      return response.redirect().toRoute('admin.projects')
+      return response.redirect().back()
     } catch (error) {
       session.flash('error', 'Erreur lors de la suppression du projet')
       return response.redirect().back()
@@ -120,16 +158,53 @@ export default class ProjectController {
   }
 
   /**
-   * Change le statut d'un projet
+   * Toggle project active status
    */
-  async toggleStatus({ response, params, session }: HttpContext) {
+  async toggleStatus({ params, response, session, bouncer }: HttpContext) {
+    await bouncer.with('ProjectPolicy').authorize('update')
+
     try {
-      await this.projectService.toggleProjectStatus(params.id)
-      session.flash('success', 'Statut du projet mis à jour avec succès')
+      const project = await this.projectService.toggleProjectStatus(params.id)
+
+      if (!project) {
+        session.flash('error', 'Projet non trouvé')
+        return response.redirect().back()
+      }
+
+      const status = project.isActive ? 'activé' : 'désactivé'
+      session.flash('success', `Projet ${status} avec succès`)
+
       return response.redirect().back()
     } catch (error) {
-      session.flash('error', 'Erreur lors de la mise à jour du statut')
+      session.flash('error', 'Erreur lors du changement de statut')
       return response.redirect().back()
+    }
+  }
+
+  /**
+   * Get projects by technology (API endpoint)
+   */
+  async getByTechnology({ params, response }: HttpContext) {
+    try {
+      const projects = await this.projectService.getProjectsByTechnology(params.technologyId)
+
+      return response.json({
+        success: true,
+        data: projects.map((project) =>
+          project.serialize({
+            relations: {
+              technologies: {
+                fields: ['id', 'name', 'category'],
+              },
+            },
+          })
+        ),
+      })
+    } catch (error) {
+      return response.status(500).json({
+        success: false,
+        message: 'Erreur lors de la récupération des projets',
+      })
     }
   }
 }

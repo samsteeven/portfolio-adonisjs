@@ -3,7 +3,7 @@ import { BaseModel, column, belongsTo } from '@adonisjs/lucid/orm'
 import User from '#models/user'
 import type { BelongsTo } from '@adonisjs/lucid/types/relations'
 
-export default class Contact extends BaseModel {
+export default class Commentaire extends BaseModel {
   @column({ isPrimary: true })
   declare id: number
 
@@ -15,6 +15,9 @@ export default class Contact extends BaseModel {
 
   @column()
   declare message: string
+
+  @column({ columnName: 'emoji' })
+  declare reaction: string | null
 
   @column({ columnName: 'user_id' })
   declare userId: number | null

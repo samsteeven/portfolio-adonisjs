@@ -7,24 +7,32 @@ import {
   Check,
   X,
   Image as ImageIcon,
-  Upload,
+  Save,
   AlertCircle,
   Link2,
   Github,
+  Eye,
 } from 'lucide-react'
 import { Technology } from '~/types/technology'
+import { ProjectType } from '~/types/projets'
 import { toast } from 'sonner'
-import { ProjectCreateProps, ProjectFormData } from '~/types/projets'
 
-export default function CreateProject({ technologies }: ProjectCreateProps) {
-  const { data, setData, post, processing, errors, reset } = useForm<ProjectFormData>({
-    title: '',
-    description: '',
+interface EditProjectProps {
+  project: ProjectType & {
+    technologies: Array<{ id: number; name: string; category: string }>
+  }
+  technologies: Array<Technology>
+}
+
+export default function EditProject({ project, technologies }: EditProjectProps) {
+  const { data, setData, patch, processing, errors, isDirty } = useForm({
+    title: project.title || '',
+    description: project.description || '',
     image: null as File | null,
-    demoPath: '',
-    githubPath: '',
-    isActive: true as boolean,
-    technologies: [] as number[],
+    demoPath: project.demoPath || '',
+    githubPath: project.githubPath || '',
+    isActive: project.isActive ?? true,
+    technologies: project.technologies?.map((tech) => tech.id) || ([] as number[]),
   })
 
   // Utilisation du hook useImageUpload
@@ -39,7 +47,7 @@ export default function CreateProject({ technologies }: ProjectCreateProps) {
     removeImage,
     openFileDialog,
   } = useImageUpload({
-    maxSize: 5, // 5MB
+    maxSize: 2,
     allowedTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'],
     onImageChange: (file) => {
       setData('image', file)
@@ -51,12 +59,12 @@ export default function CreateProject({ technologies }: ProjectCreateProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    post('/admin/projects', {
+    patch(`/admin/projects/${project.id}`, {
       onSuccess: () => {
-        reset()
+        toast.success('Projet modifié avec succès!')
       },
       onError: () => {
-        toast.error('Une erreur est survenue lors de la création du projet')
+        toast.error('Une erreur est survenue lors de la modification du projet')
       },
     })
   }
@@ -105,18 +113,37 @@ export default function CreateProject({ technologies }: ProjectCreateProps) {
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
         {/* Navigation */}
-        <Link
-          href={'/admin/projects'}
-          className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700 transition-colors mb-8"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Projets
-        </Link>
+        <div className="flex items-center gap-4 mb-8">
+          <Link
+            href={'/admin/projects'}
+            className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Projets
+          </Link>
+          <span className="text-gray-300">•</span>
+          <Link
+            href={`/admin/projects/${project.id}`}
+            className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+          >
+            <Eye className="w-4 h-4" />
+            Voir le projet
+          </Link>
+        </div>
 
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Nouveau projet</h1>
-          <p className="text-gray-600 mt-2">Ajoutez un projet à votre portfolio</p>
+          <h1 className="text-3xl font-bold text-gray-900">Modifier le projet</h1>
+          <p className="text-gray-600 mt-2">
+            Modifiez les informations de{' '}
+            <span className="font-semibold text-gray-900">"{project.title}"</span>
+          </p>
+          {isDirty && (
+            <div className="mt-3 flex items-center gap-2 text-sm text-amber-700 bg-amber-50 px-3 py-2 rounded-lg border border-amber-200">
+              <AlertCircle className="w-4 h-4" />
+              Vous avez des modifications non sauvegardées
+            </div>
+          )}
         </div>
 
         {/* Form - Layout en grille pour grands écrans */}
@@ -344,7 +371,7 @@ export default function CreateProject({ technologies }: ProjectCreateProps) {
               {selectedCount === 0 && (
                 <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                   <p className="text-sm text-yellow-800">
-                    💡 Sélectionnez au moins une technologie pour mieux présenter votre projet.
+                    Sélectionnez au moins une technologie pour mieux présenter votre projet.
                   </p>
                 </div>
               )}
@@ -357,10 +384,10 @@ export default function CreateProject({ technologies }: ProjectCreateProps) {
             <div className="bg-white rounded-xl shadow-sm p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Image du projet</h3>
 
-              {preview ? (
+              {preview || project.imgPathPublicUrl ? (
                 <div className="relative">
                   <img
-                    src={preview}
+                    src={preview || project.imgPathPublicUrl}
                     alt="Aperçu du projet"
                     className="w-full h-48 object-cover rounded-lg border-2 border-gray-200"
                   />
@@ -372,8 +399,15 @@ export default function CreateProject({ technologies }: ProjectCreateProps) {
                     <X className="w-4 h-4" />
                   </button>
                   <div className="mt-3 text-sm text-gray-600 bg-gray-50 p-2 rounded">
-                    <strong>Fichier:</strong> {data.image?.name}
+                    <strong>Fichier:</strong>{' '}
+                    {data.image?.name ||
+                      (project.imgPathPublicUrl ? 'Image actuelle' : 'Aucune image')}
                   </div>
+                  {!preview && project.imgPathPublicUrl && (
+                    <div className="mt-2 text-xs text-blue-600">
+                      Glissez une nouvelle image pour la remplacer
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div
@@ -417,7 +451,7 @@ export default function CreateProject({ technologies }: ProjectCreateProps) {
 
               {errors.image && (
                 <div className="mt-2 flex items-center gap-2 text-sm text-red-600">
-                  <AlertCircle className="w- h-4" />
+                  <AlertCircle className="w-4 h-4" />
                   {errors.image}
                 </div>
               )}
@@ -456,7 +490,7 @@ export default function CreateProject({ technologies }: ProjectCreateProps) {
               </label>
             </div>
 
-            {/* Résumé du projet */}
+            {/* Résumé des modifications */}
             <div className="bg-white rounded-xl shadow-sm p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Résumé</h3>
               <div className="space-y-3 text-sm">
@@ -466,7 +500,13 @@ export default function CreateProject({ technologies }: ProjectCreateProps) {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Image :</span>
-                  <span className="font-medium">{data.image ? '✓ Ajoutée' : '✗ Manquante'}</span>
+                  <span className="font-medium">
+                    {preview
+                      ? '✓ Nouvelle image'
+                      : project.imgPathPublicUrl
+                        ? '✓ Image existante'
+                        : '✗ Aucune image'}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Technologies :</span>
@@ -480,6 +520,12 @@ export default function CreateProject({ technologies }: ProjectCreateProps) {
                     {data.isActive ? 'Visible' : 'Masqué'}
                   </span>
                 </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Modifications :</span>
+                  <span className={`font-medium ${isDirty ? 'text-amber-600' : 'text-gray-600'}`}>
+                    {isDirty ? 'Non sauvegardées' : 'Aucune'}
+                  </span>
+                </div>
               </div>
             </div>
 
@@ -488,28 +534,37 @@ export default function CreateProject({ technologies }: ProjectCreateProps) {
               <div className="space-y-3">
                 <button
                   type="submit"
-                  disabled={processing || !data.title.trim()}
-                  className="w-full bg-blue-600 hover:bg-blue-700 hover:cursor-pointer text-white font-medium py-3 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+                  disabled={processing || !data.title.trim() || !isDirty}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
                 >
                   {processing ? (
                     <>
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                      Création en cours...
+                      Sauvegarde en cours...
                     </>
                   ) : (
                     <>
-                      <Upload className="w-4 h-4" />
-                      Créer le projet
+                      <Save className="w-4 h-4" />
+                      {isDirty ? 'Sauvegarder les modifications' : 'Aucune modification'}
                     </>
                   )}
                 </button>
 
-                <Link
-                  href={'/admin/projects'}
-                  className="block w-full text-center bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-3 px-4 rounded-lg transition-colors"
-                >
-                  Annuler
-                </Link>
+                <div className="grid grid-cols-2 gap-2">
+                  <Link
+                    href={`/admin/projects/${project.id}`}
+                    className="block w-full text-center bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-lg transition-colors text-sm"
+                  >
+                    <Eye className="w-4 h-4 inline mr-1" />
+                    Voir
+                  </Link>
+                  <Link
+                    href={'/admin/projects'}
+                    className="block w-full text-center bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-lg transition-colors text-sm"
+                  >
+                    Retour
+                  </Link>
+                </div>
               </div>
             </div>
           </div>
@@ -519,10 +574,10 @@ export default function CreateProject({ technologies }: ProjectCreateProps) {
   )
 }
 
-CreateProject.layout = (page: React.ReactNode) => (
+EditProject.layout = (page: React.ReactNode) => (
   <AdminLayout
-    title="Nouveau projet"
-    description="Créer un nouveau projet pour le portfolio"
+    title="Modifier projet"
+    description="Modifier un projet du portfolio"
     currentPath="/admin/projects"
   >
     {page}

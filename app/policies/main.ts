@@ -15,8 +15,10 @@
 import UserPolicy from '#policies/user_policy'
 import TechnologyPolicy from '#policies/technologie_policy'
 import SkillPolicy from '#policies/skill_policy'
+import ProjectPolicy from '#policies/project_policy'
 
 export const policies = {
+  ProjectPolicy: () => import('#policies/project_policy'),
   SkillPolicy: () => import('#policies/skill_policy'),
   TechnologyPolicy: () => import('#policies/technologie_policy'),
   UserPolicy: () => import('#policies/user_policy'),
@@ -27,5 +29,6 @@ declare module '@adonisjs/bouncer/types' {
     UserPolicy: UserPolicy
     TechnologyPolicy: TechnologyPolicy
     SkillPolicy: SkillPolicy
+    ProjectPolicy: ProjectPolicy
   }
 }

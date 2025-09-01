@@ -31,7 +31,8 @@ export interface InertiaProps {
   errors?: Record<string, string>
   auth?: {
     user: AuthenticatedUser
-    usersCount: number | null
+    usersCount: number
+    projectsCount: number | null
   }
 
   [key: string]: any

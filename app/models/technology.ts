@@ -1,7 +1,6 @@
-// TypeScript
 import { DateTime } from 'luxon'
 import { BaseModel, column, computed, manyToMany } from '@adonisjs/lucid/orm'
-import Project from './project.js'
+import Project from '#models/project'
 import type { ManyToMany } from '@adonisjs/lucid/types/relations'
 
 export default class Technology extends BaseModel {
@@ -15,7 +14,7 @@ export default class Technology extends BaseModel {
   declare category: string
 
   @column({ columnName: 'img_path' })
-  declare imgPath: string | null
+  declare imgPath: string
 
   @column({ columnName: 'lien_origin' })
   declare lienOrigin: string | null

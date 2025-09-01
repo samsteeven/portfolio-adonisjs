@@ -363,6 +363,16 @@ export default function AdminLayout({
                         {auth!.usersCount}
                       </span>
                     )}
+                    {item.name === 'Projets' && (
+                      <span
+                        className={cn(
+                          'ml-1 px-2 py-0.5 rounded-full text-xs font-semibold',
+                          isActive ? 'bg-blue-100 text-blue-700' : 'bg-red-100 text-red-700'
+                        )}
+                      >
+                        {auth!.projectsCount}
+                      </span>
+                    )}
                   </Link>
                 )
               })}

@@ -2,6 +2,7 @@ import { defineConfig } from '@adonisjs/inertia'
 import type { InferSharedProps } from '@adonisjs/inertia/types'
 import User from '#models/user'
 import { HttpContext } from '@adonisjs/core/http'
+import Project from '#models/project'
 
 const inertiaConfig = defineConfig({
   /**
@@ -21,13 +22,21 @@ const inertiaConfig = defineConfig({
     auth: async (ctx) => {
       const user = ctx.auth.user
       let usersCount = null
+      let projectsCount = null
       if (user) {
+        // Récupérez le nombre total d'utilisateurs
         usersCount = await User.query().count('* as total')
         usersCount = usersCount[0].$extras.total
+
+        projectsCount = await Project.query().count('* as total')
+        projectsCount = projectsCount[0].$extras.total
+
+        await user.load('subInfo')
       }
       return {
         user,
         usersCount,
+        projectsCount,
       }
     },
     error: (ctx) => ctx.session.flashMessages.get('error'),

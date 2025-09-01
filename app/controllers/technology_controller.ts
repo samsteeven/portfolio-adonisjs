@@ -66,29 +66,23 @@ export default class TechnologyController {
       )
     }
 
-    const data = await request.validateUsing(createTechnologySchema)
+    const data = await request.validateUsing(createTechnologySchema) // imgPath est maintenant requis et de type UploadedFile
     let imgPath: string | undefined
 
-    // Gestion de l'upload d'image
-    if (data.imgPath?.isValid) {
-      try {
-        imgPath = await FileUploadTechnolyService.uploadTechnologyImage(
-          data.imgPath,
-          'technologies'
-        )
-      } catch (error) {
-        session.flash('error', error.message)
-        return response.redirect().back()
-      }
-    }
-
     try {
-      await this.technologyService.createTechnology({ ...data, imgPath: imgPath || null })
+      // L'upload et la création se font dans le même bloc try/catch pour une meilleure gestion des erreurs.
+      imgPath = await FileUploadTechnolyService.uploadTechnologyImage(
+        data.imgPath, // On peut y accéder directement, le validateur garantit sa présence.
+        'technologies'
+      )
+
+      await this.technologyService.createTechnology({ ...data, imgPath })
 
       session.flash('success', 'Technologie créée avec succès')
-      return response.redirect().back()
+      return response.redirect().toPath('/admin/technologies')
     } catch (error) {
-      // Nettoyer l'image en cas d'erreur
+      // Si imgPath a été assigné (l'upload a réussi mais la création a échoué),
+      // on supprime le fichier uploadé pour ne pas laisser d'orphelins.
       if (imgPath) {
         await FileUploadTechnolyService.deleteFile(imgPath)
       }
@@ -157,13 +151,13 @@ export default class TechnologyController {
     }
     const data = await request.validateUsing(updateTechnologySchema, { meta: { id: params.id } })
 
+    // On initialise imgPath à undefined. Il ne recevra une valeur que si une nouvelle image est uploadée.
+    let newImgPath: string | undefined
     try {
-      let imgPath: string | undefined
-
       // Gérer le remplacement d'image si nécessaire
-      if (data.imgPath?.isValid) {
+      if (data.imgPath && data.imgPath.isValid) {
         const oldImagePath = technology.imgPath
-        imgPath = await FileUploadTechnolyService.replaceTechnologyImage(
+        newImgPath = await FileUploadTechnolyService.replaceTechnologyImage(
           data.imgPath,
           oldImagePath,
           'technologies'
@@ -174,7 +168,7 @@ export default class TechnologyController {
       try {
         await this.technologyService.updateTechnology(technology, {
           ...data,
-          imgPath: imgPath || technology.imgPath,
+          imgPath: newImgPath || technology.imgPath, // On utilise la nouvelle image, ou on garde l'ancienne
         })
       } catch (e) {
         session.flash('error', e.message)
@@ -182,7 +176,7 @@ export default class TechnologyController {
       }
 
       session.flash('success', 'Technologie mise à jour avec succès')
-      return response.redirect().back()
+      return response.redirect().toPath(`/admin/technologies/${technology.id}`)
     } catch (error) {
       session.flash('error', error.message || 'Erreur lors de la mise à jour de la technologie')
       return response.redirect().back()

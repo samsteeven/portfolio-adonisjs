@@ -14,13 +14,10 @@ export const createTechnologySchema = vine.compile(
 
     category: vine.string().trim().minLength(1).maxLength(191),
 
-    imgPath: vine
-      .file({
-        size: '2mb',
-        extnames: ['jpg', 'jpeg', 'png', 'svg', 'webp'],
-      })
-      .optional()
-      .nullable(),
+    imgPath: vine.file({
+      size: '2mb',
+      extnames: ['jpg', 'jpeg', 'png', 'svg', 'webp'],
+    }),
 
     lienOrigin: vine.string().trim().url().optional().nullable(),
 
@@ -56,8 +53,7 @@ export const updateTechnologySchema = vine.compile(
         size: '2mb',
         extnames: ['jpg', 'jpeg', 'png', 'svg', 'webp'],
       })
-      .optional()
-      .nullable(),
+      .optional(),
 
     lienOrigin: vine.string().trim().url().optional().nullable(),
 
@@ -122,7 +118,7 @@ export const technologyValidationMessages = {
 export type CreateTechnologyDTO = {
   name: string
   category: string
-  imgPath?: string | null
+  imgPath: string
   lienOrigin?: string | null
   description?: string | null
 }

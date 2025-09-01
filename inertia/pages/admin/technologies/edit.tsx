@@ -29,13 +29,13 @@ export default function TechnologiesEdit({
   const { data, setData, patch, processing, errors, reset, isDirty } = useForm<{
     name: string
     category: string
-    imgPath: File | null
+    imgPath: File
     lienOrigin: string
     description: string
   }>({
     name: technology.name,
     category: technology.category,
-    imgPath: null,
+    imgPath: technology.imgPathPublicUrl,
     lienOrigin: technology.lienOrigin || '',
     description: technology.description || '',
   })
@@ -329,7 +329,7 @@ export default function TechnologiesEdit({
                       {technology.imgPathPublicUrl && !hasNewImage && (
                         <div className="mt-2 text-xs sm:text-sm text-gray-600">
                           Image actuelle :{' '}
-                          {technology.imgPathPublicUrl?.split('/').pop() || 'Image existante'}
+                          {technology.imgPathPublicUrl.split('/').pop() || 'Image existante'}
                         </div>
                       )}
                     </div>
