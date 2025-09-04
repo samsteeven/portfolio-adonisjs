@@ -18,6 +18,7 @@ import {
   Settings,
   ChevronDown,
   Home,
+  LucideExternalLink,
 } from 'lucide-react'
 import { getInitials } from '~/utils/utils_string'
 import { AnimatePresence, motion } from 'framer-motion'
@@ -38,7 +39,7 @@ const adminMenuItems = [
   { name: 'Projets', icon: Briefcase, href: '/admin/projects', badge: null },
   { name: 'Compétences', icon: Award, href: '/admin/skills', badge: null },
   { name: 'Technologies', icon: Cpu, href: '/admin/technologies', badge: null },
-  { name: 'Contacts', icon: Mail, href: '/admin/contacts', badge: '3' },
+  { name: 'Commentaires', icon: Mail, href: '/admin/comments', badge: '3' },
 ]
 
 export default function AdminLayout({
@@ -299,6 +300,14 @@ export default function AdminLayout({
 
                         {/* Menu items */}
                         <div className="py-1">
+                          <Link
+                            href={'/'}
+                            prefetch
+                            className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                          >
+                            <LucideExternalLink className="w-4 h-4" />
+                            Portfolio
+                          </Link>
                           <Link
                             href={'/admin/settings/profile'}
                             className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"

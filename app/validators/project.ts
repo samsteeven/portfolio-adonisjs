@@ -1,5 +1,4 @@
 import vine from '@vinejs/vine'
-import Technology from '#models/technology'
 
 /**
  * Validates the project's creation action
@@ -41,20 +40,6 @@ export const updateProjectValidator = vine.compile(
   })
 )
 
-export interface ProjectData {
-  id: number
-  title: string
-  description: string | null
-  imgPath: string | null
-  demoPath: string | null
-  githubPath: string | null
-  isActive: boolean
-}
-
-export interface ProjectWithTechnologies extends ProjectData {
-  technologies: Technology[]
-}
-
 export interface CreateProjectData {
   title: string
   description?: string
@@ -81,29 +66,4 @@ export interface ProjectFilters {
   isActive?: boolean
   page?: number
   limit?: number
-}
-
-export interface ProjectsResponse {
-  data: ProjectWithTechnologies[]
-  meta: {
-    total: number
-    perPage: number
-    currentPage: number
-    lastPage: number
-    firstPage: number
-    firstPageUrl: string
-    lastPageUrl: string
-    nextPageUrl: string | null
-    previousPageUrl: string | null
-  }
-}
-
-export interface ProjectFormData {
-  title: string
-  description: string
-  imgPath: string
-  demoPath: string
-  githubPath: string
-  isActive: boolean
-  technologies: number[]
 }

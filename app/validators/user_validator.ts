@@ -34,6 +34,7 @@ export const createUserSchema = vine.compile(
     password: vine.string().minLength(4),
     username: vine.string().minLength(2).maxLength(50).trim(),
     role: vine.enum(Object.values(UserRole)),
+    provider: vine.string().optional(),
     isActive: vine.boolean().optional(),
     subInfo: subInfoSchema.clone().optional(),
   })
@@ -64,6 +65,7 @@ export const updateUserSchema = vine.compile(
     username: vine.string().minLength(2).maxLength(50).trim().optional(),
     role: vine.enum(Object.values(UserRole)).optional(),
     isActive: vine.boolean().optional(),
+    provider: vine.string().optional(),
     subInfo: subInfoSchema.clone().optional(),
   })
 )
@@ -77,6 +79,7 @@ export type CreateUserDTO = {
   username: string
   role: UserRole
   isActive?: boolean
+  provider?: string
   subInfo?: {
     profilGithub?: string
     profilLinkedin?: string

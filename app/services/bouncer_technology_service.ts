@@ -73,7 +73,7 @@ export default class TechnologyAuthorizationService {
   handleUnauthorized(
     response: HttpContext['response'],
     session: HttpContext['session'],
-    error: string = 'Accès non autorisé'
+    error: string = 'Action non autorisé'
   ) {
     session.flash('error', error)
     return response.redirect().back()

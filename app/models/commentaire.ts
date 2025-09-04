@@ -16,7 +16,7 @@ export default class Commentaire extends BaseModel {
   @column()
   declare message: string
 
-  @column({ columnName: 'emoji' })
+  @column()
   declare reaction: string | null
 
   @column({ columnName: 'user_id' })

@@ -10,7 +10,7 @@ export default class extends BaseSchema {
       table.string('name').notNullable()
       table.string('email', 191).notNullable()
       table.text('message').notNullable()
-      table.string('emoji', 5).nullable()
+      table.string('emoji', 10).nullable()
 
       // Optionnel: rattacher à un user (owner)
       table

@@ -32,6 +32,9 @@ export default class User extends compose(BaseModel, AuthFinder) {
   @column()
   declare role: UserRole
 
+  @column()
+  declare provider: string
+
   @column({ columnName: 'is_active', consume: (value: number) => Boolean(value) })
   declare isActive: boolean
 
@@ -39,7 +42,7 @@ export default class User extends compose(BaseModel, AuthFinder) {
   declare subInfo: HasOne<typeof SubInfo>
 
   @hasMany(() => Commentaire, { foreignKey: 'userId' })
-  declare contacts: HasMany<typeof Commentaire>
+  declare commentaires: HasMany<typeof Commentaire>
 
   @column.dateTime({ columnName: 'created_at', autoCreate: true })
   declare createdAt: DateTime

@@ -12,23 +12,10 @@
 |
 */
 
-import UserPolicy from '#policies/user_policy'
-import TechnologyPolicy from '#policies/technologie_policy'
-import SkillPolicy from '#policies/skill_policy'
-import ProjectPolicy from '#policies/project_policy'
-
 export const policies = {
+  CommentairePolicy: () => import('#policies/commentaire_policy'),
   ProjectPolicy: () => import('#policies/project_policy'),
   SkillPolicy: () => import('#policies/skill_policy'),
   TechnologyPolicy: () => import('#policies/technologie_policy'),
   UserPolicy: () => import('#policies/user_policy'),
-}
-// Types pour l'autocomplétion
-declare module '@adonisjs/bouncer/types' {
-  interface Policies {
-    UserPolicy: UserPolicy
-    TechnologyPolicy: TechnologyPolicy
-    SkillPolicy: SkillPolicy
-    ProjectPolicy: ProjectPolicy
-  }
 }

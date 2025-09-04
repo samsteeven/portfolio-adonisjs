@@ -50,6 +50,7 @@ export interface AuthenticatedUser {
   email: string
   role: UserRole
   isActive: boolean
+  provider: string
   subInfo?: {
     profilGithub?: string
     profilLinkedin?: string
