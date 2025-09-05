@@ -1,62 +1,58 @@
 import React from 'react'
 import { useForm, Link } from '@inertiajs/react'
 import AdminLayout from '~/layout/AdminLayout'
-import { useImageUpload } from '~/utils/hooks/use_image_upload'
-import {
-  ArrowLeft,
-  Check,
-  X,
-  Image as ImageIcon,
-  Upload,
-  AlertCircle,
-  Link2,
-  Github,
-} from 'lucide-react'
+import { useMultiImageUpload } from '~/utils/hooks/use_multi_image_upload'
+import { ArrowLeft, Check, X, Save, AlertCircle, Link2, Github, Calendar, Plus } from 'lucide-react'
 import { Technology } from '~/types/technology'
 import { toast } from 'sonner'
-import { ProjectCreateProps, ProjectFormData } from '~/types/projets'
+import { ProjectCreateProps } from '~/types/projets'
 
 export default function CreateProject({ technologies }: ProjectCreateProps) {
-  const { data, setData, post, processing, errors, reset } = useForm<ProjectFormData>({
+  const { data, setData, post, processing, errors, isDirty, reset } = useForm({
     title: '',
     description: '',
-    image: null as File | null,
+    year: new Date().getFullYear().toString(),
+    role: '',
+    images: [] as File[],
     demoPath: '',
     githubPath: '',
-    isActive: true as boolean,
+    isActive: true,
     technologies: [] as number[],
   })
 
-  // Utilisation du hook useImageUpload
+  // Utilisation du hook useMultiImageUpload
   const {
-    preview,
+    images: newImages,
     dragActive,
-    uploading,
     fileInputRef,
     handleDrop,
     handleDrag,
-    handleInputChange,
+    handleInputChange: handleImageInputChange,
     removeImage,
     openFileDialog,
-  } = useImageUpload({
-    maxSize: 5, // 5MB
+    getFiles,
+    getTotalImageCount,
+    canAddMore,
+  } = useMultiImageUpload({
+    maxImages: 4,
+    maxSize: 5,
     allowedTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'],
-    onImageChange: (file) => {
-      setData('image', file)
-    },
     onError: (error) => {
       toast.error(error)
     },
+    existingImages: [],
   })
+
+  // Synchroniser les nouvelles images avec le formulaire
+  React.useEffect(() => {
+    setData('images', getFiles())
+  }, [newImages])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     post('/admin/projects', {
       onSuccess: () => {
         reset()
-      },
-      onError: () => {
-        toast.error('Une erreur est survenue lors de la création du projet')
       },
     })
   }
@@ -74,19 +70,17 @@ export default function CreateProject({ technologies }: ProjectCreateProps) {
     const allSelected = categoryIds.every((id) => data.technologies.includes(id))
 
     if (allSelected) {
-      // Désélectionner tous les éléments de cette catégorie
       setData(
         'technologies',
         data.technologies.filter((id) => !categoryIds.includes(id))
       )
     } else {
-      // Sélectionner tous les éléments de cette catégorie
       const newTechnologies = [...new Set([...data.technologies, ...categoryIds])]
       setData('technologies', newTechnologies)
     }
   }
 
-  // Group technologies by category if available
+  // Group technologies by category
   const groupedTechnologies = technologies.reduce(
     (acc, tech) => {
       const category = tech.category
@@ -97,7 +91,6 @@ export default function CreateProject({ technologies }: ProjectCreateProps) {
     {} as Record<string, typeof technologies>
   )
 
-  // Statistiques des technologies sélectionnées
   const selectedCount = data.technologies.length
   const totalCount = technologies.length
 
@@ -105,23 +98,31 @@ export default function CreateProject({ technologies }: ProjectCreateProps) {
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
         {/* Navigation */}
-        <Link
-          href={'/admin/projects'}
-          className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700 transition-colors mb-8"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Projets
-        </Link>
+        <div className="flex items-center gap-4 mb-8">
+          <Link
+            href={'/admin/projects'}
+            className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Projets
+          </Link>
+        </div>
 
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Nouveau projet</h1>
           <p className="text-gray-600 mt-2">Ajoutez un projet à votre portfolio</p>
+          {isDirty && (
+            <div className="mt-3 flex items-center gap-2 text-sm text-amber-700 bg-amber-50 px-3 py-2 rounded-lg border border-amber-200">
+              <AlertCircle className="w-4 h-4" />
+              Vous avez des modifications non sauvegardées
+            </div>
+          )}
         </div>
 
-        {/* Form - Layout en grille pour grands écrans */}
+        {/* Form */}
         <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Colonne principale - Informations de base */}
+          {/* Colonne principale */}
           <div className="lg:col-span-2 space-y-6">
             <div className="bg-white rounded-xl shadow-sm p-6 space-y-6">
               <h2 className="text-xl font-semibold text-gray-900 border-b border-gray-200 pb-4">
@@ -146,13 +147,58 @@ export default function CreateProject({ technologies }: ProjectCreateProps) {
                 {errors.title && <p className="mt-2 text-sm text-red-600">{errors.title}</p>}
               </div>
 
+              {/* Year */}
+              <div>
+                <label htmlFor="year" className="block text-sm font-medium text-gray-900 mb-3">
+                  Année du projet *
+                </label>
+                <div className="relative max-w-xs">
+                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                    <Calendar className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <input
+                    type="text"
+                    id="year"
+                    value={data.year}
+                    onChange={(e) => setData('year', e.target.value)}
+                    className={`w-full pl-10 pr-4 py-3 rounded-lg bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
+                      errors.year ? 'border-red-300 focus:ring-red-500' : 'border-gray-200'
+                    }`}
+                    placeholder="2024"
+                    maxLength={4}
+                  />
+                </div>
+                {errors.year && <p className="mt-2 text-sm text-red-600">{errors.year}</p>}
+              </div>
+
+              {/* Role */}
+              <div>
+                <label htmlFor="role" className="block text-sm font-medium text-gray-900 mb-3">
+                  Votre rôle (Markdown supporté)
+                </label>
+                <textarea
+                  id="role"
+                  rows={3}
+                  value={data.role || ''}
+                  onChange={(e) => setData('role', e.target.value)}
+                  className={`w-full px-4 py-3 rounded-lg bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none transition-all ${
+                    errors.role ? 'border-red-300 focus:ring-red-500' : 'border-gray-200'
+                  }`}
+                  placeholder="Ex: **Développeur Full-Stack**&#10;- Conception et développement&#10;- Gestion de projet"
+                />
+                {errors.role && <p className="mt-2 text-sm text-red-600">{errors.role}</p>}
+                <div className="mt-2 text-xs text-gray-500">
+                  Vous pouvez utiliser Markdown : **gras**, *italique*, `code`, listes, etc.
+                </div>
+              </div>
+
               {/* Description */}
               <div>
                 <label
                   htmlFor="description"
                   className="block text-sm font-medium text-gray-900 mb-3"
                 >
-                  Description
+                  Description (Markdown supporté)
                 </label>
                 <textarea
                   id="description"
@@ -162,11 +208,14 @@ export default function CreateProject({ technologies }: ProjectCreateProps) {
                   className={`w-full px-4 py-3 rounded-lg bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none transition-all ${
                     errors.description ? 'border-red-300 focus:ring-red-500' : 'border-gray-200'
                   }`}
-                  placeholder="Décrivez votre projet, les technologies utilisées, les défis rencontrés..."
+                  placeholder="Décrivez votre projet en utilisant **Markdown** pour le formatage..."
                 />
                 {errors.description && (
                   <p className="mt-2 text-sm text-red-600">{errors.description}</p>
                 )}
+                <div className="mt-2 text-xs text-gray-500">
+                  Vous pouvez utiliser Markdown : **gras**, *italique*, `code`, etc.
+                </div>
               </div>
 
               {/* Links section */}
@@ -254,7 +303,6 @@ export default function CreateProject({ technologies }: ProjectCreateProps) {
               </div>
 
               {Object.keys(groupedTechnologies).length > 1 ? (
-                // Grouped by category
                 <div className="space-y-6">
                   {Object.entries(groupedTechnologies).map(([category, techs]) => {
                     const categorySelected = techs.filter((tech) =>
@@ -311,19 +359,17 @@ export default function CreateProject({ technologies }: ProjectCreateProps) {
                   })}
                 </div>
               ) : (
-                // Simple list if no categories
                 <div className="flex flex-wrap gap-3">
                   {technologies.map((tech) => (
                     <button
                       key={tech.id}
                       type="button"
                       onClick={() => toggleTechnology(tech.id)}
-                      className={`px-4 py-2 text-sm font-medium rounded-full hover:cursor-pointer
-                       border-2 transition-all hover:scale-105 ${
-                         data.technologies.includes(tech.id)
-                           ? 'bg-blue-600 text-white border-blue-600 shadow-md'
-                           : 'bg-white text-gray-700 border-gray-200 hover:border-blue-300 hover:text-blue-600'
-                       }`}
+                      className={`px-4 py-2 text-sm font-medium rounded-full border-2 transition-all hover:scale-105 ${
+                        data.technologies.includes(tech.id)
+                          ? 'bg-blue-600 text-white border-blue-600 shadow-md'
+                          : 'bg-white text-gray-700 border-gray-200 hover:border-blue-300 hover:text-blue-600'
+                      }`}
                     >
                       {data.technologies.includes(tech.id) && (
                         <Check className="w-3 h-3 inline mr-2" />
@@ -340,42 +386,52 @@ export default function CreateProject({ technologies }: ProjectCreateProps) {
                   {errors.technologies}
                 </div>
               )}
-
-              {selectedCount === 0 && (
-                <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                  <p className="text-sm text-yellow-800">
-                    💡 Sélectionnez au moins une technologie pour mieux présenter votre projet.
-                  </p>
-                </div>
-              )}
             </div>
           </div>
 
-          {/* Colonne latérale - Image et paramètres */}
+          {/* Colonne latérale */}
           <div className="space-y-6">
-            {/* Image Upload */}
+            {/* Images Upload */}
             <div className="bg-white rounded-xl shadow-sm p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Image du projet</h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">Images du projet</h3>
+                <span className="text-sm text-gray-500">{getTotalImageCount()}/4</span>
+              </div>
 
-              {preview ? (
-                <div className="relative">
-                  <img
-                    src={preview}
-                    alt="Aperçu du projet"
-                    className="w-full h-48 object-cover rounded-lg border-2 border-gray-200"
-                  />
-                  <button
-                    type="button"
-                    onClick={removeImage}
-                    className="absolute -top-2 -right-2 w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors shadow-md"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                  <div className="mt-3 text-sm text-gray-600 bg-gray-50 p-2 rounded">
-                    <strong>Fichier:</strong> {data.image?.name}
+              {/* Images ajoutées */}
+              {newImages.length > 0 && (
+                <div className="mb-4">
+                  <p className="text-sm font-medium text-gray-700 mb-3">Images ajoutées</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    {newImages.map((image, index) => (
+                      <div key={image.id} className="relative group">
+                        <img
+                          src={image.preview}
+                          alt={`Image ${index + 1}`}
+                          className="w-full h-24 object-cover rounded-lg border-2 border-blue-200"
+                        />
+                        <div className="absolute inset-0 group-hover:bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all rounded-lg flex items-center justify-center">
+                          <button
+                            type="button"
+                            onClick={() => removeImage(image.id)}
+                            className="opacity-0 group-hover:opacity-100 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-all"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </div>
+                        {index === 0 && (
+                          <div className="absolute top-1 left-1 bg-blue-600 text-white text-xs px-2 py-1 rounded">
+                            Principal
+                          </div>
+                        )}
+                      </div>
+                    ))}
                   </div>
                 </div>
-              ) : (
+              )}
+
+              {/* Zone d'upload */}
+              {canAddMore() && (
                 <div
                   onDragEnter={handleDrag}
                   onDragLeave={handleDrag}
@@ -389,36 +445,37 @@ export default function CreateProject({ technologies }: ProjectCreateProps) {
                   onClick={openFileDialog}
                 >
                   <div className="flex flex-col items-center">
-                    {uploading ? (
-                      <>
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-3"></div>
-                        <p className="text-sm font-medium text-blue-600">Traitement en cours...</p>
-                      </>
-                    ) : (
-                      <>
-                        <ImageIcon className="mx-auto h-12 w-12 text-gray-400 mb-3" />
-                        <p className="text-sm font-medium text-gray-700 mb-1">
-                          Cliquez pour télécharger ou glissez une image
-                        </p>
-                        <p className="text-xs text-gray-500">PNG, JPG, WEBP jusqu'à 2MB</p>
-                      </>
-                    )}
+                    <Plus className="mx-auto h-8 w-8 text-gray-400 mb-2" />
+                    <p className="text-sm font-medium text-gray-700 mb-1">Ajouter des images</p>
+                    <p className="text-xs text-gray-500">PNG, JPG, WEBP jusqu'à 5MB</p>
+                    <p className="text-xs text-gray-400 mt-1">
+                      {4 - getTotalImageCount()} emplacements restants
+                    </p>
                   </div>
 
                   <input
                     ref={fileInputRef}
                     type="file"
                     accept="image/*"
-                    onChange={handleInputChange}
+                    multiple
+                    onChange={handleImageInputChange}
                     className="hidden"
                   />
                 </div>
               )}
 
-              {errors.image && (
+              {errors.images && (
                 <div className="mt-2 flex items-center gap-2 text-sm text-red-600">
-                  <AlertCircle className="w- h-4" />
-                  {errors.image}
+                  <AlertCircle className="w-4 h-4" />
+                  {errors.images}
+                </div>
+              )}
+
+              {getTotalImageCount() === 0 && (
+                <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <p className="text-sm text-yellow-800">
+                    Ajoutez au moins une image pour mieux présenter votre projet.
+                  </p>
                 </div>
               )}
             </div>
@@ -456,7 +513,7 @@ export default function CreateProject({ technologies }: ProjectCreateProps) {
               </label>
             </div>
 
-            {/* Résumé du projet */}
+            {/* Résumé */}
             <div className="bg-white rounded-xl shadow-sm p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Résumé</h3>
               <div className="space-y-3 text-sm">
@@ -465,8 +522,12 @@ export default function CreateProject({ technologies }: ProjectCreateProps) {
                   <span className="font-medium">{data.title || 'Non défini'}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Image :</span>
-                  <span className="font-medium">{data.image ? '✓ Ajoutée' : '✗ Manquante'}</span>
+                  <span className="text-gray-600">Année :</span>
+                  <span className="font-medium">{data.year}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Images :</span>
+                  <span className="font-medium">{newImages.length} ajoutées</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Technologies :</span>
@@ -480,6 +541,12 @@ export default function CreateProject({ technologies }: ProjectCreateProps) {
                     {data.isActive ? 'Visible' : 'Masqué'}
                   </span>
                 </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Modifications :</span>
+                  <span className={`font-medium ${isDirty ? 'text-amber-600' : 'text-gray-600'}`}>
+                    {isDirty ? 'Non sauvegardées' : 'Aucune'}
+                  </span>
+                </div>
               </div>
             </div>
 
@@ -488,8 +555,12 @@ export default function CreateProject({ technologies }: ProjectCreateProps) {
               <div className="space-y-3">
                 <button
                   type="submit"
-                  disabled={processing || !data.title.trim()}
-                  className="w-full bg-blue-600 hover:bg-blue-700 hover:cursor-pointer text-white font-medium py-3 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+                  disabled={processing || !isDirty || !data.title.trim()}
+                  className={`w-full flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-medium text-white transition-all ${
+                    processing || !data.title.trim() || !isDirty
+                      ? 'bg-gray-400 cursor-not-allowed'
+                      : 'bg-blue-600 hover:bg-blue-700 focus:ring-2 hover:cursor-pointer focus:ring-blue-500 focus:ring-offset-2'
+                  }`}
                 >
                   {processing ? (
                     <>
@@ -498,7 +569,7 @@ export default function CreateProject({ technologies }: ProjectCreateProps) {
                     </>
                   ) : (
                     <>
-                      <Upload className="w-4 h-4" />
+                      <Save className="w-4 h-4" />
                       Créer le projet
                     </>
                   )}
@@ -518,7 +589,6 @@ export default function CreateProject({ technologies }: ProjectCreateProps) {
     </div>
   )
 }
-
 CreateProject.layout = (page: React.ReactNode) => (
   <AdminLayout
     title="Nouveau projet"

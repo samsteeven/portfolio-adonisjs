@@ -8,7 +8,6 @@ export default class extends BaseSchema {
       table.bigIncrements('id')
       table.string('title', 191).notNullable().unique()
       table.text('description').nullable()
-      table.string('img_path').nullable()
       table.string('demo_path', 191).nullable().unique()
       table.string('github_path', 191).nullable().unique()
       table.boolean('is_active').notNullable().defaultTo(true)

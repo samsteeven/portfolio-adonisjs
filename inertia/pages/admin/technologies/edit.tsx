@@ -29,7 +29,7 @@ export default function TechnologiesEdit({
   const { data, setData, patch, processing, errors, reset, isDirty } = useForm<{
     name: string
     category: string
-    imgPath: File
+    imgPath: File | string | null
     lienOrigin: string
     description: string
   }>({

@@ -14,9 +14,21 @@ import {
 } from 'lucide-react'
 import { Technology } from '~/types/technology'
 import AdminLayout from '~/layout/AdminLayout'
-import React from 'react'
+import React, { useEffect, useState } from 'react'
+import { getProjectMainImage } from '~/utils/others'
 
 export default function TechnologiesShow({ technology }: { technology: Technology }) {
+  const [isClient, setIsClient] = useState(false)
+
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
+
+  // Fonction pour formater les dates
+  const formatDate = (dateString: string, options?: Intl.DateTimeFormatOptions) => {
+    if (!isClient) return '...'
+    return new Date(dateString).toLocaleDateString('fr-FR', options)
+  }
   const handleDelete = () => {
     if (confirm(`Êtes-vous sûr de vouloir supprimer la technologie "${technology.name}" ?`)) {
       router.delete(`/admin/technologies/${technology.id}`)
@@ -138,17 +150,12 @@ export default function TechnologiesShow({ technology }: { technology: Technolog
                       <div className="grid grid-cols-2 gap-4">
                         <div className="flex items-center gap-2 text-sm text-gray-600">
                           <Calendar className="w-4 h-4" />
-                          <span>
-                            Ajoutée le {new Date(technology.createdAt).toLocaleDateString('fr-FR')}
-                          </span>
+                          <span>Ajoutée le {formatDate(technology.createdAt.toString())}</span>
                         </div>
                         {technology.updatedAt && (
                           <div className="flex items-center gap-2 text-sm text-gray-600">
                             <Calendar className="w-4 h-4" />
-                            <span>
-                              Modifié le{' '}
-                              {new Date(technology.updatedAt).toLocaleDateString('fr-FR')}
-                            </span>
+                            <span>Modifié le {formatDate(technology.updatedAt.toString())}</span>
                           </div>
                         )}
                       </div>
@@ -169,44 +176,47 @@ export default function TechnologiesShow({ technology }: { technology: Technolog
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {technology.projects.map((project) => (
-                        <div
-                          key={project.id}
-                          className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
-                        >
-                          <div className="flex items-start gap-3">
-                            <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
-                              {project.imgPath ? (
-                                <img
-                                  src={project.imgPath}
-                                  alt={project.title}
-                                  className="w-10 h-10 object-cover rounded-lg"
-                                />
-                              ) : (
-                                <Folder className="w-6 h-6 text-gray-400" />
-                              )}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <h4 className="font-medium text-gray-900 mb-1">{project.title}</h4>
-                              {project.description && (
-                                <p className="text-sm text-gray-600 line-clamp-2">
-                                  {project.description}
-                                </p>
-                              )}
-                              <div className="flex items-center gap-2 mt-2">
-                                <span
-                                  className={`inline-block w-2 h-2 rounded-full ${
-                                    project.isActive ? 'bg-green-500' : 'bg-gray-400'
-                                  }`}
-                                />
-                                <span className="text-xs text-gray-500">
-                                  {project.isActive ? 'Actif' : 'Inactif'}
-                                </span>
+                      {technology.projects.map((project) => {
+                        const mainImage = getProjectMainImage(project)
+                        return (
+                          <div
+                            key={project.id}
+                            className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
+                          >
+                            <div className="flex items-start gap-3">
+                              <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                                {mainImage ? (
+                                  <img
+                                    src={mainImage}
+                                    alt={project.title}
+                                    className="w-10 h-10 object-cover rounded-lg"
+                                  />
+                                ) : (
+                                  <Folder className="w-6 h-6 text-gray-400" />
+                                )}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <h4 className="font-medium text-gray-900 mb-1">{project.title}</h4>
+                                {project.description && (
+                                  <p className="text-sm text-gray-600 line-clamp-2">
+                                    {project.description}
+                                  </p>
+                                )}
+                                <div className="flex items-center gap-2 mt-2">
+                                  <span
+                                    className={`inline-block w-2 h-2 rounded-full ${
+                                      project.isActive ? 'bg-green-500' : 'bg-gray-400'
+                                    }`}
+                                  />
+                                  <span className="text-xs text-gray-500">
+                                    {project.isActive ? 'Actif' : 'Inactif'}
+                                  </span>
+                                </div>
                               </div>
                             </div>
                           </div>
-                        </div>
-                      ))}
+                        )
+                      })}
                     </div>
                   </div>
                 </div>
@@ -342,11 +352,9 @@ export default function TechnologiesShow({ technology }: { technology: Technolog
                     <hr />
 
                     <div className="text-xs text-gray-500 space-y-1">
-                      <div>Ajoutée : {new Date(technology.createdAt).toLocaleString('fr-FR')}</div>
+                      <div>Ajoutée : {formatDate(technology.createdAt.toString())}</div>
                       {technology.updatedAt && (
-                        <div>
-                          Modifié : {new Date(technology.updatedAt).toLocaleString('fr-FR')}
-                        </div>
+                        <div>Modifié : {formatDate(technology.updatedAt.toString())}</div>
                       )}
                     </div>
                   </div>

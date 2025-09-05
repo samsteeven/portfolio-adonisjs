@@ -8,7 +8,7 @@ import {
   ArrowLeft,
   Edit,
   Trash2,
-  Image,
+  Images,
   Calendar,
   Clock,
   CheckCircle,
@@ -19,16 +19,17 @@ import {
   Download,
   ExternalLink,
   Github,
+  User,
+  Star,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react'
-import { ProjectType } from '~/types/projets'
+import { ProjectShowProps } from '~/types/projets'
 import { toast } from 'sonner'
 
-interface Props {
-  project: ProjectType
-}
-
-export default function ShowProject({ project }: Props) {
+export default function ShowProject({ project }: ProjectShowProps) {
   const [isClient, setIsClient] = useState(false)
+  const [currentImageIndex, setCurrentImageIndex] = useState(0)
 
   // État pour le modal de suppression
   const [deleteModal, setDeleteModal] = useState({
@@ -47,6 +48,29 @@ export default function ShowProject({ project }: Props) {
     return new Date(dateString).toLocaleDateString('fr-FR', options)
   }
 
+  // Fonction pour obtenir toutes les images du projet
+  const getAllImages = (): Array<{ url: string; isPrimary: boolean; id?: number }> => {
+    const allImages: Array<{ url: string; isPrimary: boolean; id?: number }> = []
+
+    // Ajouter les images multiples d'abord
+    if (project.images && project.images.length > 0) {
+      project.images
+        .sort((a, b) => a.order - b.order)
+        .forEach((img) => {
+          allImages.push({
+            url: img.imagePublicUrl,
+            isPrimary: img.isPrimary,
+            id: img.id,
+          })
+        })
+    }
+
+    return allImages
+  }
+
+  const allImages = getAllImages()
+  const hasMultipleImages = allImages.length > 1
+
   const handleDeleteClick = () => {
     setDeleteModal({
       isOpen: true,
@@ -63,7 +87,6 @@ export default function ShowProject({ project }: Props) {
           router.visit('/admin/projects')
         },
         onError: () => {
-          toast.error('Erreur lors de la suppression')
           setDeleteModal((prev) => ({ ...prev, isLoading: false }))
         },
       })
@@ -84,9 +107,6 @@ export default function ShowProject({ project }: Props) {
       `/admin/projects/${project.id}/toggle-status`,
       {},
       {
-        onSuccess: () => {
-          toast.success(`Projet ${project.isActive ? 'désactivé' : 'activé'} avec succès`)
-        },
         onError: () => {
           toast.error('Erreur lors de la modification du statut')
         },
@@ -101,6 +121,14 @@ export default function ShowProject({ project }: Props) {
     } catch (error) {
       toast.error('Erreur lors de la copie')
     }
+  }
+
+  const nextImage = () => {
+    setCurrentImageIndex((prev) => (prev + 1) % allImages.length)
+  }
+
+  const prevImage = () => {
+    setCurrentImageIndex((prev) => (prev - 1 + allImages.length) % allImages.length)
   }
 
   // Grouper les technologies par catégorie
@@ -135,6 +163,9 @@ export default function ShowProject({ project }: Props) {
               <div>
                 <div className="flex items-center gap-3 mb-2">
                   <h1 className="text-3xl font-bold text-gray-900">{project.title}</h1>
+                  <span className="text-lg text-blue-600 font-medium bg-blue-50 px-3 py-1 rounded-lg">
+                    {project.year}
+                  </span>
                   <span
                     className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
                       project.isActive
@@ -155,6 +186,14 @@ export default function ShowProject({ project }: Props) {
                     )}
                   </span>
                 </div>
+
+                {/* Rôle */}
+                {project.role && (
+                  <div className="flex items-center gap-2 mb-2">
+                    <User className="h-4 w-4 text-gray-400" />
+                    <span className="text-gray-700 font-medium">{project.role}</span>
+                  </div>
+                )}
 
                 {/* Liens externes */}
                 <div className="flex items-center gap-4 mb-2">
@@ -248,16 +287,55 @@ export default function ShowProject({ project }: Props) {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Contenu principal */}
             <div className="lg:col-span-2 space-y-8">
-              {/* Image principale */}
+              {/* Galerie d'images */}
               <Card className="overflow-hidden bg-white">
                 <div className="aspect-video bg-gray-100 relative">
-                  {project.imgPathPublicUrl ? (
+                  {allImages.length > 0 ? (
                     <>
                       <img
-                        src={project.imgPathPublicUrl}
-                        alt={project.title}
+                        src={allImages[currentImageIndex].url}
+                        alt={`${project.title} - Image ${currentImageIndex + 1}`}
                         className="h-full w-full object-cover"
                       />
+
+                      {/* Badge image principale */}
+                      {allImages[currentImageIndex].isPrimary && (
+                        <div className="absolute top-4 left-4">
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-500 text-white">
+                            <Star className="h-3 w-3 mr-1" />
+                            Image principale
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Compteur d'images */}
+                      {hasMultipleImages && (
+                        <div className="absolute top-4 right-4">
+                          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-black/75 text-white">
+                            <Images className="h-4 w-4 mr-1" />
+                            {currentImageIndex + 1}/{allImages.length}
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Navigation des images */}
+                      {hasMultipleImages && (
+                        <>
+                          <button
+                            onClick={prevImage}
+                            className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/50 hover:bg-black/70 text-white rounded-full flex items-center justify-center transition-colors"
+                          >
+                            <ChevronLeft className="h-5 w-5" />
+                          </button>
+                          <button
+                            onClick={nextImage}
+                            className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/50 hover:bg-black/70 text-white rounded-full flex items-center justify-center transition-colors"
+                          >
+                            <ChevronRight className="h-5 w-5" />
+                          </button>
+                        </>
+                      )}
+
                       {/* Overlay avec actions d'image */}
                       <div className="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-50 transition-all duration-200 flex items-center justify-center opacity-0 hover:opacity-100">
                         <div className="flex items-center gap-2">
@@ -265,7 +343,7 @@ export default function ShowProject({ project }: Props) {
                             size="sm"
                             variant="outline"
                             className="bg-white/90 hover:bg-white border-none"
-                            onClick={() => window.open(project.imgPathPublicUrl!, '_blank')}
+                            onClick={() => window.open(allImages[currentImageIndex].url, '_blank')}
                           >
                             <Eye className="h-4 w-4 mr-1" />
                             Voir
@@ -276,10 +354,8 @@ export default function ShowProject({ project }: Props) {
                             className="bg-white/90 hover:bg-white border-none"
                             onClick={() => {
                               const link = document.createElement('a')
-                              if (project.imgPathPublicUrl != null) {
-                                link.href = project.imgPathPublicUrl
-                              }
-                              link.download = `${project.title}.jpg`
+                              link.href = allImages[currentImageIndex].url
+                              link.download = `${project.title}-${currentImageIndex + 1}.jpg`
                               link.click()
                             }}
                           >
@@ -291,17 +367,47 @@ export default function ShowProject({ project }: Props) {
                     </>
                   ) : (
                     <div className="h-full w-full flex flex-col items-center justify-center">
-                      <Image className="h-16 w-16 text-gray-400 mb-4" />
+                      <Images className="h-16 w-16 text-gray-400 mb-4" />
                       <p className="text-gray-500 text-sm">Aucune image associée</p>
                       <Link href={`/admin/projects/${project.id}/edit`} className="mt-2">
                         <Button size="sm" variant="outline" className="border-none">
                           <Edit className="h-4 w-4 mr-1" />
-                          Ajouter une image
+                          Ajouter des images
                         </Button>
                       </Link>
                     </div>
                   )}
                 </div>
+
+                {/* Miniatures des images */}
+                {hasMultipleImages && (
+                  <div className="p-4 bg-gray-50 border-t">
+                    <div className="flex gap-2 overflow-x-auto">
+                      {allImages.map((image, index) => (
+                        <button
+                          key={index}
+                          onClick={() => setCurrentImageIndex(index)}
+                          className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all ${
+                            index === currentImageIndex
+                              ? 'border-blue-500 ring-2 ring-blue-200'
+                              : 'border-gray-200 hover:border-gray-300'
+                          }`}
+                        >
+                          <img
+                            src={image.url}
+                            alt={`Miniature ${index + 1}`}
+                            className="w-full h-full object-cover"
+                          />
+                          {image.isPrimary && (
+                            <div className="absolute top-1 left-1">
+                              <Star className="h-3 w-3 text-yellow-500 fill-current" />
+                            </div>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </Card>
 
               {/* Description */}
@@ -340,7 +446,6 @@ export default function ShowProject({ project }: Props) {
                   </h2>
 
                   {Object.keys(groupedTechnologies).length > 1 ? (
-                    // Grouped by category
                     <div className="space-y-6">
                       {Object.entries(groupedTechnologies).map(([category, techs]) => (
                         <div key={category}>
@@ -378,7 +483,6 @@ export default function ShowProject({ project }: Props) {
                       ))}
                     </div>
                   ) : (
-                    // Simple list
                     <div className="flex flex-wrap gap-3">
                       {project.technologies.map((tech) => (
                         <div
@@ -483,11 +587,15 @@ export default function ShowProject({ project }: Props) {
                 </Card>
               )}
 
-              {/* Statistiques (placeholder) */}
+              {/* Statistiques */}
               <Card className="p-6 bg-white">
                 <h2 className="text-xl font-semibold text-gray-900 mb-4">Statistiques</h2>
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  <div className="text-center p-4 bg-purple-50 rounded-lg">
+                    <div className="text-2xl font-bold text-purple-600">{allImages.length}</div>
+                    <div className="text-sm text-purple-800">Images</div>
+                  </div>
                   <div className="text-center p-4 bg-blue-50 rounded-lg">
                     <div className="text-2xl font-bold text-blue-600">
                       {project.technologies?.length || 0}
@@ -499,10 +607,6 @@ export default function ShowProject({ project }: Props) {
                       {project.isActive ? '100%' : '0%'}
                     </div>
                     <div className="text-sm text-green-800">Visibilité</div>
-                  </div>
-                  <div className="text-center p-4 bg-purple-50 rounded-lg">
-                    <div className="text-2xl font-bold text-purple-600">0</div>
-                    <div className="text-sm text-purple-800">Vues</div>
                   </div>
                   <div className="text-center p-4 bg-orange-50 rounded-lg">
                     <div className="text-2xl font-bold text-orange-600">
@@ -551,6 +655,24 @@ export default function ShowProject({ project }: Props) {
                       </Button>
                     </div>
                   </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Année</label>
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4 text-blue-500" />
+                      <span className="text-blue-600 font-medium">{project.year}</span>
+                    </div>
+                  </div>
+
+                  {project.role && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Rôle</label>
+                      <div className="flex items-center gap-2">
+                        <User className="h-4 w-4 text-gray-400" />
+                        <span className="text-gray-600">{project.role}</span>
+                      </div>
+                    </div>
+                  )}
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Statut</label>
@@ -667,17 +789,25 @@ export default function ShowProject({ project }: Props) {
 
                 <div className="rounded-lg p-4 bg-gray-50">
                   <div className="text-center">
-                    {project.imgPathPublicUrl && (
-                      <div className="w-20 h-20 mx-auto mb-3 rounded-lg overflow-hidden bg-gray-200">
+                    {allImages.length > 0 && (
+                      <div className="w-20 h-20 mx-auto mb-3 rounded-lg overflow-hidden bg-gray-200 relative">
                         <img
-                          src={project.imgPathPublicUrl}
+                          src={allImages[0].url}
                           alt={project.title}
                           className="w-full h-full object-cover"
                         />
+                        {allImages.length > 1 && (
+                          <div className="absolute -top-1 -right-1 w-5 h-5 bg-blue-600 text-white text-xs rounded-full flex items-center justify-center font-medium">
+                            {allImages.length}
+                          </div>
+                        )}
                       </div>
                     )}
 
-                    <h4 className="font-semibold text-gray-900 mb-2">{project.title}</h4>
+                    <h4 className="font-semibold text-gray-900 mb-1">{project.title}</h4>
+                    <p className="text-xs text-blue-600 mb-2">{project.year}</p>
+
+                    {project.role && <p className="text-xs text-gray-600 mb-2">{project.role}</p>}
 
                     {project.description && (
                       <p className="text-sm text-gray-600 line-clamp-3 mb-3">
@@ -746,24 +876,15 @@ export default function ShowProject({ project }: Props) {
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Métadonnées</h3>
 
                 <div className="space-y-3 text-sm">
-                  {project.imgPathPublicUrl && (
-                    <div>
-                      <label className="font-medium text-gray-700">Chemin de l'image:</label>
-                      <div className="mt-1 flex items-center gap-2">
-                        <code className="flex-1 px-2 py-1 bg-gray-100 rounded text-xs font-mono truncate">
-                          {project.imgPathPublicUrl}
-                        </code>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => copyToClipboard(project.imgPathPublicUrl!)}
-                          className="h-6 w-6 p-0 flex-shrink-0 border-none"
-                        >
-                          <Share2 className="h-3 w-3" />
-                        </Button>
-                      </div>
+                  <div>
+                    <label className="font-medium text-gray-700">Images:</label>
+                    <div className="mt-1">
+                      <span className="text-gray-600">
+                        {allImages.length} image(s) •{' '}
+                        {allImages.filter((img) => img.isPrimary).length} principale(s)
+                      </span>
                     </div>
-                  )}
+                  </div>
 
                   <div>
                     <label className="font-medium text-gray-700">Technologies:</label>
@@ -782,6 +903,22 @@ export default function ShowProject({ project }: Props) {
                       </span>
                     </div>
                   </div>
+
+                  <div>
+                    <label className="font-medium text-gray-700">Année du projet:</label>
+                    <div className="mt-1">
+                      <span className="text-gray-600">{project.year}</span>
+                    </div>
+                  </div>
+
+                  {project.role && (
+                    <div>
+                      <label className="font-medium text-gray-700">Rôle personnel:</label>
+                      <div className="mt-1">
+                        <span className="text-gray-600">{project.role}</span>
+                      </div>
+                    </div>
+                  )}
 
                   {isClient && (
                     <div>
@@ -817,7 +954,7 @@ export default function ShowProject({ project }: Props) {
         onClose={handleDeleteCancel}
         onConfirm={handleDeleteConfirm}
         title="Supprimer le projet"
-        message="Cette action est irréversible. Êtes-vous sûr de vouloir supprimer ce projet ?"
+        message="Cette action est irréversible. Êtes-vous sûr de vouloir supprimer ce projet et toutes ses images ?"
         itemName={project.title}
         isLoading={deleteModal.isLoading}
       />

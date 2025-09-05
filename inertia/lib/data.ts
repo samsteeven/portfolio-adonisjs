@@ -14,7 +14,6 @@ export const SOCIAL_LINKS = [
   { name: 'github', url: 'https://github.com/Tajmirul' },
   { name: 'linkedin', url: 'https://www.linkedin.com/in/tajmirul' },
   { name: 'facebook', url: 'https://www.facebook.com/tajmirul.2000' },
-  { name: 'Old Version', url: GENERAL_INFO.oldPortfolio },
 ]
 
 export const MY_STACK = {

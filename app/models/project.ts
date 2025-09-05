@@ -1,7 +1,8 @@
 import { DateTime } from 'luxon'
-import { BaseModel, column, computed, manyToMany } from '@adonisjs/lucid/orm'
+import { BaseModel, column, manyToMany, hasMany } from '@adonisjs/lucid/orm'
 import Technology from '#models/technology'
-import type { ManyToMany } from '@adonisjs/lucid/types/relations'
+import ProjectImage from '#models/project_image'
+import type { ManyToMany, HasMany } from '@adonisjs/lucid/types/relations'
 
 export default class Project extends BaseModel {
   @column({ isPrimary: true })
@@ -13,8 +14,11 @@ export default class Project extends BaseModel {
   @column()
   declare description: string | null
 
-  @column({ columnName: 'img_path' })
-  declare imgPath: string | null
+  @column()
+  declare year: string
+
+  @column()
+  declare role: string | null
 
   @column({ columnName: 'demo_path' })
   declare demoPath: string | null
@@ -32,15 +36,12 @@ export default class Project extends BaseModel {
   })
   declare technologies: ManyToMany<typeof Technology>
 
+  @hasMany(() => ProjectImage)
+  declare images: HasMany<typeof ProjectImage>
+
   @column.dateTime({ columnName: 'created_at', autoCreate: true })
   declare createdAt: DateTime
 
   @column.dateTime({ columnName: 'updated_at', autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime | null
-
-  @computed()
-  public get imgPathPublicUrl(): string | null {
-    if (!this.imgPath) return null
-    return `/admin/uploads/${this.imgPath}`
-  }
 }

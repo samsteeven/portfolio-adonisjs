@@ -41,6 +41,12 @@ router
     // ===== CRUD PROJETS =====
     router.resource('projects', ProjectsController)
     router.patch('projects/:id/toggle-status', '#controllers/project_controller.toggleStatus')
+    // Nouvelles routes pour la gestion des images
+    router.patch('projects/:id/reorder-images', '#controllers/projects_controller.reorderImages')
+    router.patch(
+      'projects/:id/set-primary-image',
+      '#controllers/projects_controller.setPrimaryImage'
+    )
 
     // ===== COMMENTAIRES =====
     router.resource('comments', CommentaireController)

@@ -20,7 +20,7 @@ export default function TechnologiesCreate({ categories }: { categories: string[
   const { data, setData, post, processing, errors, reset, isDirty } = useForm<{
     name: string
     category: string
-    imgPath: File
+    imgPath: File | null
     lienOrigin: string
     description: string
   }>({

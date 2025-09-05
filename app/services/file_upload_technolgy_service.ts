@@ -1,5 +1,3 @@
-// Ajoutez ces méthodes à votre FileUploadService existant
-
 import { MultipartFile } from '@adonisjs/core/bodyparser'
 import { cuid } from '@adonisjs/core/helpers'
 import drive from '@adonisjs/drive/services/main'

@@ -5,36 +5,41 @@ export interface ProjectType {
   id: number
   title: string
   description: string | null
-  imgPath: string | null
-  imgPathPublicUrl: string | null
+  year: string
+  role: string | null
   demoPath: string | null
   githubPath: string | null
   isActive: boolean
   technologies: Technology[]
+  images: ProjectImage[]
   createdAt: Date | string
   updatedAt: Date | string
+}
+
+interface ProjectImage {
+  id: number
+  imagePath: string
+  imagePublicUrl: string
+  order: number
+  isPrimary: boolean
 }
 
 export interface ProjectsIndexProps {
   projects: {
     data: ProjectType[]
-    meta: {
+    meta?: {
       total: number
+      page: number
       perPage: number
-      currentPage: number
-      lastPage: number
-      firstPage: number
-      firstPageUrl: string
-      lastPageUrl: string
-      nextPageUrl: string | null
-      previousPageUrl: string | null
     }
   }
   technologies: Technology[]
-  filters: {
+  years?: string[]
+  filters?: {
     search: string
     technology: string
-    isActive: string | null
+    year: string
+    isActive: string
   }
 }
 
