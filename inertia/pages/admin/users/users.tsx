@@ -44,9 +44,17 @@ export default function AdminUsers({ users }: AdminUsersProps) {
           <div className="flex flex-col items-center text-center">
             {/* Avatar */}
             <div className="w-14 h-14 bg-gray-100 rounded-full flex items-center justify-center">
-              <span className="text-lg font-medium text-gray-900">
-                {getInitials(user.username)}
-              </span>
+              {user.subInfo?.photoPathPublicUrl ? (
+                <img
+                  src={user.subInfo.photoPathPublicUrl}
+                  alt={user?.username}
+                  className="w-14 h-14 rounded-full object-cover ring-4 ring-gray-50"
+                />
+              ) : (
+                <span className="text-lg font-medium text-gray-900">
+                  {getInitials(user.username)}
+                </span>
+              )}
             </div>
 
             {/* User Info */}
@@ -121,9 +129,17 @@ export default function AdminUsers({ users }: AdminUsersProps) {
                 <td className="px-6 py-4">
                   <div className="flex items-center">
                     <div className="w-11 h-11 bg-gray-100 rounded-full flex items-center justify-center">
-                      <span className="text-sm font-medium text-gray-900">
-                        {getInitials(user.username)}
-                      </span>
+                      {user.subInfo?.photoPathPublicUrl ? (
+                        <img
+                          src={user.subInfo.photoPathPublicUrl}
+                          alt={user?.username}
+                          className="w-11 h-11 rounded-full object-cover ring-4 ring-gray-50"
+                        />
+                      ) : (
+                        <span className="text-sm font-medium text-gray-900">
+                          {getInitials(user.username)}
+                        </span>
+                      )}
                     </div>
                     <div className="ml-4">
                       <div className="text-sm font-medium text-gray-900">{user.username}</div>

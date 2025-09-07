@@ -180,9 +180,7 @@ export default function ShowComment({ commentaire, reactions }: Props) {
                 </h1>
                 <p className="text-gray-600">
                   Commentaire #{commentaire.id} par{' '}
-                  <span className="font-semibold text-gray-900">
-                    {commentaire.user?.username || commentaire.name}
-                  </span>
+                  <span className="font-semibold text-gray-900">{commentaire.user?.username}</span>
                 </p>
                 <p className="text-sm text-gray-500 mt-1">
                   Posté le{' '}
@@ -375,7 +373,7 @@ export default function ShowComment({ commentaire, reactions }: Props) {
                       <div className="flex-1 min-w-0">
                         <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-2">
                           <span className="font-semibold text-gray-900">
-                            {commentaire.user?.username || commentaire.name}
+                            {commentaire.user?.username}
                           </span>
                           {commentaire.reaction && (
                             <span className="text-lg" title="Réaction de l'admin">
@@ -492,14 +490,12 @@ export default function ShowComment({ commentaire, reactions }: Props) {
                     <label className="block text-sm font-medium text-gray-700 mb-1">Nom</label>
                     <div className="flex items-center gap-2">
                       <span className="text-sm text-gray-900 font-medium flex-1 truncate">
-                        {commentaire.user?.username || commentaire.name}
+                        {commentaire.user?.username}
                       </span>
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() =>
-                          copyToClipboard(commentaire.user?.username || commentaire.name)
-                        }
+                        onClick={() => copyToClipboard(commentaire.user?.username!)}
                         className="h-6 w-6 p-0 border-none flex-shrink-0"
                       >
                         <Copy className="h-3 w-3" />
@@ -512,20 +508,18 @@ export default function ShowComment({ commentaire, reactions }: Props) {
                     <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
                     <div className="flex items-center gap-2">
                       <span className="text-sm text-gray-900 font-medium flex-1 truncate">
-                        {commentaire.user?.email || commentaire.email}
+                        {commentaire.user?.email}
                       </span>
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() =>
-                          copyToClipboard(commentaire.user?.email || commentaire.email)
-                        }
+                        onClick={() => copyToClipboard(commentaire.user?.email)}
                         className="h-6 w-6 p-0 border-none flex-shrink-0"
                       >
                         <Copy className="h-3 w-3" />
                       </Button>
                       <a
-                        href={`mailto:${commentaire.user?.email || commentaire.email}`}
+                        href={`mailto:${commentaire.user?.email}`}
                         className="text-blue-600 hover:text-blue-800 flex-shrink-0"
                       >
                         <ExternalLink className="h-3 w-3" />
@@ -692,11 +686,8 @@ export default function ShowComment({ commentaire, reactions }: Props) {
                     Copier le message
                   </Button>
 
-                  {(commentaire.user?.email || commentaire.email) && (
-                    <a
-                      href={`mailto:${commentaire.user?.email || commentaire.email}`}
-                      className="block w-full"
-                    >
+                  {commentaire.user?.email && (
+                    <a href={`mailto:${commentaire.user?.email}`} className="block w-full">
                       <Button variant="outline" className="w-full justify-start border-none">
                         <Mail className="h-4 w-4 mr-2" />
                         Contacter par email
@@ -737,7 +728,7 @@ export default function ShowComment({ commentaire, reactions }: Props) {
         onConfirm={handleDeleteConfirm}
         title="Supprimer le commentaire"
         message="Cette action est irréversible. Êtes-vous sûr de vouloir supprimer ce commentaire ?"
-        itemName={`Commentaire de ${commentaire.user?.username || commentaire.name}`}
+        itemName={`Commentaire de ${commentaire.user?.username}`}
         isLoading={deleteModal.isLoading}
       />
 

@@ -4,8 +4,6 @@ import { AuthenticatedUser } from '~/types/index'
 
 export interface CommentaireType {
   id: number
-  name: string
-  email: string
   message: string
   reaction: string | null
   userId: number | null
@@ -13,7 +11,7 @@ export interface CommentaireType {
   updatedAt: string | null
 
   // Relations
-  user?: AuthenticatedUser
+  user: AuthenticatedUser
 
   // Computed properties (depuis le modèle)
   isAnonymous?: boolean

@@ -20,7 +20,7 @@ const inertiaConfig = defineConfig({
    */
   sharedData: {
     auth: async (ctx) => {
-      const user = ctx.auth.user
+      const user = ctx.auth.use('web').user
       let usersCount = null
       let projectsCount = null
       if (user) {
@@ -35,8 +35,8 @@ const inertiaConfig = defineConfig({
       }
       return {
         user,
-        usersCount,
-        projectsCount,
+        usersCount: usersCount || undefined,
+        projectsCount: projectsCount || undefined,
       }
     },
     error: (ctx) => ctx.session.flashMessages.get('error'),

@@ -124,7 +124,13 @@ export default function AdminLayout({
   }, [isUserMenuOpen])
 
   const handleLogout = () => {
-    router.post('/admin/auth/logout')
+    router.post(
+      '/admin/auth/logout',
+      {},
+      {
+        replace: true,
+      }
+    )
   }
 
   const filteredMenuItems = adminMenuItems.filter((item) =>
@@ -243,9 +249,17 @@ export default function AdminLayout({
                   >
                     {/* Avatar plus grand */}
                     <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center shadow-sm">
-                      <span className="text-sm font-semibold text-white">
-                        {getInitials(auth!.user.username)}
-                      </span>
+                      {auth!.user.subInfo?.photoPathPublicUrl ? (
+                        <img
+                          src={auth!.user.subInfo.photoPathPublicUrl}
+                          alt={auth!.user?.username}
+                          className="w-7 h-7 rounded-full object-cover ring-4 ring-gray-50"
+                        />
+                      ) : (
+                        <span className="text-sm font-semibold text-white">
+                          {getInitials(auth!.user.username)}
+                        </span>
+                      )}
                     </div>
 
                     {/* Info utilisateur - Visible dès md */}
@@ -285,9 +299,17 @@ export default function AdminLayout({
                         <div className="md:hidden px-4 py-3 border-b border-gray-100">
                           <div className="flex items-center gap-3">
                             <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
-                              <span className="text-sm font-semibold text-white">
-                                {getInitials(auth!.user.username)}
-                              </span>
+                              {auth!.user.subInfo?.photoPathPublicUrl ? (
+                                <img
+                                  src={auth!.user.subInfo.photoPathPublicUrl}
+                                  alt={auth!.user?.username}
+                                  className="w-7 h-7 rounded-full object-cover ring-4 ring-gray-50"
+                                />
+                              ) : (
+                                <span className="text-sm font-semibold text-white">
+                                  {getInitials(auth!.user.username)}
+                                </span>
+                              )}
                             </div>
                             <div>
                               <p className="text-sm font-medium text-gray-900 truncate">

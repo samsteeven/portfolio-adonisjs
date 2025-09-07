@@ -43,6 +43,9 @@ export default class SubInfo extends BaseModel {
   @computed()
   public get photoPathPublicUrl(): string | null {
     if (!this.photoPath) return null
+    if (this.photoPath.startsWith('https://')) {
+      return this.photoPath
+    }
     // await drive.use('fs').getUrl(this.photoPath)
     return `uploads/${this.photoPath}`
   }

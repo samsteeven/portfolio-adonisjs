@@ -1,5 +1,5 @@
 import React from 'react'
-import { useForm, Link } from '@inertiajs/react'
+import { useForm, Link, router } from '@inertiajs/react'
 import AdminLayout from '~/layout/AdminLayout'
 import { useMultiImageUpload } from '~/utils/hooks/use_multi_image_upload'
 import {
@@ -76,7 +76,9 @@ export default function EditProject({ project, technologies }: ProjectEditProps)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    patch(`/admin/projects/${project.id}`, {})
+    patch(`/admin/projects/${project.id}`, {
+      onSuccess: () => router.reload({ only: ['project'] }),
+    })
   }
 
   const toggleTechnology = (techId: number) => {

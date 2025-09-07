@@ -12,6 +12,7 @@ export default class AuthController {
 
     try {
       const user = await User.verifyCredentials(email, password)
+      if (auth.use('guestbook').isAuthenticated) await auth.use('guestbook').logout()
 
       if (!user.isActive) {
         session.flash('error', "Votre compte est désactivé. Veuillez contacter l'administrateur.")
@@ -29,6 +30,12 @@ export default class AuthController {
 
   async logout({ response, auth }: HttpContext) {
     await auth.use('web').logout()
+
     return response.redirect().toRoute('home')
+  }
+  async guestbookLogout({ response, auth, session }: HttpContext) {
+    await auth.use('guestbook').logout()
+    session.flash('success', 'Vous vous etes déconnecté de mon guestbook.')
+    return response.redirect('/guestbook')
   }
 }

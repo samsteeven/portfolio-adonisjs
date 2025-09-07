@@ -73,8 +73,8 @@ export default function CommentsIndex({ commentaires, reactions, filters = {} }:
     if (searchTerm) {
       results = results.filter(
         (c) =>
-          (c.user?.username || c.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (c.user?.email || c.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (c.user?.username || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (c.user?.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
           (c.message || '').toLowerCase().includes(searchTerm.toLowerCase())
       )
     }
@@ -235,7 +235,11 @@ export default function CommentsIndex({ commentaires, reactions, filters = {} }:
               </div>
             </div>
             <div className="flex-shrink-0">
-              <Button variant="outline" className="border-none w-full sm:w-auto">
+              <Button
+                variant="outline"
+                onClick={() => router.visit('/guestbook')}
+                className="border-none w-full sm:w-auto"
+              >
                 <ExternalLink className="h-3 w-3 mr-2" />
                 <span className="sm:inline">Voir la section</span>
               </Button>
@@ -292,7 +296,7 @@ export default function CommentsIndex({ commentaires, reactions, filters = {} }:
                 <div className="ml-2 sm:ml-3">
                   <p className="text-xs sm:text-sm font-medium text-gray-500">Utilisateurs</p>
                   <p className="text-lg sm:text-xl font-semibold">
-                    {new Set(commentaires.data.map((c) => c.userId || c.email)).size}
+                    {new Set(commentaires.data.map((c) => c.userId || c.user?.email)).size}
                   </p>
                 </div>
               </div>
@@ -367,7 +371,7 @@ export default function CommentsIndex({ commentaires, reactions, filters = {} }:
                         <div className="flex items-center justify-between">
                           <div className="min-w-0">
                             <h3 className="font-semibold text-gray-900 truncate">
-                              {commentaire.user?.username || commentaire.name}
+                              {commentaire.user?.username}
                             </h3>
                             <div className="flex items-center gap-2 mt-1">
                               {commentaire.user ? (
@@ -526,7 +530,7 @@ export default function CommentsIndex({ commentaires, reactions, filters = {} }:
                         <div>
                           <div className="flex items-center gap-2">
                             <h3 className="font-semibold text-gray-900">
-                              {commentaire.user?.username || commentaire.name}
+                              {commentaire.user?.username}
                             </h3>
                             {commentaire.user ? (
                               <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">
@@ -543,7 +547,7 @@ export default function CommentsIndex({ commentaires, reactions, filters = {} }:
                           <div className="flex items-center gap-4 text-sm text-gray-500 mt-1">
                             <div className="flex items-center gap-1">
                               <Mail className="h-3 w-3" />
-                              {commentaire.user?.email || commentaire.email}
+                              {commentaire.user?.email}
                             </div>
                             <div className="flex items-center gap-1">
                               <Calendar className="h-3 w-3" />

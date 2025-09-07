@@ -66,11 +66,12 @@ export default function UserForm({ user, isEditing = false }: UserFormProps) {
           method={formMethod}
           disableWhileProcessing
           resetOnSuccess={!isEditing}
+          setDefaultsOnSuccess={!isEditing}
           options={{
             preserveScroll: true,
           }}
           encType="multipart/form-data"
-          className="space-y-6"
+          className="space-y-6 inert:opacity-50 inert:pointer-events-none"
         >
           {({ processing, errors, reset, isDirty }) => (
             <>

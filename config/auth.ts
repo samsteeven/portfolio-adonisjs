@@ -12,6 +12,13 @@ const authConfig = defineConfig({
         model: () => import('#models/user'),
       }),
     }),
+    guestbook: sessionGuard({
+      useRememberMeTokens: false,
+      rememberMeTokensAge: '2 hours',
+      provider: sessionUserProvider({
+        model: () => import('#models/user'),
+      }),
+    }),
   },
 })
 

@@ -8,12 +8,6 @@ export default class Commentaire extends BaseModel {
   declare id: number
 
   @column()
-  declare name: string
-
-  @column()
-  declare email: string
-
-  @column()
   declare message: string
 
   @column()

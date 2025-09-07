@@ -10,6 +10,27 @@ const UserController = () => import('#controllers/user_controller')
 // Routes publiques avec silent_auth pour avoir accès à l'utilisateur connecté
 router.on('/').renderInertia('home').as('home')
 router.get('/projects/:slug', '#controllers/dashboard_controller.projectShow')
+
+// Routes pour la guestbook
+router.get('/guestbook', [CommentaireController, 'indexGuestBook'])
+router
+  .group(() => {
+    router
+      .get('/oauth/:provider/redirect', '#controllers/allies_controller.redirect')
+      .where('provider', /github|google/)
+    router
+      .get('/oauth/:provider/callback', '#controllers/allies_controller.callback')
+      .where('provider', /github|google/)
+  })
+  .middleware(middleware.guest())
+router
+  .post('/guestbook', '#controllers/commentaire_controller.store')
+  .use(limitter)
+  .middleware(middleware.auth({ guards: ['guestbook', 'web'] }))
+router
+  .post('/auth/guestbook/logout', '#controllers/auth_controller.guestbookLogout')
+  .middleware(middleware.auth({ guards: ['guestbook'] }))
+
 // Routes d'authentification
 router
   .group(() => {
@@ -53,4 +74,4 @@ router
     router.patch('/comments/:id/reaction', [CommentaireController, 'addReaction'])
   })
   .prefix('/admin')
-  .middleware([middleware.auth(), middleware.isActive()])
+  .middleware([middleware.auth({ guards: ['web'] }), middleware.isActive()])

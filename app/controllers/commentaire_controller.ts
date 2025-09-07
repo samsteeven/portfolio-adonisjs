@@ -21,13 +21,9 @@ export default class CommentairesController {
     // Filtre de recherche
     if (search) {
       query = query.where((builder) => {
-        builder
-          .where('name', 'like', `%${search}%`)
-          .orWhere('email', 'like', `%${search}%`)
-          .orWhere('message', 'like', `%${search}%`)
-          .orWhereHas('user', (userQuery) => {
-            userQuery.where('name', 'like', `%${search}%`).orWhere('email', 'like', `%${search}%`)
-          })
+        builder.orWhere('message', 'like', `%${search}%`).orWhereHas('user', (userQuery) => {
+          userQuery.where('name', 'like', `%${search}%`).orWhere('email', 'like', `%${search}%`)
+        })
       })
     }
 
@@ -47,7 +43,7 @@ export default class CommentairesController {
     // Sérialiser les données pour Inertia
     const serializedCommentaires = commentaires.serialize({
       fields: {
-        pick: ['id', 'name', 'email', 'message', 'reaction', 'userId', 'createdAt', 'updatedAt'],
+        pick: ['id', 'message', 'reaction', 'userId', 'createdAt', 'updatedAt'],
       },
       relations: {
         user: {
@@ -67,37 +63,14 @@ export default class CommentairesController {
   }
 
   /**
-   * Afficher tous les commentaires (pour la page publique)
-   */
-  async clientIndex({ inertia }: HttpContext) {
-    const commentaires = await Commentaire.query()
-      .preload('user')
-      .orderBy('created_at', 'desc')
-      .exec()
-
-    return inertia.render('admin/comments/index', {
-      commentaires,
-      reactions: EmojiService.getReactionsByType(),
-    })
-  }
-
-  /**
    * Créer un nouveau commentaire (nécessite d'être connecté)
    */
-  async store({ request, response, auth, session, bouncer }: HttpContext) {
-    const authorize = await bouncer.with('CommentairePolicy').allows('store')
-    if (!authorize) {
-      return this.CommentAuthorizationService.handleUnauthorized(response, session)
-    }
-
+  async store({ request, response, auth, session }: HttpContext) {
+    const data = await request.validateUsing(createCommentaireValidator)
     try {
       const user = auth.user!
 
-      const data = await request.validateUsing(createCommentaireValidator)
-
       const commentaire = await Commentaire.create({
-        name: user.username,
-        email: user.email,
         message: data.message,
         userId: user.id,
       })
@@ -108,6 +81,7 @@ export default class CommentairesController {
       return response.redirect().back()
     } catch (error) {
       session.flash('error', 'Erreur lors de la publication du commentaire')
+      console.log(error)
       return response.redirect().back()
     }
   }
@@ -132,6 +106,46 @@ export default class CommentairesController {
     } catch (error) {
       return response.redirect().back()
     }
+  }
+
+  /**
+   * Page Index avec chargement différé
+   */
+  async indexGuestBook({ inertia, auth }: HttpContext) {
+    return inertia.render('guestbook/index', {
+      reactions: EmojiService.getReactionsByType(),
+      comments: inertia.defer(async () => {
+        const comments = await Commentaire.query()
+          .preload('user')
+          .orderBy('created_at', 'desc')
+          .limit(10)
+          .exec()
+        return { data: comments }
+      }),
+      user: () => {
+        if (auth.use('guestbook').isAuthenticated) {
+          return {
+            data: auth.use('guestbook').user?.serialize({
+              fields: {
+                pick: ['username', 'role'],
+              },
+            }),
+            guard: 'guestbook',
+          }
+        } else if (auth.use('web').isAuthenticated) {
+          return {
+            data:
+              auth.use('web').user?.serialize({
+                fields: {
+                  pick: ['username', 'role'],
+                },
+              }) || undefined,
+            guard: 'web',
+          }
+        }
+        return undefined
+      },
+    })
   }
 
   /**
