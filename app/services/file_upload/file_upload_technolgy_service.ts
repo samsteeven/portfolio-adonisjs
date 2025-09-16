@@ -28,14 +28,11 @@ export default class FileUploadTechnolyService {
 
     // Supprimer l'ancienne image si elle existe
     if (oldImagePath) {
-      const oldFileName = oldImagePath.split('/').pop()
-      if (oldFileName) {
-        try {
-          await this.deleteFile(oldFileName)
-        } catch (error) {
-          // Log l'erreur mais ne pas faire échouer l'opération
-          logger.warn("Impossible de supprimer l'ancienne image:", error.message)
-        }
+      try {
+        await this.deleteFile(oldImagePath)
+      } catch (error) {
+        // Log l'erreur mais ne pas faire échouer l'opération
+        logger.warn("Impossible de supprimer l'ancienne image:", error.message)
       }
     }
 

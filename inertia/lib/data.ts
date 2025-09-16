@@ -13,7 +13,8 @@ export const GENERAL_INFO = {
 export const SOCIAL_LINKS = [
   { name: 'github', url: 'https://github.com/Tajmirul' },
   { name: 'linkedin', url: 'https://www.linkedin.com/in/tajmirul' },
-  { name: 'facebook', url: 'https://www.facebook.com/tajmirul.2000' },
+  { name: 'discord', url: 'https://www.facebook.com/tajmirul.2000' },
+  { name: 'twitter', url: 'https://www.facebook.com/tajmirul.2000' },
 ]
 
 export const MY_STACK = {

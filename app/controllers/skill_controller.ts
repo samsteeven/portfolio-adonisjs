@@ -2,9 +2,9 @@ import type { HttpContext } from '@adonisjs/core/http'
 import SkillService from '#services/skill_service'
 import { createSkillValidator, updateSkillValidator } from '#validators/skill'
 import { inject } from '@adonisjs/core'
-import SkillUploadService from '#services/file_upload_technolgy_service'
-import FileUploadTechnolyService from '#services/file_upload_technolgy_service'
-import SkillAuthorizationService from '#services/bouncer_technology_service'
+import SkillUploadService from '#services/file_upload/file_upload_technolgy_service'
+import FileUploadTechnolyService from '#services/file_upload/file_upload_technolgy_service'
+import SkillAuthorizationService from '#services/bouncer/bouncer_technology_service'
 
 @inject()
 export default class SkillsController {

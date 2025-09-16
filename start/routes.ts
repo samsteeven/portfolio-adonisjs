@@ -1,6 +1,9 @@
 import router from '@adonisjs/core/services/router'
 import { middleware } from '#start/kernel'
 import { limitter } from '#start/limiter'
+const DashboardController = () => import('#controllers/dashboard_controller')
+const TagsController = () => import('#controllers/tags_controller')
+const BlogPostsController = () => import('#controllers/blog_posts_controller')
 const CommentaireController = () => import('#controllers/commentaire_controller')
 const ProjectsController = () => import('#controllers/project_controller')
 const SkillsController = () => import('#controllers/skill_controller')
@@ -8,7 +11,7 @@ const TechnologyController = () => import('#controllers/technology_controller')
 const UserController = () => import('#controllers/user_controller')
 
 // Routes publiques avec silent_auth pour avoir accès à l'utilisateur connecté
-router.on('/').renderInertia('home').as('home')
+router.get('/', [DashboardController, 'portfolio']).as('home')
 router.get('/projects/:slug', '#controllers/dashboard_controller.projectShow')
 
 // Routes pour la guestbook
@@ -30,6 +33,16 @@ router
 router
   .post('/auth/guestbook/logout', '#controllers/auth_controller.guestbookLogout')
   .middleware(middleware.auth({ guards: ['guestbook'] }))
+
+// Routes blog publiques
+router.get('/blog', '#controllers/blog_controller.index')
+router.get('/blog/:slug', '#controllers/blog_controller.show').where('slug', /^[a-z0-9\-]+$/)
+
+// Newsletter
+router.post('/newsletter/subscribe', '#controllers/newsletters_controller.subscribe').use(limitter)
+router
+  .get('/newsletter/unsubscribe/:token', '#controllers/newsletters_controller.unsubscribe')
+  .use(limitter)
 
 // Routes d'authentification
 router
@@ -72,6 +85,18 @@ router
     // ===== COMMENTAIRES =====
     router.resource('comments', CommentaireController)
     router.patch('/comments/:id/reaction', [CommentaireController, 'addReaction'])
+
+    // ===== Blog post =====
+    router.resource('blog', BlogPostsController)
+    router.patch('/blog/:id/toggle-status', [BlogPostsController, 'toggleStatus'])
+    // ===== Tags =====
+    router.resource('tags', TagsController).except(['show'])
+
+    // ===== Newsletter =====
+    router.get('/newsletter/subscribers', '#controllers/admin_newsletters_controller.index')
+    router.delete('/newsletter/:id', '#controllers/admin_newsletters_controller.destroy')
+    router.delete('/newsletter/bulk', '#controllers/admin_newsletters_controller.bulkDestroy')
+    router.patch('/newsletter/:id', '#controllers/admin_newsletters_controller.toggleStatus')
   })
   .prefix('/admin')
   .middleware([middleware.auth({ guards: ['web'] }), middleware.isActive()])

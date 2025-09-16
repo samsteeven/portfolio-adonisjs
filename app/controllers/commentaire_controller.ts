@@ -3,7 +3,7 @@ import Commentaire from '#models/commentaire'
 import { createCommentaireValidator, addReactionValidator } from '#validators/commentaire'
 import EmojiService from '#services/emoji_service'
 import { inject } from '@adonisjs/core'
-import CommentAuthorization from '#services/bouncer_technology_service'
+import CommentAuthorization from '#services/bouncer/bouncer_technology_service'
 
 @inject()
 export default class CommentairesController {

@@ -18,3 +18,20 @@ export const formatMemberSince = (dateString: string): string => {
     return "Date d'inscription inconnue"
   }
 }
+
+// Auto-generate slug from title
+export const generateSlug = (title: string) => {
+  return title
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9 -]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .trim()
+}
+
+export const formatDateTimeLocal = (dateString: string | null) => {
+  if (!dateString) return ''
+  // remplace l'espace entre date et heure par un "T"
+  return dateString.replace(' ', 'T').slice(0, 16)
+}

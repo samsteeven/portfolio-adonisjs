@@ -1,8 +1,8 @@
 import { HttpContext } from '@adonisjs/core/http'
 import { inject } from '@adonisjs/core'
 import { TechnologyService } from '#services/technology_service'
-import TechnologyAuthorizationService from '#services/bouncer_technology_service'
-import FileUploadTechnolyService from '#services/file_upload_technolgy_service'
+import TechnologyAuthorizationService from '#services/bouncer/bouncer_technology_service'
+import FileUploadTechnolyService from '#services/file_upload/file_upload_technolgy_service'
 import {
   createTechnologySchema,
   updateTechnologySchema,

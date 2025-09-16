@@ -3,8 +3,8 @@ import { inject } from '@adonisjs/core'
 import { UserService } from '#services/user_service'
 import { UserRole } from '#enums/user_role'
 import { createUserSchema, updateUserSchema } from '#validators/user_validator'
-import FileUploadService from '#services/file_upload_service'
-import BouncerUserService from '#services/bouncer_user_service'
+import FileUploadService from '#services/file_upload/file_upload_service'
+import BouncerUserService from '#services/bouncer/bouncer_user_service'
 
 @inject()
 export default class UserController {

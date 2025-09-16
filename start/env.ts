@@ -16,7 +16,10 @@ export default await Env.create(new URL('../', import.meta.url), {
   PORT: Env.schema.number(),
   APP_KEY: Env.schema.string(),
   HOST: Env.schema.string({ format: 'host' }),
+  APP_URL: Env.schema.string(),
   LOG_LEVEL: Env.schema.string(),
+  MAIL_FROM_ADDRESS: Env.schema.string({ format: 'email' }),
+  MAIL_FROM_NAME: Env.schema.string(),
 
   /*
   |----------------------------------------------------------
@@ -67,4 +70,13 @@ export default await Env.create(new URL('../', import.meta.url), {
   */
   SMTP_HOST: Env.schema.string(),
   SMTP_PORT: Env.schema.string(),
+
+  /*
+  |----------------------------------------------------------
+  | Variables for @rlanz/bull-queue
+  |----------------------------------------------------------
+  */
+  QUEUE_REDIS_HOST: Env.schema.string({ format: 'host' }),
+  QUEUE_REDIS_PORT: Env.schema.number(),
+  QUEUE_REDIS_PASSWORD: Env.schema.string.optional()
 })

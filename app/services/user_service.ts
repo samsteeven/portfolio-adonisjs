@@ -2,7 +2,7 @@ import User from '#models/user'
 import { UserRole } from '#enums/user_role'
 import { CreateUserDTO, UpdateUserDTO } from '#validators/user_validator'
 import db from '@adonisjs/lucid/services/db'
-import FileUploadService from '#services/file_upload_service'
+import FileUploadService from '#services/file_upload/file_upload_service'
 
 export class UserService {
   /**

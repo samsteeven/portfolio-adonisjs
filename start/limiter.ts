@@ -23,5 +23,5 @@ export const limitter = limiter.define('login', (ctx) => {
   // Si l'email n'est pas là, la clé sera juste l'IP.
   const key = email ? `${email}_${ctx.request.ip()}` : ctx.request.ip()
 
-  return limiter.allowRequests(10).every('5 minutes').blockFor('30 minutes').usingKey(key)
+  return limiter.allowRequests(5).every('5 minutes').blockFor('30 minutes').usingKey(key)
 })

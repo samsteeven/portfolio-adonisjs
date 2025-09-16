@@ -18,6 +18,8 @@ import {
   Settings,
   ChevronDown,
   Home,
+  FileText,
+  UserStar,
   LucideExternalLink,
 } from 'lucide-react'
 import { getInitials } from '~/utils/utils_string'
@@ -40,6 +42,8 @@ const adminMenuItems = [
   { name: 'Compétences', icon: Award, href: '/admin/skills', badge: null },
   { name: 'Technologies', icon: Cpu, href: '/admin/technologies', badge: null },
   { name: 'Commentaires', icon: Mail, href: '/admin/comments', badge: '3' },
+  { name: 'Blog', icon: FileText, href: '/admin/blog', badge: '3' },
+  { name: 'Subscribers', icon: UserStar, href: '/admin/newsletter/subscribers', badge: '3' },
 ]
 
 export default function AdminLayout({

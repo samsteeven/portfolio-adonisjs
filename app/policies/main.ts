@@ -16,6 +16,9 @@ export const policies = {
   CommentairePolicy: () => import('#policies/commentaire_policy'),
   ProjectPolicy: () => import('#policies/project_policy'),
   SkillPolicy: () => import('#policies/skill_policy'),
+  BlogPolicy: () => import('#policies/skill_policy'),
+  TagsPolicy: () => import('#policies/skill_policy'),
+  NewsletterPolicy: () => import('#policies/skill_policy'),
   TechnologyPolicy: () => import('#policies/technologie_policy'),
   UserPolicy: () => import('#policies/user_policy'),
 }

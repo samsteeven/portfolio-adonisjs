@@ -95,7 +95,7 @@ const ProjectList = () => {
   }
 
   return (
-    <section className="pb-section mb-64" id="selected-projects">
+    <section className="pb-section mb-46" id="selected-projects">
       <div className="container">
         <SectionTitle title="SELECTED PROJECTS" />
         <div className="group/projects relative" ref={containerRef}>

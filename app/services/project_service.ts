@@ -3,7 +3,7 @@ import ProjectImage from '#models/project_image'
 import Technology from '#models/technology'
 import type { CreateProjectData, UpdateProjectData, ProjectFilters } from '#validators/project'
 import { ModelPaginatorContract } from '@adonisjs/lucid/types/model'
-import ProjectUploadService from '#services/file_upload_technolgy_service'
+import ProjectUploadService from '#services/file_upload/file_upload_technolgy_service'
 
 export default class ProjectService {
   /**
