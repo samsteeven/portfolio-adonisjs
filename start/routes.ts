@@ -1,6 +1,7 @@
 import router from '@adonisjs/core/services/router'
 import { middleware } from '#start/kernel'
 import { limitter } from '#start/limiter'
+import CommentairesController from '#controllers/commentaire_controller'
 const DashboardController = () => import('#controllers/dashboard_controller')
 const TagsController = () => import('#controllers/tags_controller')
 const BlogPostsController = () => import('#controllers/blog_posts_controller')
@@ -26,10 +27,18 @@ router
       .where('provider', /github|google/)
   })
   .middleware(middleware.guest())
+// Soumission de commentaire pour visiteur authentifié
 router
-  .post('/guestbook', '#controllers/commentaire_controller.store')
-  .use(limitter)
-  .middleware(middleware.auth({ guards: ['guestbook', 'web'] }))
+  .post('/guestbook/authenticated', [CommentaireController, 'storeAuthenticated'])
+  .middleware([middleware.auth({ guards: ['web', 'guestbook'] })])
+
+// Soumission de commentaire pour visiteur invité
+router
+  .post('/guestbook/guest', [CommentairesController, 'storeGuest'])
+  .middleware(middleware.guest())
+
+// API pour les statistiques géographiques (public, pour affichage sur la page)
+router.get('/guestbook/stats/geo', [CommentairesController, 'getGeoStats'])
 router
   .post('/auth/guestbook/logout', '#controllers/auth_controller.guestbookLogout')
   .middleware(middleware.auth({ guards: ['guestbook'] }))

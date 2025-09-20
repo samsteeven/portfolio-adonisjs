@@ -1,10 +1,25 @@
 import React, { useEffect, useState } from 'react'
-import { Deferred, Head, Link, router, useForm } from '@inertiajs/react'
-import { Github, Loader2, MessageCircle, Send, Smile, X } from 'lucide-react'
+import { WhenVisible, Head, Link, router, useForm } from '@inertiajs/react'
+import {
+  Github,
+  Loader2,
+  MessageCircle,
+  Send,
+  Smile,
+  X,
+  MapPin,
+  User,
+  Mail,
+  Phone,
+  Calendar,
+  Globe,
+  LogIn,
+} from 'lucide-react'
 import { CommentaireType } from '~/types/commentaire'
 import { getInitials } from '~/utils/utils_string'
 import { AuthenticatedUser } from '~/types'
 import { UserRole } from '~/enums/user_role'
+import { Fallback } from '@/components/fallback'
 
 interface CommentsData {
   data: CommentaireType[]
@@ -30,23 +45,65 @@ interface GuestbookProps {
 }
 
 export default function Guestbook({ comments: deferredComments, reactions, user }: GuestbookProps) {
-  const { data, setData, post, processing, errors, reset } = useForm({
+  // Form pour utilisateur authentifié
+  const {
+    data: authData,
+    setData: setAuthData,
+    post: postAuth,
+    processing: authProcessing,
+    errors: authErrors,
+    reset: resetAuth,
+  } = useForm({
     message: '',
   })
+
+  // Form pour visiteur invité
+  const {
+    data: guestData,
+    setData: setGuestData,
+    post: postGuest,
+    processing: guestProcessing,
+    errors: guestErrors,
+    reset: resetGuest,
+  } = useForm({
+    message: '',
+    guestName: '',
+    guestEmail: '',
+    guestPhone: '',
+    website: '', // Honeypot field
+  })
+
   const [showReactionPicker, setShowReactionPicker] = useState<number | null>(null)
   const [authLoading, setAuthLoading] = useState<'github' | 'google' | null>(null)
+  const [formType, setFormType] = useState<'guest' | 'auth'>('auth')
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [isclient, setIsClient] = useState(false)
+
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
+  const handleAuthSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    post('/guestbook', {
+    postAuth('/guestbook/authenticated', {
       onSuccess: () => {
-        reset()
+        resetAuth()
+        router.reload({ only: ['comments'] })
+      },
+    })
+  }
+
+  const handleGuestSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    postGuest('/guestbook/guest', {
+      onSuccess: () => {
+        resetGuest()
         router.reload({ only: ['comments'] })
       },
     })
   }
 
   const formatDate = (dateString: string) => {
+    if (!isclient) return '...'
     const date = new Date(dateString)
     return date.toLocaleDateString('fr-FR', {
       day: 'numeric',
@@ -89,17 +146,14 @@ export default function Guestbook({ comments: deferredComments, reactions, user 
     )
   }
 
-  // Gestion des clics sur les boutons d'authentification
   const handleAuthClick = (provider: 'github' | 'google', url: string) => {
-    if (authLoading) return // Empêche les clics multiples
+    if (authLoading) return
 
     setAuthLoading(provider)
-
-    // Redirection vers l'URL d'authentification
     window.location.replace(url)
   }
 
-  // Check if user is admin (adjust role check according to your role system)
+  // Check if user is admin
   const isAdmin = user?.data && user.data.role === UserRole.ADMIN
 
   // Fermer le picker d'emojis quand on clique ailleurs
@@ -117,18 +171,6 @@ export default function Guestbook({ comments: deferredComments, reactions, user 
     }
   }, [showReactionPicker])
 
-  // Réinitialiser l'état de chargement si on revient sur la page
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        setAuthLoading(null)
-      }
-    }
-
-    document.addEventListener('visibilitychange', handleVisibilityChange)
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
-  }, [])
-
   return (
     <>
       <Head title="Livre d'or - Portfolio" />
@@ -143,69 +185,10 @@ export default function Guestbook({ comments: deferredComments, reactions, user 
             </h1>
             <p className="text-gray-400 text-lg mb-8 max-w-2xl">
               Laissez une impression durable ! Signez mon livre d'or et faites-moi savoir que vous
-              êtes passé.
+              êtes passé. Connectez-vous ou laissez vos coordonnées pour partager votre message.
             </p>
 
-            {/* Show login buttons only if user is not authenticated */}
-            {!user?.data && (
-              <div className="mb-8">
-                <p className="text-white mb-4">Connectez-vous pour laisser un message !</p>
-                <div className="flex flex-wrap gap-4">
-                  <button
-                    onClick={() => handleAuthClick('github', 'oauth/github/redirect')}
-                    disabled={authLoading !== null}
-                    className={`flex items-center gap-3 px-6 py-3 rounded-lg transition-colors ${
-                      authLoading !== null
-                        ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
-                        : 'bg-gray-800 hover:bg-gray-700 text-white hover:cursor-pointer'
-                    }`}
-                  >
-                    {authLoading === 'github' ? (
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                    ) : (
-                      <Github className="w-5 h-5" />
-                    )}
-                    {authLoading === 'github' ? 'Connexion...' : 'Connectez-vous avec GitHub'}
-                  </button>
-
-                  <button
-                    onClick={() => handleAuthClick('google', 'oauth/google/redirect')}
-                    disabled={authLoading !== null}
-                    className={`flex items-center gap-3 px-6 py-3 rounded-lg transition-colors ${
-                      authLoading !== null
-                        ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
-                        : 'bg-gray-800 hover:bg-gray-700 text-white hover:cursor-pointer'
-                    }`}
-                  >
-                    {authLoading === 'google' ? (
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                    ) : (
-                      <svg className="w-5 h-5" viewBox="0 0 24 24">
-                        <path
-                          fill="currentColor"
-                          d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                        />
-                        <path
-                          fill="currentColor"
-                          d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                        />
-                        <path
-                          fill="currentColor"
-                          d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                        />
-                        <path
-                          fill="currentColor"
-                          d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                        />
-                      </svg>
-                    )}
-                    {authLoading === 'google' ? 'Connexion...' : 'Connectez-vous avec Google'}
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Welcome message for authenticated users */}
+            {/* Message de bienvenue pour les utilisateurs connectés */}
             {user?.data && (
               <div className="mb-8 p-4 bg-gray-800/50 rounded-lg border border-gray-700">
                 <p className="text-green-400 mb-2">✨ Bienvenue, {user.data.username} !</p>
@@ -227,32 +210,121 @@ export default function Guestbook({ comments: deferredComments, reactions, user 
                 </div>
               </div>
             )}
+
+            {/* Options de connexion pour les non-connectés */}
+            {!user?.data && (
+              <div className="mb-8">
+                <div className="flex flex-col sm:flex-row gap-4 mb-6">
+                  <button
+                    onClick={() => setFormType('guest')}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                      formType === 'guest'
+                        ? 'bg-pink-600 text-white'
+                        : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                    }`}
+                  >
+                    <User className="w-4 h-4" />
+                    Laisser un message
+                  </button>
+                  <button
+                    onClick={() => setFormType('auth')}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                      formType === 'auth'
+                        ? 'bg-pink-600 text-white'
+                        : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                    }`}
+                  >
+                    <LogIn className="w-4 h-4" />
+                    Se connecter
+                  </button>
+                </div>
+
+                {/* Boutons de connexion sociale */}
+                {formType === 'auth' && (
+                  <div className="mb-6">
+                    <p className="text-white mb-4">Connectez-vous avec :</p>
+                    <div className="flex flex-wrap gap-4">
+                      <button
+                        onClick={() => handleAuthClick('github', '/oauth/github/redirect')}
+                        disabled={authLoading !== null}
+                        className={`flex items-center gap-3 px-6 py-3 rounded-lg transition-colors ${
+                          authLoading !== null
+                            ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                            : 'bg-gray-800 hover:bg-gray-700 text-white hover:cursor-pointer'
+                        }`}
+                      >
+                        {authLoading === 'github' ? (
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                        ) : (
+                          <Github className="w-5 h-5" />
+                        )}
+                        {authLoading === 'github' ? 'Connexion...' : 'GitHub'}
+                      </button>
+
+                      <button
+                        onClick={() => handleAuthClick('google', '/oauth/google/redirect')}
+                        disabled={authLoading !== null}
+                        className={`flex items-center gap-3 px-6 py-3 rounded-lg transition-colors ${
+                          authLoading !== null
+                            ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                            : 'bg-gray-800 hover:bg-gray-700 text-white hover:cursor-pointer'
+                        }`}
+                      >
+                        {authLoading === 'google' ? (
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                        ) : (
+                          <svg className="w-5 h-5" viewBox="0 0 24 24">
+                            <path
+                              fill="currentColor"
+                              d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                            />
+                            <path
+                              fill="currentColor"
+                              d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                            />
+                            <path
+                              fill="currentColor"
+                              d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                            />
+                            <path
+                              fill="currentColor"
+                              d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                            />
+                          </svg>
+                        )}
+                        {authLoading === 'google' ? 'Connexion...' : 'Google'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
-          {/* Formulaire de commentaire - affiché seulement si connecté */}
+          {/* Formulaire pour utilisateur authentifié */}
           {user?.data && (
             <div className="mb-12">
-              <div className="space-y-4">
+              <form onSubmit={handleAuthSubmit} className="space-y-4">
                 <textarea
-                  value={data.message}
-                  onChange={(e) => setData('message', e.target.value)}
+                  value={authData.message}
+                  onChange={(e) => setAuthData('message', e.target.value)}
                   placeholder="Écrivez votre message..."
                   rows={4}
-                  className="w-full px-4 py-3 bg-gray-800 border-none border-gray-700 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent resize-none text-white placeholder-gray-400"
+                  className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent resize-none text-white placeholder-gray-400"
                 />
-                {errors.message && <p className="text-red-400 text-sm">{errors.message}</p>}
+                {authErrors.message && <p className="text-red-400 text-sm">{authErrors.message}</p>}
 
                 <div className="flex justify-end">
                   <button
-                    onClick={handleSubmit}
-                    disabled={processing || !data.message.trim()}
+                    type="submit"
+                    disabled={authProcessing || !authData.message.trim()}
                     className={`flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-all ${
-                      processing || !data.message.trim()
+                      authProcessing || !authData.message.trim()
                         ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
                         : 'bg-pink-600 hover:bg-pink-500 text-white hover:cursor-pointer'
                     }`}
                   >
-                    {processing ? (
+                    {authProcessing ? (
                       <>
                         <Loader2 className="w-4 h-4 animate-spin" />
                         Publication...
@@ -265,22 +337,128 @@ export default function Guestbook({ comments: deferredComments, reactions, user 
                     )}
                   </button>
                 </div>
-              </div>
+              </form>
+            </div>
+          )}
+
+          {/* Formulaire pour visiteur invité */}
+          {!user?.data && formType === 'guest' && (
+            <div className="mb-12">
+              <form onSubmit={handleGuestSubmit} className="space-y-4">
+                {/* Honeypot field - caché pour les utilisateurs */}
+                <input
+                  type="text"
+                  name="website"
+                  value={guestData.website}
+                  onChange={(e) => setGuestData('website', e.target.value)}
+                  style={{ position: 'absolute', left: '-9999px', opacity: 0 }}
+                  tabIndex={-1}
+                  autoComplete="off"
+                />
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      <User className="w-4 h-4 inline mr-2" />
+                      Nom complet *
+                    </label>
+                    <input
+                      type="text"
+                      value={guestData.guestName}
+                      onChange={(e) => setGuestData('guestName', e.target.value)}
+                      placeholder="Votre nom complet"
+                      required
+                      className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent text-white placeholder-gray-400"
+                    />
+                    {guestErrors.guestName && (
+                      <p className="text-red-400 text-sm mt-1">{guestErrors.guestName}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      <Mail className="w-4 h-4 inline mr-2" />
+                      Email (optionnel)
+                    </label>
+                    <input
+                      type="email"
+                      value={guestData.guestEmail}
+                      onChange={(e) => setGuestData('guestEmail', e.target.value)}
+                      placeholder="votre@email.com"
+                      className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent text-white placeholder-gray-400"
+                    />
+                    {guestErrors.guestEmail && (
+                      <p className="text-red-400 text-sm mt-1">{guestErrors.guestEmail}</p>
+                    )}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    <Phone className="w-4 h-4 inline mr-2" />
+                    Téléphone (optionnel)
+                  </label>
+                  <input
+                    type="tel"
+                    value={guestData.guestPhone}
+                    onChange={(e) => setGuestData('guestPhone', e.target.value)}
+                    placeholder="+33 6 12 34 56 78"
+                    className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent text-white placeholder-gray-400"
+                  />
+                  {guestErrors.guestPhone && (
+                    <p className="text-red-400 text-sm mt-1">{guestErrors.guestPhone}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    <MessageCircle className="w-4 h-4 inline mr-2" />
+                    Votre message *
+                  </label>
+                  <textarea
+                    value={guestData.message}
+                    onChange={(e) => setGuestData('message', e.target.value)}
+                    placeholder="Laissez-moi un message..."
+                    rows={4}
+                    required
+                    className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent resize-none text-white placeholder-gray-400"
+                  />
+                  {guestErrors.message && (
+                    <p className="text-red-400 text-sm mt-1">{guestErrors.message}</p>
+                  )}
+                </div>
+
+                <div className="flex justify-end">
+                  <button
+                    type="submit"
+                    disabled={
+                      guestProcessing || !guestData.message.trim() || !guestData.guestName.trim()
+                    }
+                    className={`flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-all ${
+                      guestProcessing || !guestData.message.trim() || !guestData.guestName.trim()
+                        ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
+                        : 'bg-pink-600 hover:bg-pink-500 text-white hover:cursor-pointer'
+                    }`}
+                  >
+                    {guestProcessing ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Envoi en cours...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="w-4 h-4" />
+                        Envoyer le message
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
             </div>
           )}
 
           {/* Liste des commentaires avec Deferred */}
-          <Deferred
-            data="comments"
-            fallback={
-              <div className="flex justify-center py-12">
-                <div className="flex items-center gap-3">
-                  <Loader2 className="w-6 h-6 animate-spin text-pink-500" />
-                  <span className="text-gray-400">Chargement des messages...</span>
-                </div>
-              </div>
-            }
-          >
+          <WhenVisible data="comments" fallback={<Fallback message="messages" />}>
             {() => {
               const comments = deferredComments as CommentsData
               return (
@@ -292,13 +470,13 @@ export default function Guestbook({ comments: deferredComments, reactions, user 
                         {comment.user?.subInfo ? (
                           <img
                             src={comment.user.subInfo.photoPath}
-                            alt={comment.user.username}
+                            alt={comment.displayName || comment.user.username}
                             className="w-12 h-12 rounded-full object-cover"
                           />
                         ) : (
                           <div className="w-12 h-12 bg-gray-700 rounded-full flex items-center justify-center">
                             <span className="text-white font-semibold text-sm">
-                              {getInitials(comment.user.username)}
+                              {getInitials(comment.displayName || comment.guestName || 'V')}
                             </span>
                           </div>
                         )}
@@ -309,11 +487,22 @@ export default function Guestbook({ comments: deferredComments, reactions, user 
                         <div className="flex items-center justify-between mb-1">
                           <div className="flex items-center gap-2">
                             <span className="font-semibold text-white">
-                              {comment.user.username}
+                              {comment.displayName || comment.guestName}
                             </span>
+                            {comment.commentType === 'guest' && (
+                              <span className="text-xs bg-gray-700 px-2 py-0.5 rounded text-gray-300">
+                                Visiteur
+                              </span>
+                            )}
                             {comment.user?.provider && (
                               <span className="text-xs text-gray-500">
                                 (via {comment.user.provider})
+                              </span>
+                            )}
+                            {comment.fullLocation && (
+                              <span className="text-xs text-gray-500 flex items-center gap-1">
+                                <MapPin className="w-3 h-3" />
+                                {comment.fullLocation}
                               </span>
                             )}
                           </div>
@@ -412,16 +601,21 @@ export default function Guestbook({ comments: deferredComments, reactions, user 
                           </div>
                         </div>
 
-                        <p className="text-gray-300 mb-2 whitespace-pre-wrap">
-                          {comment.message}
-                          {comment.reaction && !isAdmin && (
-                            <span className="ml-2 text-lg">{comment.reaction}</span>
-                          )}
-                        </p>
+                        <p className="text-gray-300 mb-2 whitespace-pre-wrap">{comment.message}</p>
 
-                        <time className="text-sm text-gray-500 italic" dateTime={comment.createdAt}>
-                          {formatDate(comment.createdAt)}
-                        </time>
+                        <div className="flex items-center gap-4 text-sm text-gray-500">
+                          <time className="flex items-center gap-1" dateTime={comment.createdAt}>
+                            <Calendar className="w-3 h-3" />
+                            {formatDate(comment.createdAt)}
+                          </time>
+                          {comment.country && (
+                            <span className="flex items-center gap-1">
+                              <Globe className="w-3 h-3" />
+                              {comment.city && `${comment.city}, `}
+                              {comment.country}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -432,16 +626,14 @@ export default function Guestbook({ comments: deferredComments, reactions, user 
                       <MessageCircle className="w-12 h-12 text-gray-600 mx-auto mb-4" />
                       <p className="text-gray-400">Aucun message pour le moment.</p>
                       <p className="text-gray-500 text-sm">
-                        {user
-                          ? "Soyez le premier à signer ce livre d'or !"
-                          : "Connectez-vous pour être le premier à signer ce livre d'or !"}
+                        Soyez le premier à signer ce livre d'or !
                       </p>
                     </div>
                   )}
                 </div>
               )
             }}
-          </Deferred>
+          </WhenVisible>
         </div>
       </div>
     </>

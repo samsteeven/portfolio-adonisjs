@@ -7,11 +7,11 @@ const allyConfig = defineConfig({
     clientSecret: env.get('GITHUB_CLIENT_SECRET'),
     callbackUrl: 'http://localhost:3333/oauth/github/callback',
   }),
-  // google: services.google({
-  //   clientId: env.get('GOOGLE_CLIENT_ID'),
-  //   clientSecret: env.get('GOOGLE_CLIENT_SECRET'),
-  //   callbackUrl: 'http://localhost:3333/auth/google/callback',
-  // }),
+  google: services.google({
+    clientId: env.get('GOOGLE_CLIENT_ID'),
+    clientSecret: env.get('GOOGLE_CLIENT_SECRET'),
+    callbackUrl: 'http://localhost:3333/oauth/google/callback',
+  }),
 })
 
 export default allyConfig

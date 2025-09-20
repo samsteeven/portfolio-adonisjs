@@ -1,6 +1,6 @@
 import { cn } from '@/utils'
 import { useState } from 'react'
-import { MoveUpRight } from 'lucide-react'
+import { MoveUpLeft, MoveUpRight } from 'lucide-react'
 import { Link, router, usePage } from '@inertiajs/react'
 import { GENERAL_INFO, SOCIAL_LINKS } from '@/data'
 import { RoughAnnotate } from '@/components/RoughAnnotate'
@@ -11,6 +11,8 @@ const COLORS = [
   'bg-blue-500 text-white',
   'bg-teal-500 text-black',
   'bg-indigo-500 text-white',
+  'bg-indigo-500 text-white',
+  'bg-pink-500 text-white',
 ]
 
 const MENU_LINKS = [
@@ -136,10 +138,17 @@ const Navbar = () => {
                           COLORS[idx]
                         )}
                       >
-                        <MoveUpRight
-                          size={8}
-                          className="scale-0 group-hover:scale-100 transition-all"
-                        />
+                        {link.url.startsWith('/#') ? (
+                          <MoveUpLeft
+                            size={8}
+                            className="scale-0 rotate-[-80deg] group-hover:scale-100 transition-all"
+                          />
+                        ) : (
+                          <MoveUpRight
+                            size={8}
+                            className="scale-0 group-hover:scale-100 transition-all"
+                          />
+                        )}
                       </span>
                       {link.name}
                     </button>

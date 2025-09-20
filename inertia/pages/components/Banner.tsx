@@ -52,11 +52,6 @@ const Banner = () => {
             Frontend Developer with 3+ years of experience in building high-performance, scalable,
             and responsive web solutions.
           </p>
-          <h1
-            className={`heading text-[35px] text-darkslateblue font-medium mx-28 md:mx-5 cursor-default font-caveat`}
-          >
-            {' < Vikas />'}
-          </h1>
           <Button
             as="link"
             target="_blank"

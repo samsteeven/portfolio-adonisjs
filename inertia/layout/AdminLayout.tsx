@@ -37,11 +37,11 @@ interface AdminLayoutProps {
 
 const adminMenuItems = [
   { name: 'Dashboard', icon: Home, href: '/admin/dashboard', badge: null },
-  { name: 'Utilisateurs', icon: Users, href: '/admin/users' },
+  { name: 'Users', icon: Users, href: '/admin/users' },
   { name: 'Projets', icon: Briefcase, href: '/admin/projects', badge: null },
   { name: 'Compétences', icon: Award, href: '/admin/skills', badge: null },
   { name: 'Technologies', icon: Cpu, href: '/admin/technologies', badge: null },
-  { name: 'Commentaires', icon: Mail, href: '/admin/comments', badge: '3' },
+  { name: 'Comments', icon: Mail, href: '/admin/comments', badge: '3' },
   { name: 'Blog', icon: FileText, href: '/admin/blog', badge: '3' },
   { name: 'Subscribers', icon: UserStar, href: '/admin/newsletter/subscribers', badge: '3' },
 ]

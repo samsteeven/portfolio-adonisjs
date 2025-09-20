@@ -22,11 +22,11 @@ export default function Newsletter_signup({ success, className = '' }: Newslette
         </div>
         <h3 className="sm:text-2xl md:text-3xl font-bold text-white mb-2">Newsletter</h3>
         <p className="text-gray-400 md:text-xl">
-          Restez au courant de mes derniers articles et projets
+          Restez au courant de mes dernieres actualites et posts
         </p>
         <div className="inline-block mt-2">
           <RoughAnnotate strokeWidth={4} color="#3A132B" type={'box'} padding={4}>
-            <p className="md:text-lg font-anton">Abonnez - vous !</p>
+            <p className="md:text-lg font-anton">Rejoignez - nous !</p>
           </RoughAnnotate>
         </div>
       </div>

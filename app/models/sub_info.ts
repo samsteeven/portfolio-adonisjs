@@ -22,6 +22,9 @@ export default class SubInfo extends BaseModel {
   @column({ columnName: 'profil_mail' })
   declare profilMail: string | null
 
+  @column({ columnName: 'profil_discord' })
+  declare profilDiscord: string | null
+
   @column({ columnName: 'photo_path' })
   declare photoPath: string | null
 

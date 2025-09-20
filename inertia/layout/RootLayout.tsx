@@ -14,6 +14,7 @@ import PageTransition from '@/components/PageTransition'
 import { AuthSync } from '@/components/AuthSync'
 import { InertiaProps } from '~/types'
 import '~/css/app.css'
+import BottomNavbar from '~/layout/bottom_navbar'
 interface RootLayoutProps {
   children: React.ReactNode
 }
@@ -38,6 +39,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
           <main>{children}</main>
         </PageTransition>
         <Footer />
+        <BottomNavbar />
         <Preloader />
         <ScrollProgressIndicator />
         <ParticleBackground />

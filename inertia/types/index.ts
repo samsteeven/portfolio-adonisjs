@@ -56,6 +56,7 @@ export interface AuthenticatedUser {
     profilLinkedin?: string
     profilTwitter?: string
     profilMail?: string
+    profilDiscord?: string
     photoPath?: string
     photoPathPublicUrl?: string
     phone?: string

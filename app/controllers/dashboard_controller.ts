@@ -17,16 +17,18 @@ export default class DashboardController {
       .preload('author')
       .preload('tags')
       .orderBy('created_at', 'desc')
-      .limit(4)
+      .limit(5)
 
     return inertia.render('home', {
-      recentPosts: recentPosts.map((post) =>
-        post.serialize({
-          relations: {
-            author: { fields: ['username'] },
-            tags: { fields: ['name', 'slug', 'color'] },
-          },
-        })
+      recentPosts: inertia.defer(() =>
+        recentPosts.map((post) =>
+          post.serialize({
+            relations: {
+              author: { fields: ['username'] },
+              tags: { fields: ['name', 'slug', 'color'] },
+            },
+          })
+        )
       ),
     })
   }

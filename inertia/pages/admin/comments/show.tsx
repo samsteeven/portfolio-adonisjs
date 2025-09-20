@@ -14,7 +14,6 @@ import {
   Github,
   Chrome,
   UserCheck,
-  UserX,
   Smile,
   X,
   Copy,
@@ -22,6 +21,11 @@ import {
   MessageCircle,
   Eye,
   Globe,
+  MapPin,
+  Phone,
+  Shield,
+  Wifi,
+  Monitor,
 } from 'lucide-react'
 import { CommentaireType } from '~/types/commentaire'
 import { toast } from 'sonner'
@@ -65,12 +69,7 @@ export default function ShowComment({ commentaire, reactions }: Props) {
     setDeleteModal((prev) => ({ ...prev, isLoading: true }))
 
     router.delete(`/admin/comments/${commentaire.id}`, {
-      onSuccess: () => {
-        toast.success('Commentaire supprimé avec succès')
-        router.visit('/admin/comments')
-      },
       onError: () => {
-        toast.error('Erreur lors de la suppression')
         setDeleteModal((prev) => ({ ...prev, isLoading: false }))
       },
     })
@@ -124,7 +123,7 @@ export default function ShowComment({ commentaire, reactions }: Props) {
     }
   }
 
-  const getProviderIcon = (provider: string) => {
+  const getProviderIcon = (provider?: string) => {
     switch (provider) {
       case 'github':
         return <Github className="h-5 w-5" />
@@ -135,7 +134,7 @@ export default function ShowComment({ commentaire, reactions }: Props) {
     }
   }
 
-  const getProviderColor = (provider: string) => {
+  const getProviderColor = (provider?: string) => {
     switch (provider) {
       case 'github':
         return 'text-gray-700 bg-gray-100 border-gray-200'
@@ -146,7 +145,7 @@ export default function ShowComment({ commentaire, reactions }: Props) {
     }
   }
 
-  const getProviderName = (provider: string) => {
+  const getProviderName = (provider?: string) => {
     switch (provider) {
       case 'github':
         return 'GitHub'
@@ -156,6 +155,8 @@ export default function ShowComment({ commentaire, reactions }: Props) {
         return 'Local'
     }
   }
+
+  const isGuestComment = commentaire.commentType === 'guest'
 
   return (
     <>
@@ -180,7 +181,19 @@ export default function ShowComment({ commentaire, reactions }: Props) {
                 </h1>
                 <p className="text-gray-600">
                   Commentaire #{commentaire.id} par{' '}
-                  <span className="font-semibold text-gray-900">{commentaire.user?.username}</span>
+                  <span className="font-semibold text-gray-900">{commentaire.displayName}</span>
+                  {isGuestComment && (
+                    <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                      <User className="h-3 w-3 mr-1" />
+                      Invité
+                    </span>
+                  )}
+                  {!isGuestComment && (
+                    <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                      <UserCheck className="h-3 w-3 mr-1" />
+                      Connecté
+                    </span>
+                  )}
                 </p>
                 <p className="text-sm text-gray-500 mt-1">
                   Posté le{' '}
@@ -201,6 +214,12 @@ export default function ShowComment({ commentaire, reactions }: Props) {
                         hour: '2-digit',
                         minute: '2-digit',
                       })}
+                    </span>
+                  )}
+                  {commentaire.fullLocation && (
+                    <span className="flex items-center gap-1 mt-1">
+                      <MapPin className="h-3 w-3" />
+                      {commentaire.fullLocation}
                     </span>
                   )}
                 </p>
@@ -352,6 +371,157 @@ export default function ShowComment({ commentaire, reactions }: Props) {
                 </div>
               </Card>
 
+              {/* Informations techniques et de géolocalisation */}
+              {(commentaire.ipAddress ||
+                commentaire.userAgent ||
+                commentaire.country ||
+                commentaire.isp ||
+                commentaire.organization ||
+                commentaire.timezone) && (
+                <Card className="bg-white">
+                  <div className="p-4 sm:p-6">
+                    <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                      <Shield className="h-5 w-5" />
+                      Informations techniques
+                    </h2>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {/* Géolocalisation */}
+                      {(commentaire.country || commentaire.city || commentaire.latitude) && (
+                        <div className="space-y-3">
+                          <h3 className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                            <MapPin className="h-4 w-4" />
+                            Localisation
+                          </h3>
+
+                          {commentaire.country && (
+                            <div className="text-sm">
+                              <span className="text-gray-600">Pays:</span>
+                              <span className="ml-2 font-medium">
+                                {commentaire.country}
+                                {commentaire.countryCode && (
+                                  <span className="ml-1 text-xs text-gray-500 uppercase">
+                                    ({commentaire.countryCode})
+                                  </span>
+                                )}
+                              </span>
+                            </div>
+                          )}
+
+                          {commentaire.city && (
+                            <div className="text-sm">
+                              <span className="text-gray-600">Ville:</span>
+                              <span className="ml-2 font-medium">{commentaire.city}</span>
+                            </div>
+                          )}
+
+                          {commentaire.regionName && (
+                            <div className="text-sm">
+                              <span className="text-gray-600">Région:</span>
+                              <span className="ml-2 font-medium">{commentaire.regionName}</span>
+                            </div>
+                          )}
+
+                          {commentaire.timezone && (
+                            <div className="text-sm">
+                              <span className="text-gray-600">Fuseau horaire:</span>
+                              <span className="ml-2 font-medium">{commentaire.timezone}</span>
+                            </div>
+                          )}
+
+                          {commentaire.latitude && commentaire.longitude && (
+                            <div className="text-sm">
+                              <span className="text-gray-600">Coordonnées:</span>
+                              <span className="ml-2 font-mono text-xs">
+                                {Number(commentaire.latitude).toFixed(4)},{' '}
+                                {Number(commentaire.longitude).toFixed(4)}
+                              </span>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() =>
+                                  copyToClipboard(
+                                    `${commentaire.latitude}, ${commentaire.longitude}`
+                                  )
+                                }
+                                className="ml-2 h-5 w-5 p-0 border-none"
+                              >
+                                <Copy className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Informations réseau */}
+                      {(commentaire.ipAddress || commentaire.isp || commentaire.organization) && (
+                        <div className="space-y-3">
+                          <h3 className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                            <Wifi className="h-4 w-4" />
+                            Réseau
+                          </h3>
+
+                          {commentaire.ipAddress && (
+                            <div className="text-sm">
+                              <span className="text-gray-600">IP (anonymisée):</span>
+                              <span className="ml-2 font-mono text-xs">
+                                {commentaire.ipAddress}
+                              </span>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => copyToClipboard(commentaire.ipAddress || '')}
+                                className="ml-2 h-5 w-5 p-0 border-none"
+                              >
+                                <Copy className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          )}
+
+                          {commentaire.isp && (
+                            <div className="text-sm">
+                              <span className="text-gray-600">FAI:</span>
+                              <span className="ml-2 font-medium">{commentaire.isp}</span>
+                            </div>
+                          )}
+
+                          {commentaire.organization && (
+                            <div className="text-sm">
+                              <span className="text-gray-600">Organisation:</span>
+                              <span className="ml-2 font-medium">{commentaire.organization}</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* User Agent */}
+                    {commentaire.userAgent && (
+                      <div className="mt-6 pt-4 border-t">
+                        <h3 className="text-sm font-medium text-gray-700 flex items-center gap-2 mb-3">
+                          <Monitor className="h-4 w-4" />
+                          Navigateur / Système
+                        </h3>
+                        <div className="bg-gray-50 rounded p-3">
+                          <p className="text-xs text-gray-600 font-mono break-all leading-relaxed">
+                            {commentaire.userAgent}
+                          </p>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => copyToClipboard(commentaire.userAgent || '')}
+                          className="mt-2 border-none"
+                        >
+                          <Copy className="h-3 w-3 mr-1" />
+                          Copier User Agent
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </Card>
+              )}
+
               {/* Aperçu public */}
               <Card className="bg-white">
                 <div className="p-4 sm:p-6">
@@ -364,17 +534,28 @@ export default function ShowComment({ commentaire, reactions }: Props) {
                     <div className="flex items-start gap-3">
                       {/* Avatar */}
                       <div
-                        className={`p-2 rounded-full ${getProviderColor(commentaire.user?.provider || 'local')}`}
+                        className={`p-2 rounded-full ${getProviderColor(commentaire.user?.provider)}`}
                       >
-                        {getProviderIcon(commentaire.user?.provider || 'local')}
+                        {getProviderIcon(commentaire.user?.provider)}
                       </div>
 
                       {/* Contenu */}
                       <div className="flex-1 min-w-0">
                         <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-2">
                           <span className="font-semibold text-gray-900">
-                            {commentaire.user?.username}
+                            {commentaire.displayName}
                           </span>
+                          {commentaire.commentType === 'guest' && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                              Visiteur
+                            </span>
+                          )}
+                          {commentaire.fullLocation && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-600">
+                              <MapPin className="h-3 w-3 mr-1" />
+                              {commentaire.city}
+                            </span>
+                          )}
                           {commentaire.reaction && (
                             <span className="text-lg" title="Réaction de l'admin">
                               {commentaire.reaction}
@@ -398,7 +579,7 @@ export default function ShowComment({ commentaire, reactions }: Props) {
                   </div>
 
                   <p className="text-sm text-gray-600 mt-3">
-                    C'est ainsi que ce commentaire apparaîtra sur votre portfolio public.
+                    C'est ainsi que ce commentaire apparaîtra sur votre livre d'or public.
                   </p>
                 </div>
               </Card>
@@ -461,7 +642,7 @@ export default function ShowComment({ commentaire, reactions }: Props) {
               {/* Informations utilisateur */}
               <Card className="p-4 sm:p-6 bg-white">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                  Informations utilisateur
+                  {isGuestComment ? 'Informations visiteur' : 'Informations utilisateur'}
                 </h3>
 
                 <div className="space-y-4">
@@ -476,11 +657,9 @@ export default function ShowComment({ commentaire, reactions }: Props) {
                         </span>
                       </div>
                     ) : (
-                      <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-lg border border-gray-200">
-                        <UserX className="h-4 w-4 text-gray-600" />
-                        <span className="text-sm text-gray-700 font-medium">
-                          Utilisateur anonyme
-                        </span>
+                      <div className="flex items-center gap-2 px-3 py-2 bg-blue-50 rounded-lg border border-blue-200">
+                        <User className="h-4 w-4 text-blue-600" />
+                        <span className="text-sm text-blue-800 font-medium">Visiteur invité</span>
                       </div>
                     )}
                   </div>
@@ -490,12 +669,12 @@ export default function ShowComment({ commentaire, reactions }: Props) {
                     <label className="block text-sm font-medium text-gray-700 mb-1">Nom</label>
                     <div className="flex items-center gap-2">
                       <span className="text-sm text-gray-900 font-medium flex-1 truncate">
-                        {commentaire.user?.username}
+                        {commentaire.displayName}
                       </span>
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => copyToClipboard(commentaire.user?.username!)}
+                        onClick={() => copyToClipboard(commentaire.displayName || '')}
                         className="h-6 w-6 p-0 border-none flex-shrink-0"
                       >
                         <Copy className="h-3 w-3" />
@@ -504,28 +683,58 @@ export default function ShowComment({ commentaire, reactions }: Props) {
                   </div>
 
                   {/* Email */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-gray-900 font-medium flex-1 truncate">
-                        {commentaire.user?.email}
-                      </span>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => copyToClipboard(commentaire.user?.email)}
-                        className="h-6 w-6 p-0 border-none flex-shrink-0"
-                      >
-                        <Copy className="h-3 w-3" />
-                      </Button>
-                      <a
-                        href={`mailto:${commentaire.user?.email}`}
-                        className="text-blue-600 hover:text-blue-800 flex-shrink-0"
-                      >
-                        <ExternalLink className="h-3 w-3" />
-                      </a>
+                  {commentaire.displayEmail && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-gray-900 font-medium flex-1 truncate">
+                          {commentaire.displayEmail}
+                        </span>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => copyToClipboard(commentaire.displayEmail || '')}
+                          className="h-6 w-6 p-0 border-none flex-shrink-0"
+                        >
+                          <Copy className="h-3 w-3" />
+                        </Button>
+                        <a
+                          href={`mailto:${commentaire.displayEmail}`}
+                          className="text-blue-600 hover:text-blue-800 flex-shrink-0"
+                        >
+                          <ExternalLink className="h-3 w-3" />
+                        </a>
+                      </div>
                     </div>
-                  </div>
+                  )}
+
+                  {/* Téléphone (pour les invités) */}
+                  {commentaire.guestPhone && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Téléphone
+                      </label>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-gray-900 font-medium flex-1 truncate">
+                          {commentaire.guestPhone}
+                        </span>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => copyToClipboard(commentaire.guestPhone || '')}
+                          className="h-6 w-6 p-0 border-none flex-shrink-0"
+                        >
+                          <Copy className="h-3 w-3" />
+                        </Button>
+                        <a
+                          href={`tel:${commentaire.guestPhone}`}
+                          className="text-blue-600 hover:text-blue-800 flex-shrink-0"
+                        >
+                          <Phone className="h-3 w-3" />
+                        </a>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Fournisseur d'authentification */}
                   {commentaire.user?.provider && (
@@ -565,6 +774,32 @@ export default function ShowComment({ commentaire, reactions }: Props) {
                       </div>
                     </div>
                   )}
+
+                  {/* Type de commentaire */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Type de commentaire
+                    </label>
+                    <div
+                      className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-medium ${
+                        commentaire.commentType === 'authenticated'
+                          ? 'bg-green-50 border-green-200 text-green-800'
+                          : 'bg-blue-50 border-blue-200 text-blue-800'
+                      }`}
+                    >
+                      {commentaire.commentType === 'authenticated' ? (
+                        <>
+                          <UserCheck className="h-4 w-4" />
+                          Utilisateur connecté
+                        </>
+                      ) : (
+                        <>
+                          <User className="h-4 w-4" />
+                          Visiteur invité
+                        </>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </Card>
 
@@ -660,6 +895,16 @@ export default function ShowComment({ commentaire, reactions }: Props) {
                       )}
                     </div>
                   </div>
+
+                  {/* Informations de référence */}
+                  {commentaire.referer && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Page de référence
+                      </label>
+                      <div className="text-sm text-gray-600 break-all">{commentaire.referer}</div>
+                    </div>
+                  )}
                 </div>
               </Card>
 
@@ -686,8 +931,8 @@ export default function ShowComment({ commentaire, reactions }: Props) {
                     Copier le message
                   </Button>
 
-                  {commentaire.user?.email && (
-                    <a href={`mailto:${commentaire.user?.email}`} className="block w-full">
+                  {commentaire.displayEmail && (
+                    <a href={`mailto:${commentaire.displayEmail}`} className="block w-full">
                       <Button variant="outline" className="w-full justify-start border-none">
                         <Mail className="h-4 w-4 mr-2" />
                         Contacter par email
@@ -695,13 +940,37 @@ export default function ShowComment({ commentaire, reactions }: Props) {
                     </a>
                   )}
 
+                  {commentaire.guestPhone && (
+                    <a href={`tel:${commentaire.guestPhone}`} className="block w-full">
+                      <Button variant="outline" className="w-full justify-start border-none">
+                        <Phone className="h-4 w-4 mr-2" />
+                        Appeler
+                      </Button>
+                    </a>
+                  )}
+
+                  {/* Localiser sur une carte */}
+                  {commentaire.latitude && commentaire.longitude && (
+                    <a
+                      href={`https://www.google.com/maps?q=${commentaire.latitude},${commentaire.longitude}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block w-full"
+                    >
+                      <Button variant="outline" className="w-full justify-start border-none">
+                        <MapPin className="h-4 w-4 mr-2" />
+                        Voir sur la carte
+                      </Button>
+                    </a>
+                  )}
+
                   <Button
-                    onClick={() => window.open('/', '_blank')}
+                    onClick={() => window.open('/guestbook', '_blank')}
                     variant="outline"
                     className="w-full justify-start border-none"
                   >
                     <Eye className="h-4 w-4 mr-2" />
-                    Voir sur le site
+                    Voir le livre d'or
                   </Button>
 
                   <hr className="my-2" />
@@ -728,7 +997,7 @@ export default function ShowComment({ commentaire, reactions }: Props) {
         onConfirm={handleDeleteConfirm}
         title="Supprimer le commentaire"
         message="Cette action est irréversible. Êtes-vous sûr de vouloir supprimer ce commentaire ?"
-        itemName={`Commentaire de ${commentaire.user?.username}`}
+        itemName={`Commentaire de ${commentaire.displayName}`}
         isLoading={deleteModal.isLoading}
       />
 

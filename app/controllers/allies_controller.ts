@@ -1,6 +1,7 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import User from '#models/user'
 import { UserRole } from '#enums/user_role'
+import string from '@adonisjs/core/helpers/string'
 
 export default class AlliesController {
   async redirect({ ally, params, response, session }: HttpContext) {
@@ -8,7 +9,7 @@ export default class AlliesController {
       return ally.use(params.provider).redirect()
     } catch (error) {
       // Gérer les erreurs de redirection
-      session.flash('error', 'Erreur de redirection')
+      session.flash('error', 'Erreur de redirection, reesayer')
       return response.redirect('/guestbook')
     }
   }
@@ -46,7 +47,7 @@ export default class AlliesController {
           username: oauthUser.name || oauthUser.nickName || 'Utilisateur',
           email: oauthUser.email,
           provider: params.provider,
-          password: oauth.name || oauthUser.nickName || 'password',
+          password: string.generateRandom(32),
         }
       )
 
@@ -68,7 +69,7 @@ export default class AlliesController {
       return response.redirect('/guestbook')
     } catch (error) {
       logger.error('Erreur OAuth:', error)
-      session.flash('error', 'Erreur lors de la connexion')
+      session.flash('error', 'Erreur lors de la connexion, reesayer')
       return response.redirect('/guestbook')
     }
   }

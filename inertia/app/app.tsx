@@ -4,7 +4,7 @@ import { hydrateRoot } from 'react-dom/client'
 import RootLayout from '~/layout/RootLayout'
 
 createInertiaApp({
-  progress: { color: '#5468FF' },
+  progress: { color: '#22D3EE' },
   resolve: (name) => {
     // Chargement dynamique de tes pages
     const pages = import.meta.glob('../pages/**/*.tsx', { eager: true })

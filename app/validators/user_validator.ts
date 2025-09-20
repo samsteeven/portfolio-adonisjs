@@ -9,6 +9,7 @@ const subInfoSchema = vine.object({
   profilLinkedin: vine.string().url().optional(),
   profilTwitter: vine.string().url().optional(),
   profilMail: vine.string().email().optional(),
+  profilDiscord: vine.string().url().optional(),
   photoPath: vine
     .file({
       size: '2mb',
@@ -85,6 +86,7 @@ export type CreateUserDTO = {
     profilLinkedin?: string
     profilTwitter?: string
     profilMail?: string
+    profilDiscord?: string
     photoPath?: string
     phone?: string
     bio?: string

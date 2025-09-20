@@ -140,6 +140,15 @@ export default function UserInfoModal({ isOpen, onClose, user }: UserInfoModalPr
                       <LinkIcon className="w-4 h-4" /> Twitter
                     </a>
                   )}
+                  {user.subInfo?.profilDiscord && (
+                    <a
+                      href={user.subInfo.profilDiscord}
+                      target="_blank"
+                      className="flex items-center gap-2 hover:underline text-gray-700 hover:text-gray-900"
+                    >
+                      <LinkIcon className="w-4 h-4" /> Discord
+                    </a>
+                  )}
                 </div>
 
                 {/* Dates */}
