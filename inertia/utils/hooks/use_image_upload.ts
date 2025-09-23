@@ -1,10 +1,12 @@
-import React, { useState, useRef } from 'react'
+import type React from 'react'
+import { useState, useRef } from 'react'
 
 interface UseImageUploadOptions {
   maxSize?: number // in MB
   allowedTypes?: string[]
   onImageChange?: (file: File | null) => void
   onError?: (error: string) => void
+  initialPreview?: string | null
 }
 
 export function useImageUpload(options: UseImageUploadOptions = {}) {
@@ -13,9 +15,10 @@ export function useImageUpload(options: UseImageUploadOptions = {}) {
     allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'],
     onImageChange,
     onError,
+    initialPreview = null,
   } = options
 
-  const [preview, setPreview] = useState<string | null>(null)
+  const [preview, setPreview] = useState<string | null>(initialPreview)
   const [dragActive, setDragActive] = useState(false)
   const [uploading, setUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -78,6 +81,7 @@ export function useImageUpload(options: UseImageUploadOptions = {}) {
   }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.stopPropagation() // Empêche la propagation de l'événement
     const file = e.target.files?.[0]
     if (file) {
       handleFileChange(file)
@@ -96,6 +100,15 @@ export function useImageUpload(options: UseImageUploadOptions = {}) {
     fileInputRef.current?.click()
   }
 
+  // Nouvelle fonction pour gérer le click du conteneur
+  const handleContainerClick = (e: React.MouseEvent) => {
+    // Si le click vient directement de l'input file, on ne fait rien
+    if (e.target === fileInputRef.current) {
+      return
+    }
+    openFileDialog()
+  }
+
   return {
     preview,
     dragActive,
@@ -106,5 +119,6 @@ export function useImageUpload(options: UseImageUploadOptions = {}) {
     handleInputChange,
     removeImage,
     openFileDialog,
+    handleContainerClick, // Nouvelle fonction exportée
   }
 }

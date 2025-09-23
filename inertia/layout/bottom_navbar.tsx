@@ -1,6 +1,6 @@
 import { cn } from '@/utils'
 import { Link, usePage } from '@inertiajs/react'
-import { Home, BookOpen, NotebookPen } from 'lucide-react'
+import { Home, BookOpen, NotebookPen, Briefcase, PhoneOutgoing } from 'lucide-react'
 import React from 'react'
 
 interface NavItem {
@@ -24,6 +24,16 @@ const NAV_ITEMS: NavItem[] = [
     name: 'Guestbook',
     url: '/guestbook',
     icon: <NotebookPen className="w-4 h-4" />,
+  },
+  {
+    name: 'Services',
+    url: '/services',
+    icon: <Briefcase className="w-4 h-4" />,
+  },
+  {
+    name: 'Contacter',
+    url: '/contact',
+    icon: <PhoneOutgoing className="w-4 h-4" />,
   },
 ]
 

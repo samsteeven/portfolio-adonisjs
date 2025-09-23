@@ -1,7 +1,9 @@
 import router from '@adonisjs/core/services/router'
 import { middleware } from '#start/kernel'
 import { limitter } from '#start/limiter'
-import CommentairesController from '#controllers/commentaire_controller'
+const FaqController = () => import('#controllers/admin_faq_controller')
+const ContactRequestsController = () => import('#controllers/contact_requests_controller')
+const ServicesController = () => import('#controllers/services_controller')
 const DashboardController = () => import('#controllers/dashboard_controller')
 const TagsController = () => import('#controllers/tags_controller')
 const BlogPostsController = () => import('#controllers/blog_posts_controller')
@@ -27,6 +29,7 @@ router
       .where('provider', /github|google/)
   })
   .middleware(middleware.guest())
+
 // Soumission de commentaire pour visiteur authentifié
 router
   .post('/guestbook/authenticated', [CommentaireController, 'storeAuthenticated'])
@@ -34,11 +37,11 @@ router
 
 // Soumission de commentaire pour visiteur invité
 router
-  .post('/guestbook/guest', [CommentairesController, 'storeGuest'])
+  .post('/guestbook/guest', [CommentaireController, 'storeGuest'])
   .middleware(middleware.guest())
 
 // API pour les statistiques géographiques (public, pour affichage sur la page)
-router.get('/guestbook/stats/geo', [CommentairesController, 'getGeoStats'])
+router.get('/guestbook/stats/geo', [CommentaireController, 'getGeoStats'])
 router
   .post('/auth/guestbook/logout', '#controllers/auth_controller.guestbookLogout')
   .middleware(middleware.auth({ guards: ['guestbook'] }))
@@ -52,6 +55,24 @@ router.post('/newsletter/subscribe', '#controllers/newsletters_controller.subscr
 router
   .get('/newsletter/unsubscribe/:token', '#controllers/newsletters_controller.unsubscribe')
   .use(limitter)
+
+router.get('/services', [ServicesController, 'publicIndex'])
+
+// // Page détail d'un service (par slug)
+// router.get('/services/:slug', [ServicesController, 'duplicate'])
+
+// API publique pour récupérer les services actifs (pour dropdowns, etc.)
+router
+  .get('/api/services/active', '#controllers/services_controller.apiActiveServices')
+  .as('api.services.active')
+
+// Page du formulaire de contact
+router.get('/contact', '#controllers/contact_requests_controller.showForm')
+
+// Soumettre une demande de contact
+router.post('/contact', '#controllers/contact_requests_controller.store')
+
+router.get('/misc/faq', [FaqController, 'indexPublic'])
 
 // Routes d'authentification
 router
@@ -106,6 +127,28 @@ router
     router.delete('/newsletter/:id', '#controllers/admin_newsletters_controller.destroy')
     router.delete('/newsletter/bulk', '#controllers/admin_newsletters_controller.bulkDestroy')
     router.patch('/newsletter/:id', '#controllers/admin_newsletters_controller.toggleStatus')
+
+    // ==== Services ===
+    router.resource('services', ServicesController)
+    router.patch('/services/:id/toggle-status', [ServicesController, 'toggleStatus'])
+    // Dupliquer un service
+    router.post('/services/:id/duplicate', [ServicesController, 'duplicate'])
+
+    // Réorganiser l'ordre d'affichage des services
+    router.patch('/services/reorder', [ServicesController, 'reorder'])
+
+    // ==== DEMANDES DE CONTACT ====
+    router.resource('contact-requests', ContactRequestsController).except(['update'])
+    router.patch('/contact-requests/:id/status', [ContactRequestsController, 'updateStatus'])
+    router.post('/contact-requests/:id/reply', [ContactRequestsController, 'reply'])
+    // Actions en lot
+    router.patch('/contact-requests/bulk-mark-as-read', [
+      ContactRequestsController,
+      'bulkMarkAsRead',
+    ])
+
+    // Routes admin FAQ
+    router.resource('faqs', FaqController)
   })
   .prefix('/admin')
   .middleware([middleware.auth({ guards: ['web'] }), middleware.isActive()])

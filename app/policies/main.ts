@@ -14,7 +14,10 @@
 
 export const policies = {
   CommentairePolicy: () => import('#policies/commentaire_policy'),
+  ContactRequestPolicy: () => import('#policies/contact_request_policy'),
+  FaqPolicy: () => import('#policies/skill_policy'),
   ProjectPolicy: () => import('#policies/project_policy'),
+  ServicePolicy: () => import('#policies/service_policy'),
   SkillPolicy: () => import('#policies/skill_policy'),
   BlogPolicy: () => import('#policies/skill_policy'),
   TagsPolicy: () => import('#policies/skill_policy'),

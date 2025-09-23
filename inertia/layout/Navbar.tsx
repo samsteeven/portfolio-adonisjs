@@ -33,16 +33,12 @@ const MENU_LINKS = [
     url: '/#selected-projects',
   },
   {
-    name: "S'abonner",
+    name: 'Newsletter',
     url: '/#newsletter',
   },
   {
-    name: 'Blog',
-    url: '/blog',
-  },
-  {
-    name: 'Guestbook',
-    url: '/guestbook',
+    name: 'FAQs',
+    url: '/misc/faq',
   },
 ]
 

@@ -175,7 +175,7 @@ export default function Guestbook({ comments: deferredComments, reactions, user 
     <>
       <Head title="Livre d'or - Portfolio" />
 
-      <div className="min-h-screen bg-gray-900 text-white pt-12">
+      <div className="min-h-screentext-white pt-12">
         <div className="max-w-4xl mx-auto px-6 py-12">
           {/* Header */}
           <div className="mb-12">

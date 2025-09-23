@@ -54,7 +54,7 @@ export default class SkillsController {
     let imgPath: string | undefined
 
     // Gestion de l'upload d'image
-    if (data.imagePath?.isValid) {
+    if (data.imagePath) {
       try {
         imgPath = await SkillUploadService.uploadTechnologyImage(data.imagePath, 'skills')
       } catch (error) {

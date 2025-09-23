@@ -172,7 +172,7 @@ Dashboard.layout = (page: React.ReactNode) => {
     <AdminLayout
       title="Dashboard"
       description="Vue d'ensemble de mon portfolio"
-      currentPath="/dashboard"
+      currentPath="/admin/dashboard"
     >
       {page}
     </AdminLayout>

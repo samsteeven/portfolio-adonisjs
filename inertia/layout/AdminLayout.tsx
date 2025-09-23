@@ -21,6 +21,8 @@ import {
   FileText,
   UserStar,
   LucideExternalLink,
+  HelpCircle,
+  MessageSquare,
 } from 'lucide-react'
 import { getInitials } from '~/utils/utils_string'
 import { AnimatePresence, motion } from 'framer-motion'
@@ -41,9 +43,12 @@ const adminMenuItems = [
   { name: 'Projets', icon: Briefcase, href: '/admin/projects', badge: null },
   { name: 'Compétences', icon: Award, href: '/admin/skills', badge: null },
   { name: 'Technologies', icon: Cpu, href: '/admin/technologies', badge: null },
-  { name: 'Comments', icon: Mail, href: '/admin/comments', badge: '3' },
+  { name: 'Services', icon: Briefcase, href: '/admin/services', badge: null },
+  { name: 'Contact', icon: Mail, href: '/admin/contact-requests', badge: null },
+  { name: 'Comments', icon: MessageSquare, href: '/admin/comments', badge: '3' },
   { name: 'Blog', icon: FileText, href: '/admin/blog', badge: '3' },
-  { name: 'Subscribers', icon: UserStar, href: '/admin/newsletter/subscribers', badge: '3' },
+  { name: 'Subscribers', icon: UserStar, href: '/admin/newsletter/subscribers', badge: null },
+  { name: 'FAQs', icon: HelpCircle, href: '/admin/faqs', badge: null },
 ]
 
 export default function AdminLayout({
