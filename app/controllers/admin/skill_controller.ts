@@ -19,10 +19,8 @@ export default class SkillsController {
   async index({ inertia, request }: HttpContext) {
     const page = request.input('page', 1)
     const limit = request.input('limit', 10)
-    const search = request.input('search', '')
-    const category = request.input('category', '')
 
-    const skills = await this.skillService.getSkills({ page, limit, search, category })
+    const skills = await this.skillService.getSkills({ page, limit })
     const categories = await this.skillService.getCategories()
 
     return inertia.render('admin/skills/index', {
@@ -105,7 +103,7 @@ export default class SkillsController {
       let imgPath: string | undefined
 
       // Gérer le remplacement d'image si nécessaire
-      if (data.imagePath?.isValid) {
+      if (data.imagePath) {
         const oldImagePath = skill.imagePath
         imgPath = await FileUploadTechnolyService.replaceTechnologyImage(
           data.imagePath,
@@ -146,7 +144,6 @@ export default class SkillsController {
     }
 
     try {
-      // Supprimer l'image associée si elle existe
       if (skill.imagePath) {
         try {
           await FileUploadTechnolyService.deleteFile(skill.imagePath)

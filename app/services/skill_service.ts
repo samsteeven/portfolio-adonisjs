@@ -2,16 +2,8 @@ import Skill from '#models/skill'
 import { CreateSkillValidatorDTO, UpdateSkillValidatorDTO } from '#validators/skill'
 
 export default class SkillService {
-  async getSkills({ page = 1, limit = 10, search = '', category = '' }) {
+  async getSkills({ page = 1, limit = 10 }) {
     const query = Skill.query()
-
-    if (search) {
-      query.whereILike('name', `%${search}%`)
-    }
-
-    if (category) {
-      query.where('category', category)
-    }
 
     const paginator = await query.paginate(page, limit)
     return paginator.serialize() // ✅ serialize pour envoyer à Inertia

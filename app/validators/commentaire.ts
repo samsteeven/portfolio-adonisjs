@@ -26,11 +26,7 @@ export const createGuestCommentValidator = vine.compile(
 
     guestEmail: vine.string().email().normalizeEmail().optional(),
 
-    guestPhone: vine
-      .string()
-      .trim()
-      .regex(/^[\+]?[\d\s\-\(\)\.]{8,20}$/)
-      .optional(),
+    guestPhone: vine.string().trim().optional(),
 
     // Champ honeypot pour la protection anti-spam
     website: vine

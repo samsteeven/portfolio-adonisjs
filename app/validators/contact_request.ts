@@ -21,11 +21,7 @@ export const createContactRequestValidator = vine.compile(
 
     email: vine.string().email().normalizeEmail(),
 
-    phone: vine
-      .string()
-      .trim()
-      .regex(/^[+]?[\d\s\-().]{8,20}$/)
-      .optional(),
+    phone: vine.string().trim().optional(),
 
     message: vine.string().trim().minLength(10).maxLength(2000),
 

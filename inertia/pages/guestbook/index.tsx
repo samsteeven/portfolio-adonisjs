@@ -20,6 +20,10 @@ import { getInitials } from '~/utils/utils_string'
 import { AuthenticatedUser } from '~/types'
 import { UserRole } from '~/enums/user_role'
 import { Fallback } from '@/components/fallback'
+import { PhoneInput } from '@/components/ui/phone-input'
+import type { CountryCode } from 'libphonenumber-js'
+import { isValidPhoneNumber } from 'react-phone-number-input'
+import { toast } from 'sonner'
 
 interface CommentsData {
   data: CommentaireType[]
@@ -76,12 +80,31 @@ export default function Guestbook({ comments: deferredComments, reactions, user 
   const [showReactionPicker, setShowReactionPicker] = useState<number | null>(null)
   const [authLoading, setAuthLoading] = useState<'github' | 'google' | null>(null)
   const [formType, setFormType] = useState<'guest' | 'auth'>('auth')
-
   const [isclient, setIsClient] = useState(false)
+  const [defaultCountry, setDefaultCountry] = useState<CountryCode>('FR')
 
   useEffect(() => {
     setIsClient(true)
+
+    const fetchCountry = async () => {
+      try {
+        const ipRes = await fetch('https://api.ipify.org?format=json')
+        const ipData = await ipRes.json()
+
+        const countryRes = await fetch(`/whoami?ip=${ipData.ip}`)
+        const countryData = await countryRes.json()
+
+        if (countryData && countryData.countryCode) {
+          setDefaultCountry(countryData.countryCode)
+        }
+      } catch (error) {
+        console.error('Erreur:', error)
+      }
+    }
+
+    fetchCountry()
   }, [])
+
   const handleAuthSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     postAuth('/guestbook/authenticated', {
@@ -94,6 +117,12 @@ export default function Guestbook({ comments: deferredComments, reactions, user 
 
   const handleGuestSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    // Validate phone number if provided
+    if (guestData.guestPhone && !isValidPhoneNumber(guestData.guestPhone, defaultCountry)) {
+      toast.error('Erreur lors de la validation du numéro de téléphone')
+      return
+    }
+
     postGuest('/guestbook/guest', {
       onSuccess: () => {
         resetGuest()
@@ -175,7 +204,7 @@ export default function Guestbook({ comments: deferredComments, reactions, user 
     <>
       <Head title="Livre d'or - Portfolio" />
 
-      <div className="min-h-screentext-white pt-12">
+      <div className="min-h-screen text-white pt-12">
         <div className="max-w-4xl mx-auto px-6 py-12">
           {/* Header */}
           <div className="mb-12">
@@ -398,12 +427,13 @@ export default function Guestbook({ comments: deferredComments, reactions, user 
                     <Phone className="w-4 h-4 inline mr-2" />
                     Téléphone (optionnel)
                   </label>
-                  <input
-                    type="tel"
+                  <PhoneInput
                     value={guestData.guestPhone}
-                    onChange={(e) => setGuestData('guestPhone', e.target.value)}
-                    placeholder="+33 6 12 34 56 78"
-                    className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent text-white placeholder-gray-400"
+                    onChange={(value) => setGuestData('guestPhone', value || '')}
+                    placeholder="Entrez votre numéro de téléphone"
+                    defaultCountry={defaultCountry}
+                    international
+                    className="w-full [&_input]:px-4 [&_input]:py-3 [&_input]:bg-gray-800 [&_input]:border-gray-700 [&_input]:text-white [&_input]:placeholder-gray-400 [&_input]:focus:ring-2 [&_input]:focus:ring-pink-500 [&_input]:focus:border-transparent [&_input]:rounded-lg [&_button]:bg-gray-800 [&_button]:border-gray-700 [&_button]:hover:bg-gray-700"
                   />
                   {guestErrors.guestPhone && (
                     <p className="text-red-400 text-sm mt-1">{guestErrors.guestPhone}</p>

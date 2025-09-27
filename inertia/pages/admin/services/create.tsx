@@ -1,5 +1,5 @@
 import type React from 'react'
-import { Head, Link, useForm } from '@inertiajs/react'
+import { Head, Link, router, useForm } from '@inertiajs/react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card } from '@/components/ui/card'
@@ -98,7 +98,7 @@ export default function AdminServiceCreate({ maxDisplayOrder }: Props) {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => window.open('/services', '_blank')}
+                onClick={() => router.visit('/services')}
                 className="flex-1 sm:flex-none border-gray-300 hover:border-blue-400 hover:text-blue-600"
               >
                 <Eye className="h-4 w-4 mr-2" />

@@ -41,7 +41,7 @@ const adminMenuItems = [
   { name: 'Dashboard', icon: Home, href: '/admin/dashboard', badge: null },
   { name: 'Users', icon: Users, href: '/admin/users' },
   { name: 'Projets', icon: Briefcase, href: '/admin/projects', badge: null },
-  { name: 'Compétences', icon: Award, href: '/admin/skills', badge: null },
+  { name: 'Skills', icon: Award, href: '/admin/skills', badge: null },
   { name: 'Technologies', icon: Cpu, href: '/admin/technologies', badge: null },
   { name: 'Services', icon: Briefcase, href: '/admin/services', badge: null },
   { name: 'Contact', icon: Mail, href: '/admin/contact-requests', badge: null },
@@ -233,7 +233,7 @@ export default function AdminLayout({
 
                   {/* Bouton settings rapide */}
                   <Link
-                    href={'/admin/settings'}
+                    href={'/admin/settings/profile'}
                     className="p-2 rounded-lg hover:bg-gray-100 transition-colors group"
                   >
                     <Settings className="w-5 h-5 text-gray-600 group-hover:text-gray-800" />
@@ -490,14 +490,14 @@ export default function AdminLayout({
 
         {/* Contenu principal */}
         <main className="relative">
-          <div className="w-full px-4 lg:px-6 py-6">
+          <div className="w-full px-3 sm:px-4 lg:px-6 py-6">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4 }}
               className="rounded-sm border shadow-sm transition-all duration-300 bg-white border-gray-200"
             >
-              <div className="p-6 lg:p-8">{children}</div>
+              <div className="p-3 sm:p-6 lg:p-8">{children}</div>
             </motion.div>
           </div>
         </main>

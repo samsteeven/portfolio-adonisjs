@@ -267,70 +267,6 @@ export default class ProjectsController {
   }
 
   /**
-   * Get projects by technology (API endpoint)
-   */
-  async getByTechnology({ params, response }: HttpContext) {
-    try {
-      const projects = await this.projectService.getProjectsByTechnology(params.technologyId)
-
-      return response.json({
-        success: true,
-        data: projects.map((project) =>
-          project.serialize({
-            relations: {
-              technologies: {
-                fields: ['id', 'name', 'category'],
-              },
-              images: {
-                fields: ['id', 'imagePath', 'imagePublicUrl', 'order', 'isPrimary'],
-              },
-            },
-          })
-        ),
-      })
-    } catch (error) {
-      console.error('Error getting projects by technology:', error)
-      return response.status(500).json({
-        success: false,
-        message: 'Erreur lors de la récupération des projets',
-        error: error.message,
-      })
-    }
-  }
-
-  /**
-   * Get projects by year (API endpoint)
-   */
-  async getByYear({ params, response }: HttpContext) {
-    try {
-      const projects = await this.projectService.getProjectsByYear(params.year)
-
-      return response.json({
-        success: true,
-        data: projects.map((project) =>
-          project.serialize({
-            relations: {
-              technologies: {
-                fields: ['id', 'name', 'category'],
-              },
-              images: {
-                fields: ['id', 'imagePath', 'imagePublicUrl', 'order', 'isPrimary'],
-              },
-            },
-          })
-        ),
-      })
-    } catch (error) {
-      console.error('Error getting projects by year:', error)
-      return response.status(500).json({
-        success: false,
-        message: 'Erreur lors de la récupération des projets',
-        error: error.message,
-      })
-    }
-  }
-
-  /**
    * Reorder project images
    */
   async reorderImages({ params, request, response, session, bouncer }: HttpContext) {
@@ -387,67 +323,6 @@ export default class ProjectsController {
       console.error('Error setting primary image:', error)
       session.flash('error', "Erreur lors de la définition de l'image principale")
       return response.redirect().back()
-    }
-  }
-
-  /**
-   * Get all project years for filtering (API endpoint)
-   */
-  async getYears({ response }: HttpContext) {
-    try {
-      const years = await this.projectService.getProjectYears()
-      return response.json({
-        success: true,
-        data: years,
-      })
-    } catch (error) {
-      console.error('Error getting project years:', error)
-      return response.status(500).json({
-        success: false,
-        message: 'Erreur lors de la récupération des années',
-        error: error.message,
-      })
-    }
-  }
-
-  /**
-   * Search projects (API endpoint)
-   */
-  async search({ request, response }: HttpContext) {
-    try {
-      const { q: searchTerm, limit = 10 } = request.qs()
-
-      if (!searchTerm || typeof searchTerm !== 'string') {
-        return response.json({
-          success: true,
-          data: [],
-        })
-      }
-
-      const projects = await this.projectService.searchProjects(searchTerm.trim(), limit)
-
-      return response.json({
-        success: true,
-        data: projects.map((project) =>
-          project.serialize({
-            relations: {
-              technologies: {
-                fields: ['id', 'name', 'category'],
-              },
-              images: {
-                fields: ['id', 'imagePath', 'imagePublicUrl', 'order', 'isPrimary'],
-              },
-            },
-          })
-        ),
-      })
-    } catch (error) {
-      console.error('Error searching projects:', error)
-      return response.status(500).json({
-        success: false,
-        message: 'Erreur lors de la recherche de projets',
-        error: error.message,
-      })
     }
   }
 }

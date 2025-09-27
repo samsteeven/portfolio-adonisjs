@@ -237,11 +237,12 @@ export default class ServicesController {
   /**
    * Réorganiser l'ordre d'affichage des services (admin)
    */
-  async reorder({ request, response, session, bouncer }: HttpContext) {
+  async reorder({ request, response, session, bouncer, logger }: HttpContext) {
     const authorize = await bouncer.with('ServicePolicy').allows('reorder')
     if (!authorize) {
       return this.ServiceAuthorizationService.handleUnauthorized(response, session)
     }
+
     try {
       const data = await request.validateUsing(reorderServicesValidator)
 
@@ -256,34 +257,12 @@ export default class ServicesController {
         })
       )
 
-      session.flash('success', 'Ordre des services mis à jour avec succès')
-      return response.json({ success: true })
+      return response.redirect().back()
     } catch (error) {
+      logger.error('Erreur lors de la réorganisation des services:', error)
       return response.status(400).json({
-        error: 'Erreur lors de la réorganisation des services',
-      })
-    }
-  }
-
-  /**
-   * API pour obtenir la liste des services actifs (pour les dropdowns, etc.)
-   */
-  async apiActiveServices({ response }: HttpContext) {
-    try {
-      const services = await Service.query()
-        .where('isActive', true)
-        .orderBy('displayOrder', 'asc')
-        .select('id', 'title', 'slug', 'price')
-        .exec()
-
-      return response.json({
-        success: true,
-        data: services.map((service) => service.serialize()),
-      })
-    } catch (error) {
-      return response.status(500).json({
         success: false,
-        error: 'Erreur lors de la récupération des services',
+        message: 'Erreur lors de la réorganisation des services',
       })
     }
   }
@@ -291,14 +270,13 @@ export default class ServicesController {
   /**
    * Dupliquer un service (admin)
    */
-  async duplicate({ params, response, session, bouncer }: HttpContext) {
+  async duplicate({ params, response, session, bouncer, logger }: HttpContext) {
     const authorize = await bouncer.with('ServicePolicy').allows('duplicate')
     if (!authorize) {
       return this.ServiceAuthorizationService.handleUnauthorized(response, session)
     }
+    const originalService = await Service.findOrFail(params.id)
     try {
-      const originalService = await Service.findOrFail(params.id)
-
       // Créer une copie avec un titre modifié
       const duplicatedService = await Service.create({
         title: `${originalService.title} (Copie)`,
@@ -312,6 +290,7 @@ export default class ServicesController {
       session.flash('success', 'Service dupliqué avec succès')
       return response.redirect(`/admin/services/${duplicatedService.id}/edit`)
     } catch (error) {
+      logger.error('Erreur lors de la duplication du service:', error)
       session.flash('error', 'Erreur lors de la duplication du service')
       return response.redirect().back()
     }

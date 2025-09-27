@@ -30,7 +30,8 @@ export default defineConfig({
     () => import('@adonisjs/lucid/commands'),
     () => import('@adonisjs/bouncer/commands'),
     () => import('@adonisjs/mail/commands'),
-    () => import('@rlanz/bull-queue/commands')
+    () => import('@rlanz/bull-queue/commands'),
+    () => import('@adonisjs/cache/commands')
   ],
 
   /*
@@ -64,7 +65,8 @@ export default defineConfig({
     () => import('@adonisjs/bouncer/bouncer_provider'),
     () => import('@adonisjs/ally/ally_provider'),
     () => import('@adonisjs/mail/mail_provider'),
-    () => import('@rlanz/bull-queue/queue_provider')
+    () => import('@rlanz/bull-queue/queue_provider'),
+    () => import('@adonisjs/cache/cache_provider')
   ],
 
   /*

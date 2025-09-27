@@ -19,12 +19,17 @@ export default class UserPolicy extends BasePolicy {
     return user.role === UserRole.ADMIN && targetUser.role === UserRole.VISITOR
   }
 
-  // Modifier le rôle (seulement admin, et pas soi-même)
+  // Modifier le rôle (seulement admin)
   changeRole(user: User, targetUser: User): AuthorizerResponse {
-    return user.role === UserRole.ADMIN && user.id !== targetUser.id
+    // Un utilisateur peut modifier son propre rôle seulement s'il est admin
+    if (user.id === targetUser.id) {
+      return user.role === UserRole.ADMIN
+    }
+    // Un admin peut modifier le rôle des autres utilisateurs
+    return user.role === UserRole.ADMIN
   }
 
-  // Activer/désactiver un utilisateur (admin, mais pas soi-même)
+  // Activer/désactiver un utilisateur (admin, et pas soi-même)
   toggleStatus(user: User, targetUser: User): AuthorizerResponse {
     return user.role === UserRole.ADMIN && user.id !== targetUser.id
   }

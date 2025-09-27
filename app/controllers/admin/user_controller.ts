@@ -1,7 +1,6 @@
 import { HttpContext } from '@adonisjs/core/http'
 import { inject } from '@adonisjs/core'
 import { UserService } from '#services/user_service'
-import { UserRole } from '#enums/user_role'
 import { createUserSchema, updateUserSchema } from '#validators/user_validator'
 import FileUploadService from '#services/file_upload/file_upload_service'
 import BouncerUserService from '#services/bouncer/bouncer_user_service'
@@ -16,11 +15,8 @@ export default class UserController {
   /**
    * Affiche la liste des utilisateurs avec pagination et filtres
    */
-  async index({ inertia, request }: HttpContext) {
-    const search = request.input('search', '')
-    const role = request.input('role') as UserRole
-
-    const users = await this.userService.getUsers({ search, role })
+  async index({ inertia }: HttpContext) {
+    const users = await this.userService.getUsers()
 
     return inertia.render('admin/users/users', { users })
   }
@@ -46,7 +42,7 @@ export default class UserController {
     const photo = userData.subInfo?.photoPath
     let photoUrl: string | undefined
 
-    if (photo?.isValid) {
+    if (photo) {
       try {
         photoUrl = await FileUploadService.uploadProfilePhoto(photo)
       } catch (error) {
@@ -92,7 +88,7 @@ export default class UserController {
   /**
    * Met à jour un utilisateur
    */
-  async update({ request, response, params, session, bouncer }: HttpContext) {
+  async update({ request, response, params, session, bouncer, auth }: HttpContext) {
     // Vérification d'autorisation simplifiée
     const authResult = await this.bouncerUserService.canUpdateUser(bouncer, params.id)
     if (!authResult.authorized) {
@@ -114,13 +110,17 @@ export default class UserController {
       }
 
       // Mettre à jour l'utilisateur
-      await this.userService.updateUser(params.id, {
-        ...userData,
-        subInfo: {
-          ...otherSubInfo,
-          ...(photoUrl && { photoPath: photoUrl }), // Seulement si nouvelle photo
+      await this.userService.updateUser(
+        params.id,
+        {
+          ...userData,
+          subInfo: {
+            ...otherSubInfo,
+            ...(photoUrl && { photoPath: photoUrl }), // Seulement si nouvelle photo
+          },
         },
-      })
+        auth.user
+      )
 
       session.flash('success', 'Utilisateur mis à jour avec succès')
       return response.redirect().back()

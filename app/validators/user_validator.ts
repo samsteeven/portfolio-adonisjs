@@ -16,7 +16,7 @@ const subInfoSchema = vine.object({
       extnames: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
     })
     .optional(),
-  phone: vine.string().optional(),
+  phone: vine.string().minLength(9).optional(),
   bio: vine.string().optional(),
 })
 

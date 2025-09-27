@@ -8,18 +8,8 @@ export class UserService {
   /**
    * Liste des utilisateurs (avec recherche et filtre par rôle)
    */
-  async getUsers({ search, role }: { search?: string; role?: UserRole }) {
-    const query = User.query()
-
-    if (search) {
-      query.where((sub) => {
-        sub.whereILike('email', `%${search}%`).orWhereILike('username', `%${search}%`)
-      })
-    }
-
-    if (role) query.where('role', role)
-
-    return query.orderBy('created_at', 'desc').preload('subInfo')
+  async getUsers() {
+    return User.query().orderBy('created_at', 'desc').preload('subInfo')
   }
 
   /**
@@ -49,10 +39,23 @@ export class UserService {
   /**
    * Mettre à jour un utilisateur
    */
-  async updateUser(id: string | number, data: UpdateUserDTO) {
+  async updateUser(id: string | number, data: UpdateUserDTO, authenticatedUser?: User) {
     const user = await this.findUser(id)
 
     const { subInfo, ...userPayload } = data
+
+    // Vérifier si l'utilisateur tente de modifier son propre rôle
+    if (userPayload.role !== undefined && authenticatedUser) {
+      // Si l'utilisateur tente de modifier son propre rôle
+      if (authenticatedUser.id === user.id) {
+        // Vérifier si l'utilisateur a le droit de modifier son propre rôle
+        const canChangeOwnRole = authenticatedUser.role === UserRole.ADMIN
+        if (!canChangeOwnRole) {
+          // Supprimer la modification du rôle
+          delete userPayload.role
+        }
+      }
+    }
 
     return await db.transaction(async (trx) => {
       user.useTransaction(trx)

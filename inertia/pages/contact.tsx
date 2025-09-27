@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Head, useForm, router } from '@inertiajs/react'
 import {
   Mail,
@@ -18,6 +18,10 @@ import {
   Shield,
 } from 'lucide-react'
 import { ServiceType } from '~/types/services'
+import { PhoneInput } from '@/components/ui/phone-input'
+import type { CountryCode } from 'libphonenumber-js'
+import { isValidPhoneNumber } from 'react-phone-number-input'
+import { toast } from 'sonner'
 
 interface Props {
   selectedService?: ServiceType | null
@@ -40,6 +44,27 @@ export default function ContactIndex({ selectedService, services = [], success, 
   const [contextualService, setContextualService] = useState<ServiceType | null>(
     selectedService || null
   )
+  const [defaultCountry, setDefaultCountry] = useState<CountryCode>('FR')
+
+  useEffect(() => {
+    const fetchCountry = async () => {
+      try {
+        const ipRes = await fetch('https://api.ipify.org?format=json')
+        const ipData = await ipRes.json()
+
+        const countryRes = await fetch(`/whoami?ip=${ipData.ip}`)
+        const countryData = await countryRes.json()
+
+        if (countryData && countryData.countryCode) {
+          setDefaultCountry(countryData.countryCode)
+        }
+      } catch (error) {
+        console.error('Erreur:', error)
+      }
+    }
+
+    fetchCountry()
+  }, [])
 
   const { data, setData, post, processing, errors, reset } = useForm<FormData>({
     firstName: '',
@@ -53,6 +78,13 @@ export default function ContactIndex({ selectedService, services = [], success, 
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+
+    // Validate phone number if provided
+    if (data.phone && !isValidPhoneNumber(data.phone, defaultCountry)) {
+      toast.error('Numéro de téléphone invalide')
+      return
+    }
+
     post('/contact', {
       onSuccess: () => {
         reset()
@@ -274,20 +306,14 @@ export default function ContactIndex({ selectedService, services = [], success, 
                   <label className="block text-sm font-semibold text-gray-200 mb-3">
                     Téléphone <span className="text-gray-400">(optionnel)</span>
                   </label>
-                  <div className="relative group">
-                    <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-pink-400 transition-colors" />
-                    <input
-                      type="tel"
-                      value={data.phone}
-                      onChange={(e) => setData('phone', e.target.value)}
-                      className={`w-full pl-12 pr-4 py-4 bg-gray-800/50 backdrop-blur-sm border rounded-2xl focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all duration-200 text-white placeholder-gray-400 ${
-                        getFieldError('phone')
-                          ? 'border-red-400'
-                          : 'border-gray-600 hover:border-gray-500'
-                      }`}
-                      placeholder="+33 6 12 34 56 78"
-                    />
-                  </div>
+                  <PhoneInput
+                    value={data.phone}
+                    onChange={(value) => setData('phone', value || '')}
+                    placeholder="Entrez votre numéro de téléphone"
+                    defaultCountry={defaultCountry}
+                    international
+                    className="w-full [&_input]:pl-12 [&_input]:pr-4 [&_input]:py-4 [&_input]:bg-gray-800/50 [&_input]:backdrop-blur-sm [&_input]:border [&_input]:rounded-2xl [&_input]:focus:ring-2 [&_input]:focus:ring-pink-500 [&_input]:focus:border-transparent [&_input]:transition-all [&_input]:duration-200 [&_input]:text-white [&_input]:placeholder-gray-400 [&_button]:hover:bg-gray-700"
+                  />
                   {getFieldError('phone') && (
                     <p className="mt-2 text-sm text-red-400">{getFieldError('phone')}</p>
                   )}

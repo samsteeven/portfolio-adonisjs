@@ -155,7 +155,7 @@ export default class TechnologyController {
     let newImgPath: string | undefined
     try {
       // Gérer le remplacement d'image si nécessaire
-      if (data.imgPath && data.imgPath.isValid) {
+      if (data.imgPath) {
         const oldImagePath = technology.imgPath
         newImgPath = await FileUploadTechnolyService.replaceTechnologyImage(
           data.imgPath,

@@ -9,25 +9,11 @@ export default class NewsletterController {
   public constructor(private newsletterAuthorization: NewsletterAuthorizationService) {}
   async index({ request, inertia }: HttpContext) {
     const page = request.input('page', 1)
-    const search = request.input('search', '')
-    const status = request.input('status', '')
+    const limit = request.input('limit', 20)
 
     let query = NewsletterSubscriber.query().orderBy('subscribedAt', 'desc')
 
-    // Filtres côté serveur si nécessaire
-    if (search) {
-      query = query.where('email', 'like', `%${search}%`)
-    }
-
-    if (status === 'active') {
-      query = query.where('isActive', true).whereNotNull('confirmedAt')
-    } else if (status === 'inactive') {
-      query = query.where('isActive', false)
-    } else if (status === 'unconfirmed') {
-      query = query.where('isActive', true).whereNull('confirmedAt')
-    }
-
-    const subscribers = await query.paginate(page, 20)
+    const subscribers = await query.paginate(page, limit)
 
     // Statistiques
     const stats = {
@@ -52,7 +38,6 @@ export default class NewsletterController {
         recentSubscribers: stats.recentSubscribers?.$extras.total || 0,
         unsubscribeRate: stats.unsubscribeRate,
       },
-      filters: { search, status },
     })
   }
 

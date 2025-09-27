@@ -17,6 +17,8 @@ import {
   Globe,
   EyeOff,
   Clock,
+  Copy,
+  GripVertical,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import AdminLayout from '~/layout/AdminLayout'
@@ -61,6 +63,21 @@ export default function AdminServiceShow({ service }: Props) {
         },
         onError: () => {
           toast.error('Erreur lors de la modification du statut')
+        },
+      }
+    )
+  }
+
+  const handleDuplicate = () => {
+    router.post(
+      `/admin/services/${service.id}/duplicate`,
+      {},
+      {
+        onSuccess: () => {
+          toast.success('Service dupliqué avec succès')
+        },
+        onError: () => {
+          toast.error('Erreur lors de la duplication du service')
         },
       }
     )
@@ -134,6 +151,15 @@ export default function AdminServiceShow({ service }: Props) {
             </div>
 
             <div className="flex flex-wrap gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleDuplicate}
+                className="border-emerald-300 hover:border-emerald-400 hover:text-emerald-600 hover:bg-emerald-50"
+              >
+                <Copy className="h-4 w-4" />
+              </Button>
+
               <Link href={`/admin/services/${service.id}/edit`}>
                 <Button className="bg-blue-600 hover:bg-blue-700 text-white">
                   <Edit3 className="h-4 w-4 mr-2" />
@@ -263,6 +289,15 @@ export default function AdminServiceShow({ service }: Props) {
 
                   <Button
                     variant="outline"
+                    onClick={handleDuplicate}
+                    className="w-full justify-start border-emerald-200 hover:border-emerald-300 hover:bg-emerald-50"
+                  >
+                    <Copy className="h-4 w-4 mr-2" />
+                    Dupliquer
+                  </Button>
+
+                  <Button
+                    variant="outline"
                     onClick={() => router.visit('/services')}
                     className="w-full justify-start border-gray-200 hover:border-gray-300 hover:bg-gray-50 col-span-2"
                   >
@@ -360,6 +395,17 @@ export default function AdminServiceShow({ service }: Props) {
                     <Badge className={getStatusColor(service.isActive)}>
                       {service.isActive ? 'Actif' : 'Inactif'}
                     </Badge>
+                  </div>
+                  
+                  <div className="pt-2 border-t border-gray-200">
+                    <Button
+                      variant="outline"
+                      onClick={() => router.visit('/admin/services')}
+                      className="w-full justify-start border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                    >
+                      <GripVertical className="h-4 w-4 mr-2" />
+                      Réorganiser les services
+                    </Button>
                   </div>
                 </div>
               </Card>

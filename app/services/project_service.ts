@@ -241,25 +241,6 @@ export default class ProjectService {
       .orderBy('createdAt', 'desc')
       .limit(limit)
   }
-
-  /**
-   * Search projects
-   */
-  async searchProjects(searchTerm: string, limit: number = 10): Promise<Project[]> {
-    return Project.query()
-      .preload('technologies')
-      .preload('images')
-      .where((query) => {
-        query
-          .whereLike('title', `%${searchTerm}%`)
-          .orWhereLike('description', `%${searchTerm}%`)
-          .orWhereLike('role', `%${searchTerm}%`)
-      })
-      .where('isActive', true)
-      .orderBy('createdAt', 'desc')
-      .limit(limit)
-  }
-
   /**
    * Get projects by year
    */

@@ -18,11 +18,12 @@ import {
   Filter,
   Grid,
   List,
-  Star,
   DollarSign,
   X,
   SortAsc,
   SortDesc,
+  GripVertical,
+  Check,
 } from 'lucide-react'
 import { ServiceType } from '~/types/services'
 import { toast } from 'sonner'
@@ -61,6 +62,8 @@ export default function AdminServicesIndex({ services, stats }: Props) {
   const [sortField, setSortField] = useState<SortField>('displayOrder')
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
   const [currentPage, setCurrentPage] = useState(1)
+  const [isReordering, setIsReordering] = useState(false)
+  const [reorderedServices, setReorderedServices] = useState<ServiceType[]>([])
   const itemsPerPage = 12
 
   const [deleteModal, setDeleteModal] = useState({
@@ -72,7 +75,7 @@ export default function AdminServicesIndex({ services, stats }: Props) {
 
   // Filtrage et tri côté client
   const filteredAndSortedServices = useMemo(() => {
-    let filtered = [...services.data]
+    let filtered = [...(isReordering ? reorderedServices : services.data)]
 
     // Recherche textuelle
     if (searchTerm) {
@@ -100,37 +103,48 @@ export default function AdminServicesIndex({ services, stats }: Props) {
     }
 
     // Tri
-    filtered.sort((a, b) => {
-      let aValue: any, bValue: any
+    if (!isReordering) {
+      filtered.sort((a, b) => {
+        let aValue: any, bValue: any
 
-      switch (sortField) {
-        case 'title':
-          aValue = a.title.toLowerCase()
-          bValue = b.title.toLowerCase()
-          break
-        case 'displayOrder':
-          aValue = a.displayOrder
-          bValue = b.displayOrder
-          break
-        case 'price':
-          aValue = a.price || 0
-          bValue = b.price || 0
-          break
-        case 'isActive':
-          aValue = a.isActive ? 1 : 0
-          bValue = b.isActive ? 1 : 0
-          break
-        default:
-          return 0
-      }
+        switch (sortField) {
+          case 'title':
+            aValue = a.title.toLowerCase()
+            bValue = b.title.toLowerCase()
+            break
+          case 'displayOrder':
+            aValue = a.displayOrder
+            bValue = b.displayOrder
+            break
+          case 'price':
+            aValue = a.price || 0
+            bValue = b.price || 0
+            break
+          case 'isActive':
+            aValue = a.isActive ? 1 : 0
+            bValue = b.isActive ? 1 : 0
+            break
+          default:
+            return 0
+        }
 
-      if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1
-      if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1
-      return 0
-    })
+        if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1
+        if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1
+        return 0
+      })
+    }
 
     return filtered
-  }, [services.data, searchTerm, statusFilter, priceFilter, sortField, sortDirection])
+  }, [
+    services.data,
+    reorderedServices,
+    isReordering,
+    searchTerm,
+    statusFilter,
+    priceFilter,
+    sortField,
+    sortDirection,
+  ])
 
   // Pagination côté client
   const paginatedServices = useMemo(() => {
@@ -223,6 +237,49 @@ export default function AdminServicesIndex({ services, stats }: Props) {
     })
   }
 
+  const startReordering = () => {
+    setIsReordering(true)
+    setReorderedServices([...services.data].sort((a, b) => a.displayOrder - b.displayOrder))
+  }
+
+  const cancelReordering = () => {
+    setIsReordering(false)
+    setReorderedServices([])
+  }
+
+  const saveReordering = () => {
+    const servicesToSave = reorderedServices.map((service, index) => ({
+      id: service.id,
+      displayOrder: index + 1,
+    }))
+
+    router.patch(
+      '/admin/reorder/services',
+      { services: servicesToSave },
+      {
+        onSuccess: () => {
+          toast.success('Ordre des services mis à jour avec succès')
+          setIsReordering(false)
+          setReorderedServices([])
+        },
+        onError: () => {
+          toast.error('Erreur lors de la réorganisation des services')
+        },
+      }
+    )
+  }
+
+  const moveService = (index: number, direction: 'up' | 'down') => {
+    const newServices = [...reorderedServices]
+    if (direction === 'up' && index > 0) {
+      ;[newServices[index - 1], newServices[index]] = [newServices[index], newServices[index - 1]]
+      setReorderedServices(newServices)
+    } else if (direction === 'down' && index < newServices.length - 1) {
+      ;[newServices[index + 1], newServices[index]] = [newServices[index], newServices[index + 1]]
+      setReorderedServices(newServices)
+    }
+  }
+
   const SortButton = ({ field, children }: { field: SortField; children: React.ReactNode }) => (
     <Button
       variant="ghost"
@@ -242,7 +299,7 @@ export default function AdminServicesIndex({ services, stats }: Props) {
     </Button>
   )
 
-  const ServiceCard = ({ service }: { service: ServiceType }) => (
+  const ServiceCard = ({ service, index }: { service: ServiceType; index: number }) => (
     <div className="group relative bg-white rounded-2xl border border-gray-100 hover:border-blue-200 transition-all duration-300 hover:shadow-xl hover:shadow-blue-100/50 overflow-hidden">
       {/* Image Header */}
       <div className="relative h-48 overflow-hidden">
@@ -275,18 +332,22 @@ export default function AdminServicesIndex({ services, stats }: Props) {
         </div>
 
         {/* Quick Actions */}
-        <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-all duration-300">
-          <button
-            onClick={() => handleToggleStatus(service.id)}
-            className="p-2 bg-white/90 backdrop-blur-sm hover:bg-white rounded-xl shadow-lg transition-all duration-200 hover:scale-105"
-            title={service.isActive ? 'Désactiver' : 'Activer'}
-          >
-            {service.isActive ? (
-              <EyeOff className="h-4 w-4 text-gray-700" />
-            ) : (
-              <Eye className="h-4 w-4 text-gray-700" />
-            )}
-          </button>
+        <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-all duration-300 flex gap-1">
+          {!isReordering && (
+            <>
+              <button
+                onClick={() => handleToggleStatus(service.id)}
+                className="p-2 bg-white/90 backdrop-blur-sm hover:bg-white rounded-xl shadow-lg transition-all duration-200 hover:scale-105"
+                title={service.isActive ? 'Désactiver' : 'Activer'}
+              >
+                {service.isActive ? (
+                  <EyeOff className="h-4 w-4 text-gray-700" />
+                ) : (
+                  <Eye className="h-4 w-4 text-gray-700" />
+                )}
+              </button>
+            </>
+          )}
         </div>
 
         {/* Order Badge */}
@@ -295,6 +356,15 @@ export default function AdminServicesIndex({ services, stats }: Props) {
             #{service.displayOrder}
           </span>
         </div>
+
+        {/* Reorder Handle */}
+        {isReordering && (
+          <div className="absolute top-3 left-3 cursor-move">
+            <div className="p-2 bg-black/20 backdrop-blur-sm rounded-xl">
+              <GripVertical className="h-4 w-4 text-white" />
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Content */}
@@ -317,52 +387,84 @@ export default function AdminServicesIndex({ services, stats }: Props) {
 
         {/* Actions */}
         <div className="flex items-center gap-2">
-          <Link href={`/admin/services/${service.id}`} className="flex-1">
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full border-gray-200 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 transition-all duration-200"
-            >
-              <Eye className="h-4 w-4 mr-2" />
-              Détails
-            </Button>
-          </Link>
+          {isReordering ? (
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => moveService(index, 'up')}
+                disabled={index === 0}
+                className="flex-1 border-gray-200"
+              >
+                ↑
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => moveService(index, 'down')}
+                disabled={index === reorderedServices.length - 1}
+                className="flex-1 border-gray-200"
+              >
+                ↓
+              </Button>
+            </>
+          ) : (
+            <>
+              <Link href={`/admin/services/${service.id}`} className="flex-1">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full border-gray-200 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 transition-all duration-200"
+                >
+                  <Eye className="h-4 w-4 mr-2" />
+                  Détails
+                </Button>
+              </Link>
 
-          <Link href={`/admin/services/${service.id}/edit`}>
-            <Button
-              size="sm"
-              className="bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg transition-all duration-200"
-            >
-              <Edit className="h-4 w-4" />
-            </Button>
-          </Link>
+              <Link href={`/admin/services/${service.id}/edit`}>
+                <Button
+                  size="sm"
+                  className="bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg transition-all duration-200"
+                >
+                  <Edit className="h-4 w-4" />
+                </Button>
+              </Link>
 
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handleDuplicate(service.id)}
-            className="border-gray-200 hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700 transition-all duration-200"
-            title="Dupliquer"
-          >
-            <Copy className="h-4 w-4" />
-          </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleDuplicate(service.id)}
+                className="border-gray-200 hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700 transition-all duration-200"
+                title="Dupliquer"
+              >
+                <Copy className="h-4 w-4" />
+              </Button>
 
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handleDeleteClick(service.id, service.title)}
-            className="border-gray-200 hover:border-red-300 hover:bg-red-50 hover:text-red-700 transition-all duration-200"
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleDeleteClick(service.id, service.title)}
+                className="border-gray-200 hover:border-red-300 hover:bg-red-50 hover:text-red-700 transition-all duration-200"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </>
+          )}
         </div>
       </div>
     </div>
   )
 
-  const ServiceRow = ({ service }: { service: ServiceType }) => (
+  const ServiceRow = ({ service, index }: { service: ServiceType; index: number }) => (
     <div className="group bg-white rounded-xl border border-gray-100 hover:border-blue-200 transition-all duration-300 hover:shadow-lg p-4 sm:p-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6">
+        {/* Reorder Handle */}
+        {isReordering && (
+          <div className="cursor-move p-2 text-gray-400 hover:text-gray-600">
+            <GripVertical className="h-5 w-5" />
+          </div>
+        )}
+
         {/* Image */}
         <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden flex-shrink-0 shadow-md">
           {service.image ? (
@@ -417,48 +519,73 @@ export default function AdminServicesIndex({ services, stats }: Props) {
 
         {/* Actions */}
         <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
-          <button
-            onClick={() => handleToggleStatus(service.id)}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            title={service.isActive ? 'Désactiver' : 'Activer'}
-          >
-            {service.isActive ? (
-              <EyeOff className="h-4 w-4 text-gray-600" />
-            ) : (
-              <Eye className="h-4 w-4 text-gray-600" />
-            )}
-          </button>
+          {isReordering ? (
+            <div className="flex gap-1">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => moveService(index, 'up')}
+                disabled={index === 0}
+                className="p-2"
+              >
+                ↑
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => moveService(index, 'down')}
+                disabled={index === reorderedServices.length - 1}
+                className="p-2"
+              >
+                ↓
+              </Button>
+            </div>
+          ) : (
+            <>
+              <button
+                onClick={() => handleToggleStatus(service.id)}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                title={service.isActive ? 'Désactiver' : 'Activer'}
+              >
+                {service.isActive ? (
+                  <EyeOff className="h-4 w-4 text-gray-600" />
+                ) : (
+                  <Eye className="h-4 w-4 text-gray-600" />
+                )}
+              </button>
 
-          <Link href={`/admin/services/${service.id}`}>
-            <Button variant="outline" size="sm" className="border-gray-200">
-              <Eye className="h-4 w-4" />
-            </Button>
-          </Link>
+              <Link href={`/admin/services/${service.id}`}>
+                <Button variant="outline" size="sm" className="border-gray-200">
+                  <Eye className="h-4 w-4" />
+                </Button>
+              </Link>
 
-          <Link href={`/admin/services/${service.id}/edit`}>
-            <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
-              <Edit className="h-4 w-4" />
-            </Button>
-          </Link>
+              <Link href={`/admin/services/${service.id}/edit`}>
+                <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
+                  <Edit className="h-4 w-4" />
+                </Button>
+              </Link>
 
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handleDuplicate(service.id)}
-            className="border-gray-200"
-            title="Dupliquer"
-          >
-            <Copy className="h-4 w-4" />
-          </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleDuplicate(service.id)}
+                className="border-gray-200"
+                title="Dupliquer"
+              >
+                <Copy className="h-4 w-4" />
+              </Button>
 
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handleDeleteClick(service.id, service.title)}
-            className="border-gray-200 text-red-600 hover:bg-red-50 hover:border-red-300"
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleDeleteClick(service.id, service.title)}
+                className="border-gray-200 text-red-600 hover:bg-red-50 hover:border-red-300"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </>
+          )}
         </div>
       </div>
     </div>
@@ -482,22 +609,50 @@ export default function AdminServicesIndex({ services, stats }: Props) {
             </div>
 
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-              <Link href={'/services'} target="_blank" className="w-full sm:w-auto">
-                <Button
-                  variant="outline"
-                  className="w-full sm:w-auto border-gray-300 hover:border-blue-400 hover:text-blue-600"
-                >
-                  <ExternalLink className="h-4 w-4 mr-2" />
-                  Aperçu public
-                </Button>
-              </Link>
-
-              <Link href={'/admin/services/create'} className="w-full sm:w-auto">
-                <Button className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-300">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Créer un service
-                </Button>
-              </Link>
+              {isReordering ? (
+                <div className="flex gap-2">
+                  <Button
+                    onClick={cancelReordering}
+                    variant="outline"
+                    className="border-gray-300 hover:border-gray-400"
+                  >
+                    Annuler
+                  </Button>
+                  <Button
+                    onClick={saveReordering}
+                    className="bg-green-600 hover:bg-green-700 text-white"
+                  >
+                    <Check className="h-4 w-4 mr-2" />
+                    Enregistrer l'ordre
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  <Button
+                    onClick={startReordering}
+                    variant="outline"
+                    className="border-gray-300 hover:border-gray-400"
+                  >
+                    <GripVertical className="h-4 w-4 mr-2" />
+                    Réorganiser
+                  </Button>
+                  <Link href={'/services'} target="_blank" className="w-full sm:w-auto">
+                    <Button
+                      variant="outline"
+                      className="w-full sm:w-auto border-gray-300 hover:border-blue-400 hover:text-blue-600"
+                    >
+                      <ExternalLink className="h-4 w-4 mr-2" />
+                      Aperçu public
+                    </Button>
+                  </Link>
+                  <Link href={'/admin/services/create'} className="w-full sm:w-auto">
+                    <Button className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-300">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Créer un service
+                    </Button>
+                  </Link>
+                </>
+              )}
             </div>
           </div>
 
@@ -610,163 +765,161 @@ export default function AdminServicesIndex({ services, stats }: Props) {
                 </div>
 
                 <Button
-                  onClick={handleReset}
                   variant="outline"
-                  className="border-gray-300 hover:border-gray-400 h-10"
+                  onClick={handleReset}
+                  className="h-10 border-gray-200 hover:border-gray-300"
                 >
                   <Filter className="h-4 w-4 mr-2" />
                   Réinitialiser
                 </Button>
               </div>
-
-              {/* Tri et résultats */}
-              <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center pt-4 border-t border-gray-100">
-                <div className="flex flex-wrap gap-2">
-                  <span className="text-sm text-gray-600 mr-2">Trier par:</span>
-                  <SortButton field="title">Titre</SortButton>
-                  <SortButton field="displayOrder">Ordre</SortButton>
-                  <SortButton field="price">Prix</SortButton>
-                  <SortButton field="isActive">Statut</SortButton>
-                </div>
-
-                <p className="text-sm text-gray-600 font-medium">
-                  {filteredAndSortedServices.length} résultat
-                  {filteredAndSortedServices.length > 1 ? 's' : ''}
-                </p>
-              </div>
             </div>
           </Card>
 
-          {/* Affichage des services */}
-          {paginatedServices.length > 0 ? (
-            <>
-              {viewMode === 'grid' ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                  {paginatedServices.map((service) => (
-                    <ServiceCard key={service.id} service={service} />
-                  ))}
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {paginatedServices.map((service) => (
-                    <ServiceRow key={service.id} service={service} />
-                  ))}
-                </div>
-              )}
-            </>
-          ) : (
-            <Card className="p-8 sm:p-16 text-center border-0 shadow-lg bg-white">
-              <div className="flex flex-col items-center gap-6 max-w-md mx-auto">
-                <div className="p-6 bg-gray-100 rounded-full">
-                  <Star className="h-12 w-12 text-gray-400" />
-                </div>
-                <div>
-                  <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3">
+          {/* Services List/Grid */}
+          <div className="space-y-6">
+            {/* Sort Controls - Only show when not reordering */}
+            {!isReordering && (
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-sm text-gray-600">Trier par :</span>
+                <SortButton field="displayOrder">Ordre d'affichage</SortButton>
+                <SortButton field="title">Titre</SortButton>
+                <SortButton field="price">Prix</SortButton>
+                <SortButton field="isActive">Statut</SortButton>
+              </div>
+            )}
+
+            {/* Services Grid/List */}
+            {paginatedServices.length > 0 ? (
+              <div
+                className={
+                  viewMode === 'grid'
+                    ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'
+                    : 'space-y-4'
+                }
+              >
+                {paginatedServices.map((service, index) =>
+                  viewMode === 'grid' ? (
+                    <ServiceCard
+                      key={service.id}
+                      service={service}
+                      index={
+                        isReordering
+                          ? reorderedServices.findIndex((s) => s.id === service.id)
+                          : index
+                      }
+                    />
+                  ) : (
+                    <ServiceRow
+                      key={service.id}
+                      service={service}
+                      index={
+                        isReordering
+                          ? reorderedServices.findIndex((s) => s.id === service.id)
+                          : index
+                      }
+                    />
+                  )
+                )}
+              </div>
+            ) : (
+              <Card className="p-12 text-center border-0 shadow-lg">
+                <div className="max-w-md mx-auto">
+                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <ImageIcon className="h-8 w-8 text-gray-400" />
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun service trouvé</h3>
+                  <p className="text-gray-500 mb-6">
                     {searchTerm || statusFilter || priceFilter
-                      ? 'Aucun résultat'
-                      : 'Créez votre premier service'}
-                  </h3>
-                  <p className="text-gray-600 mb-6 leading-relaxed text-sm sm:text-base">
-                    {searchTerm || statusFilter || priceFilter
-                      ? 'Aucun service ne correspond à vos critères. Essayez de modifier vos filtres.'
-                      : 'Commencez à présenter vos services avec une interface professionnelle et moderne.'}
+                      ? 'Aucun service ne correspond à vos critères de recherche.'
+                      : 'Commencez par créer votre premier service.'}
                   </p>
-                  <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                    {(searchTerm || statusFilter || priceFilter) && (
-                      <Button
-                        onClick={handleReset}
-                        variant="outline"
-                        className="border-gray-300 hover:border-gray-400"
-                      >
-                        Réinitialiser les filtres
-                      </Button>
-                    )}
+                  {!searchTerm && !statusFilter && !priceFilter && (
                     <Link href={'/admin/services/create'}>
-                      <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-300">
+                      <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white">
                         <Plus className="h-4 w-4 mr-2" />
-                        Créer mon premier service
+                        Créer un service
                       </Button>
                     </Link>
-                  </div>
+                  )}
                 </div>
-              </div>
-            </Card>
-          )}
+              </Card>
+            )}
 
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <Card className="p-4 sm:p-6 border-0 shadow-lg bg-white">
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                <p className="text-sm text-gray-600 font-medium">
-                  Page {currentPage} sur {totalPages} • {filteredAndSortedServices.length} résultat
-                  {filteredAndSortedServices.length > 1 ? 's' : ''}
-                </p>
-
-                <div className="flex items-center gap-2">
-                  <Button
-                    onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                    disabled={currentPage === 1}
-                    variant="outline"
-                    size="sm"
-                    className="border-gray-300 hover:border-blue-400 hover:text-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    ← Précédent
-                  </Button>
-
-                  <div className="flex gap-1">
-                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                      let pageNum: number
-                      if (totalPages <= 5) {
-                        pageNum = i + 1
-                      } else if (currentPage <= 3) {
-                        pageNum = i + 1
-                      } else if (currentPage >= totalPages - 2) {
-                        pageNum = totalPages - 4 + i
-                      } else {
-                        pageNum = currentPage - 2 + i
-                      }
-
-                      return (
-                        <Button
-                          key={pageNum}
-                          onClick={() => setCurrentPage(pageNum)}
-                          variant={currentPage === pageNum ? 'default' : 'outline'}
-                          size="sm"
-                          className={`w-8 h-8 p-0 ${
-                            currentPage === pageNum
-                              ? 'bg-blue-600 text-white'
-                              : 'border-gray-300 hover:border-blue-400 hover:text-blue-600'
-                          }`}
-                        >
-                          {pageNum}
-                        </Button>
-                      )
-                    })}
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <Card className="p-4 border-0 shadow-lg bg-white">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div className="text-sm text-gray-600">
+                    Affichage de{' '}
+                    <span className="font-medium">{(currentPage - 1) * itemsPerPage + 1}</span> à{' '}
+                    <span className="font-medium">
+                      {Math.min(currentPage * itemsPerPage, filteredAndSortedServices.length)}
+                    </span>{' '}
+                    sur <span className="font-medium">{filteredAndSortedServices.length}</span>{' '}
+                    services
                   </div>
 
-                  <Button
-                    onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                    disabled={currentPage === totalPages}
-                    variant="outline"
-                    size="sm"
-                    className="border-gray-300 hover:border-blue-400 hover:text-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Suivant →
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                      disabled={currentPage === 1}
+                      className="border-gray-200"
+                    >
+                      Précédent
+                    </Button>
+
+                    <div className="flex items-center gap-1">
+                      {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                        const pageNum =
+                          totalPages <= 5
+                            ? i + 1
+                            : currentPage <= 3
+                              ? i + 1
+                              : currentPage >= totalPages - 2
+                                ? totalPages - 4 + i
+                                : currentPage - 2 + i
+
+                        return (
+                          <Button
+                            key={pageNum}
+                            variant={currentPage === pageNum ? 'default' : 'outline'}
+                            onClick={() => setCurrentPage(pageNum)}
+                            className={
+                              currentPage === pageNum
+                                ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                                : 'border-gray-200'
+                            }
+                          >
+                            {pageNum}
+                          </Button>
+                        )
+                      })}
+                    </div>
+
+                    <Button
+                      variant="outline"
+                      onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                      disabled={currentPage === totalPages}
+                      className="border-gray-200"
+                    >
+                      Suivant
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            </Card>
-          )}
+              </Card>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Delete Modal */}
       <DeleteConfirmationModal
         isOpen={deleteModal.isOpen}
         onClose={handleDeleteCancel}
         onConfirm={handleDeleteConfirm}
         title="Supprimer le service"
-        message="Cette action est définitive. Le service et toutes ses données associées seront supprimés."
+        message="Êtes-vous sûr de vouloir supprimer ce service ? Cette action est irréversible."
         itemName={deleteModal.serviceName}
         isLoading={deleteModal.isLoading}
       />
@@ -775,7 +928,11 @@ export default function AdminServicesIndex({ services, stats }: Props) {
 }
 
 AdminServicesIndex.layout = (page: React.ReactNode) => (
-  <AdminLayout title="Services" description="Gestion des services" currentPath="/admin/services">
+  <AdminLayout
+    title="Gestion des Services"
+    description="Créez et gérez vos services"
+    currentPath="/admin/services"
+  >
     {page}
   </AdminLayout>
 )
