@@ -279,14 +279,14 @@ export default function CreateProject({ technologies }: ProjectCreateProps) {
                         <span className="text-xs text-gray-500">{data.role || 'Votre rôle'}</span>
                       </div>
                     </div>
-                    
+
                     {data.description && (
                       <div className="prose prose-sm max-w-none">
-                        <div 
+                        <div
                           className="text-gray-700"
-                          dangerouslySetInnerHTML={{ 
-                            __html: data.description.replace(/\n/g, '<br />') 
-                          }} 
+                          dangerouslySetInnerHTML={{
+                            __html: data.description.replace(/\n/g, '<br />')
+                          }}
                         />
                       </div>
                     )}
