@@ -1,7 +1,7 @@
 import { cn } from '@/utils'
 import { Link, usePage } from '@inertiajs/react'
 import { Home, BookOpen, NotebookPen, Briefcase, PhoneOutgoing } from 'lucide-react'
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 
 interface NavItem {
   name: string
@@ -9,42 +9,19 @@ interface NavItem {
   icon: React.ReactNode
 }
 
-const NAV_ITEMS: NavItem[] = [
-  {
-    name: 'Accueil',
-    url: '/',
-    icon: <Home className="w-4 h-4" />,
-  },
-  {
-    name: 'Blog',
-    url: '/blog',
-    icon: <BookOpen className="w-4 h-4" />,
-  },
-  {
-    name: 'Guestbook',
-    url: '/guestbook',
-    icon: <NotebookPen className="w-4 h-4" />,
-  },
-  {
-    name: 'Services',
-    url: '/services',
-    icon: <Briefcase className="w-4 h-4" />,
-  },
-  {
-    name: 'Contacter',
-    url: '/contact',
-    icon: <PhoneOutgoing className="w-4 h-4" />,
-  },
-]
-
-interface BottomNavbarProps {
+const BottomNavbar = ({
+  hideOnPaths = ['/auth'],
+  className,
+}: {
   hideOnPaths?: string[]
   className?: string
-}
-
-const BottomNavbar = ({ hideOnPaths = ['/auth'], className }: BottomNavbarProps) => {
+}) => {
   const { url } = usePage()
+  const [mounted, setMounted] = useState(false)
 
+  useEffect(() => {
+    setMounted(true)
+  }, [])
   const shouldShow = () => {
     const currentPath = url
     return !hideOnPaths.some((path) => currentPath.startsWith(path))
@@ -54,12 +31,41 @@ const BottomNavbar = ({ hideOnPaths = ['/auth'], className }: BottomNavbarProps)
     return null
   }
 
-  const isActive = (item: NavItem) => {
+  const isActive = (item: { url: string }) => {
+    if (!mounted) return false // Évite le mismatch pendant l'hydratation
     if (item.url === '/') {
       return url === '/'
     }
     return url.startsWith(item.url)
   }
+
+  const navItems: NavItem[] = [
+    {
+      name: 'Accueil',
+      url: '/',
+      icon: <Home className="w-4 h-4" aria-hidden="true" />,
+    },
+    {
+      name: 'Blog',
+      url: '/blog',
+      icon: <BookOpen className="w-4 h-4" aria-hidden="true" />,
+    },
+    {
+      name: 'Guestbook',
+      url: '/guestbook',
+      icon: <NotebookPen className="w-4 h-4" aria-hidden="true" />,
+    },
+    {
+      name: 'Services',
+      url: '/services',
+      icon: <Briefcase className="w-4 h-4" aria-hidden="true" />,
+    },
+    {
+      name: 'Contacter',
+      url: '/contact',
+      icon: <PhoneOutgoing className="w-4 h-4" aria-hidden="true" />,
+    },
+  ]
 
   return (
     <>
@@ -87,7 +93,7 @@ const BottomNavbar = ({ hideOnPaths = ['/auth'], className }: BottomNavbarProps)
           )}
         >
           <nav className="flex items-center px-1 py-2">
-            {NAV_ITEMS.map((item) => {
+            {navItems.map((item) => {
               const active = isActive(item)
 
               return (
@@ -100,17 +106,16 @@ const BottomNavbar = ({ hideOnPaths = ['/auth'], className }: BottomNavbarProps)
                     'transition-all duration-300 ease-out',
                     'hover:scale-105 active:scale-95',
                     'min-w-[2.5rem] sm:min-w-[3rem]',
-                    'min-h-[2.5rem] sm:min-h-[3rem]',
-                    {
-                      'bg-gradient-to-b from-white/40 via-white/20 to-transparent': active,
-                      'shadow-sm': active,
-                    }
+                    'min-h-[2.5rem] sm:min-h-[3rem]'
                   )}
                 >
                   {/* Indicateur actif - point en haut */}
-                  {active && (
-                    <div className="absolute -top-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-[#22D3EE] animate-pulse" />
-                  )}
+                  <div
+                    className={cn(
+                      'absolute -top-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-[#22D3EE]',
+                      active ? 'block animate-pulse' : 'hidden'
+                    )}
+                  />
 
                   {/* Icon */}
                   <div
@@ -118,10 +123,7 @@ const BottomNavbar = ({ hideOnPaths = ['/auth'], className }: BottomNavbarProps)
                       'flex items-center justify-center mb-0.5',
                       'transition-all duration-300 ease-out',
                       'group-hover:scale-110',
-                      {
-                        'scale-105 text-[#22D3EE]': active,
-                        'text-white': !active,
-                      }
+                      active ? 'scale-105 text-[#22D3EE]' : 'text-white'
                     )}
                   >
                     {item.icon}
@@ -133,10 +135,7 @@ const BottomNavbar = ({ hideOnPaths = ['/auth'], className }: BottomNavbarProps)
                       'text-xs font-medium leading-tight text-center',
                       'transition-all duration-300',
                       'hidden sm:block',
-                      {
-                        'text-[#22D3EE]': active,
-                        'text-white': !active,
-                      }
+                      active ? 'text-[#22D3EE]' : 'text-white'
                     )}
                   >
                     {item.name}

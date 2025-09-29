@@ -24,25 +24,21 @@ import {
   SortAsc,
   SortDesc,
   User,
+  X,
 } from 'lucide-react'
 import { ProjectsIndexProps } from '~/types/projets'
-import { toast } from 'sonner'
 import { getProjectMainImage } from '~/utils/others'
 
-export default function ProjectsIndex({
-  projects,
-  technologies,
-  years = [],
-  filters,
-}: ProjectsIndexProps) {
-  const [searchTerm, setSearchTerm] = useState(filters?.search || '')
-  const [selectedTechnology, setSelectedTechnology] = useState(filters?.technology || '')
-  const [selectedYear, setSelectedYear] = useState(filters?.year || '')
-  const [selectedStatus, setSelectedStatus] = useState(filters?.isActive || '')
+export default function ProjectsIndex({ projects, technologies, years = [] }: ProjectsIndexProps) {
+  const [searchTerm, setSearchTerm] = useState('')
+  const [selectedTechnology, setSelectedTechnology] = useState('')
+  const [selectedYear, setSelectedYear] = useState('')
+  const [selectedStatus, setSelectedStatus] = useState('')
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [sortBy, setSortBy] = useState<'title' | 'createdAt' | 'updatedAt' | 'year'>('createdAt')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
   const [isClient, setIsClient] = useState(false)
+  const [showFilters, setShowFilters] = useState(false)
 
   // États pour le modal de suppression
   const [deleteModal, setDeleteModal] = useState({
@@ -156,7 +152,6 @@ export default function ProjectsIndex({
     try {
       router.delete(`/admin/projects/${deleteModal.projectId}`, {
         onSuccess: () => {
-          toast.success('Projet supprimé avec succès')
           setDeleteModal({
             isOpen: false,
             projectId: null,
@@ -165,7 +160,6 @@ export default function ProjectsIndex({
           })
         },
         onError: () => {
-          toast.error('Erreur lors de la suppression')
           setDeleteModal((prev) => ({ ...prev, isLoading: false }))
         },
       })
@@ -183,24 +177,49 @@ export default function ProjectsIndex({
     })
   }
 
+  // Active filters count
+  const activeFiltersCount = [searchTerm, selectedTechnology, selectedYear, selectedStatus].filter(
+    Boolean
+  ).length
+
   return (
     <>
-      <div className="min-h-screen sm:bg-gray-50 sm:p-3">
-        <div className="px-3 sm:px-6 lg:px-8">
+      <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
+        <div className="max-w-7xl mx-auto">
           {/* Header */}
-          <div className="sm:flex sm:items-center justify-between mb-8">
-            <div className="sm:flex-auto">
-              <h1 className="text-3xl font-bold text-gray-900">Projets</h1>
-              <p className="mt-2 text-sm sm:text-base text-gray-700">
-                Gérez vos projets de portfolio
-              </p>
-              <div className="mt-2 text-sm text-gray-500">
-                {filteredAndSortedProjects.length} projet(s) sur {projects.data.length} au total
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Projets</h1>
+              <p className="mt-1 text-gray-600">Gérez vos projets de portfolio</p>
+              <div className="mt-1 text-sm text-gray-500">
+                {filteredAndSortedProjects.length} projet
+                {filteredAndSortedProjects.length > 1 ? 's' : ''} sur {projects.data.length} au
+                total
               </div>
             </div>
-            <div className="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
+            <div className="flex flex-wrap items-center gap-3">
+              <Button
+                variant="outline"
+                onClick={() => setShowFilters(!showFilters)}
+                className="md:hidden flex items-center gap-2"
+              >
+                <Filter className="h-4 w-4" />
+                Filtres{' '}
+                {activeFiltersCount > 0 && (
+                  <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-0.5 rounded-full">
+                    {activeFiltersCount}
+                  </span>
+                )}
+              </Button>
+              <a
+                href="/#selected-projects"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                <Eye className="h-4 w-4" />
+                Voir
+              </a>
               <Link href={'/admin/projects/create'}>
-                <Button className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700">
+                <Button className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700">
                   <Plus className="h-4 w-4" />
                   Nouveau projet
                 </Button>
@@ -209,13 +228,28 @@ export default function ProjectsIndex({
           </div>
 
           {/* Filtres et contrôles */}
-          <Card className="mb-8 p-6 bg-white">
-            <div className="grid grid-cols-1 gap-6">
+          <Card
+            className={`mb-6 p-4 sm:p-6 bg-white transition-all duration-300 ${showFilters ? 'block' : 'hidden md:block'}`}
+          >
+            <div className="space-y-4">
+              {/* Mobile filter header */}
+              <div className="flex md:hidden items-center justify-between">
+                <h3 className="text-lg font-medium text-gray-900">Filtres</h3>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowFilters(false)}
+                  className="p-1"
+                >
+                  <X className="h-5 w-5" />
+                </Button>
+              </div>
+
               {/* Ligne 1: Recherche et filtres */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
                 {/* Recherche */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Rechercher</label>
+                <div className="lg:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Rechercher</label>
                   <div className="relative">
                     <Input
                       type="text"
@@ -230,15 +264,15 @@ export default function ProjectsIndex({
 
                 {/* Technologie */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
                     Technologie
                   </label>
                   <select
                     value={selectedTechnology}
                     onChange={(e) => setSelectedTechnology(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-none"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                   >
-                    <option value="">Toutes les technologies</option>
+                    <option value="">Toutes</option>
                     {technologies.map((tech) => (
                       <option key={tech.id} value={tech.id}>
                         {tech.name}
@@ -249,13 +283,13 @@ export default function ProjectsIndex({
 
                 {/* Année */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Année</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Année</label>
                   <select
                     value={selectedYear}
                     onChange={(e) => setSelectedYear(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-none"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                   >
-                    <option value="">Toutes les années</option>
+                    <option value="">Toutes</option>
                     {years.map((year) => (
                       <option key={year} value={year}>
                         {year}
@@ -266,26 +300,29 @@ export default function ProjectsIndex({
 
                 {/* Statut */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Statut</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Statut</label>
                   <select
                     value={selectedStatus}
                     onChange={(e) => setSelectedStatus(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-none"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                   >
-                    <option value="">Tous les statuts</option>
+                    <option value="">Tous</option>
                     <option value="active">Actif</option>
                     <option value="inactive">Inactif</option>
                   </select>
                 </div>
+              </div>
 
+              {/* Ligne 2: Tri et actions */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
                 {/* Tri */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Tri</label>
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Tri</label>
                   <div className="flex gap-2">
                     <select
                       value={sortBy}
                       onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-none"
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                     >
                       <option value="createdAt">Date création</option>
                       <option value="updatedAt">Date modification</option>
@@ -305,16 +342,13 @@ export default function ProjectsIndex({
                     </button>
                   </div>
                 </div>
-              </div>
 
-              {/* Ligne 2: Actions et vue */}
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 {/* Actions de filtres */}
-                <div className="flex items-center gap-2">
+                <div className="flex items-end">
                   <Button
                     variant="ghost"
                     onClick={handleReset}
-                    className="border-none text-sm"
+                    className="w-full border border-gray-300 text-sm"
                     size="sm"
                   >
                     <Filter className="h-4 w-4 mr-1" />
@@ -323,21 +357,33 @@ export default function ProjectsIndex({
                 </div>
 
                 {/* Mode d'affichage */}
-                <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
-                  <button
-                    onClick={() => setViewMode('grid')}
-                    className={`p-2 rounded ${viewMode === 'grid' ? 'bg-white shadow-sm' : 'hover:bg-gray-200'}`}
-                    title="Vue grille"
-                  >
-                    <Grid3X3 className="h-4 w-4" />
-                  </button>
-                  <button
-                    onClick={() => setViewMode('list')}
-                    className={`p-2 rounded ${viewMode === 'list' ? 'bg-white shadow-sm' : 'hover:bg-gray-200'}`}
-                    title="Vue liste"
-                  >
-                    <List className="h-4 w-4" />
-                  </button>
+                <div className="flex items-end">
+                  <div className="flex w-full bg-gray-100 rounded-lg p-1">
+                    <button
+                      onClick={() => setViewMode('grid')}
+                      className={`flex-1 py-2 rounded text-sm font-medium ${
+                        viewMode === 'grid'
+                          ? 'bg-white shadow-sm text-gray-900'
+                          : 'text-gray-600 hover:text-gray-900'
+                      }`}
+                      title="Vue grille"
+                    >
+                      <Grid3X3 className="h-4 w-4 mx-auto" />
+                      <span className="sr-only">Grille</span>
+                    </button>
+                    <button
+                      onClick={() => setViewMode('list')}
+                      className={`flex-1 py-2 rounded text-sm font-medium ${
+                        viewMode === 'list'
+                          ? 'bg-white shadow-sm text-gray-900'
+                          : 'text-gray-600 hover:text-gray-900'
+                      }`}
+                      title="Vue liste"
+                    >
+                      <List className="h-4 w-4 mx-auto" />
+                      <span className="sr-only">Liste</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -346,7 +392,7 @@ export default function ProjectsIndex({
           {/* Contenu */}
           {viewMode === 'grid' ? (
             /* Vue grille */
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
               {filteredAndSortedProjects.map((project) => {
                 const mainImage = getProjectMainImage(project)
                 const imageCount = project.images?.length || 0
@@ -354,7 +400,7 @@ export default function ProjectsIndex({
                 return (
                   <Card
                     key={project.id}
-                    className="overflow-hidden hover:shadow-lg transition-shadow bg-white"
+                    className="overflow-hidden hover:shadow-lg transition-all duration-300 bg-white border border-gray-200 rounded-xl"
                   >
                     {/* Image */}
                     <div className="aspect-video bg-gray-100 relative">
@@ -373,7 +419,7 @@ export default function ProjectsIndex({
                       {/* Badge pour nombre d'images */}
                       {imageCount > 1 && (
                         <div className="absolute top-2 left-2">
-                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-white/90 text-gray-800 border">
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-white/90 text-gray-800 border border-gray-300">
                             <Images className="h-3 w-3 mr-1" />
                             {imageCount}
                           </span>
@@ -406,7 +452,7 @@ export default function ProjectsIndex({
                               href={project.demoPath}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="p-1.5 bg-white/90 rounded-full hover:bg-white transition-colors"
+                              className="p-1.5 bg-white/90 rounded-full hover:bg-white transition-colors shadow-sm"
                               title="Voir la démo"
                             >
                               <ExternalLink className="h-3 w-3 text-gray-700" />
@@ -417,7 +463,7 @@ export default function ProjectsIndex({
                               href={project.githubPath}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="p-1.5 bg-white/90 rounded-full hover:bg-white transition-colors"
+                              className="p-1.5 bg-white/90 rounded-full hover:bg-white transition-colors shadow-sm"
                               title="Voir le code"
                             >
                               <Github className="h-3 w-3 text-gray-700" />
@@ -435,7 +481,7 @@ export default function ProjectsIndex({
                             {project.title}
                           </h3>
                           <div className="flex items-center gap-2 mt-1">
-                            <span className="text-sm text-blue-600 font-medium">
+                            <span className="text-sm text-blue-600 font-medium bg-blue-50 px-2 py-0.5 rounded">
                               {project.year}
                             </span>
                             {project.role && (
@@ -485,13 +531,13 @@ export default function ProjectsIndex({
                       {/* Actions */}
                       <div className="flex items-center gap-2">
                         <Link href={`/admin/projects/${project.id}`} className="flex-1">
-                          <Button size="sm" variant="outline" className="w-full border-none">
+                          <Button size="sm" variant="outline" className="w-full border-gray-300">
                             <Eye className="h-3 w-3 mr-1" />
                             Voir
                           </Button>
                         </Link>
                         <Link href={`/admin/projects/${project.id}/edit`}>
-                          <Button size="sm" variant="outline" className="border-none">
+                          <Button size="sm" variant="outline" className="border-gray-300">
                             <Edit className="h-3 w-3" />
                           </Button>
                         </Link>
@@ -499,7 +545,7 @@ export default function ProjectsIndex({
                           size="sm"
                           variant="outline"
                           onClick={() => handleDeleteClick(project.id, project.title)}
-                          className="text-red-600 hover:text-red-800 border-none hover:bg-red-50"
+                          className="text-red-600 hover:text-red-800 border-red-300 hover:bg-red-50"
                         >
                           <Trash2 className="h-3 w-3" />
                         </Button>
@@ -519,14 +565,14 @@ export default function ProjectsIndex({
                 return (
                   <Card
                     key={project.id}
-                    className="overflow-hidden hover:shadow-md transition-shadow bg-white"
+                    className="overflow-hidden hover:shadow-md transition-all duration-300 bg-white border border-gray-200 rounded-xl"
                   >
                     <div className="p-4 sm:p-6">
                       {/* Version mobile */}
                       <div className="sm:hidden">
                         <div className="flex items-start gap-3 mb-3">
                           <div className="flex-shrink-0 relative">
-                            <div className="w-12 h-12 bg-gray-100 rounded-lg overflow-hidden">
+                            <div className="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden">
                               {mainImage ? (
                                 <img
                                   src={mainImage}
@@ -535,7 +581,7 @@ export default function ProjectsIndex({
                                 />
                               ) : (
                                 <div className="h-full w-full flex items-center justify-center">
-                                  <Images className="h-4 w-4 text-gray-400" />
+                                  <Images className="h-5 w-5 text-gray-400" />
                                 </div>
                               )}
                             </div>
@@ -551,7 +597,9 @@ export default function ProjectsIndex({
                               {project.title}
                             </h3>
                             <div className="flex items-center gap-2 mb-2 text-xs">
-                              <span className="text-blue-600 font-medium">{project.year}</span>
+                              <span className="text-blue-600 font-medium bg-blue-50 px-2 py-0.5 rounded">
+                                {project.year}
+                              </span>
                               {project.role && (
                                 <>
                                   <span className="text-gray-400">•</span>
@@ -561,7 +609,7 @@ export default function ProjectsIndex({
                             </div>
                             <div className="flex items-center gap-2 mb-2">
                               <span
-                                className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                                className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
                                   project.isActive
                                     ? 'bg-green-100 text-green-800'
                                     : 'bg-gray-100 text-gray-800'
@@ -596,14 +644,14 @@ export default function ProjectsIndex({
                             <Button
                               size="sm"
                               variant="outline"
-                              className="w-full border-none text-xs"
+                              className="w-full border-gray-300 text-xs"
                             >
                               <Eye className="h-3 w-3 mr-1" />
                               Voir
                             </Button>
                           </Link>
                           <Link href={`/admin/projects/${project.id}/edit`}>
-                            <Button size="sm" variant="outline" className="border-none px-2">
+                            <Button size="sm" variant="outline" className="border-gray-300 px-2">
                               <Edit className="h-3 w-3" />
                             </Button>
                           </Link>
@@ -611,7 +659,7 @@ export default function ProjectsIndex({
                             size="sm"
                             variant="outline"
                             onClick={() => handleDeleteClick(project.id, project.title)}
-                            className="text-red-600 hover:text-red-800 hover:bg-red-50 border-none px-2"
+                            className="text-red-600 hover:text-red-800 hover:bg-red-50 border-red-300 px-2"
                           >
                             <Trash2 className="h-3 w-3" />
                           </Button>
@@ -622,7 +670,7 @@ export default function ProjectsIndex({
                       <div className="hidden sm:block">
                         <div className="flex items-center gap-6">
                           <div className="flex-shrink-0 relative">
-                            <div className="w-20 h-20 bg-gray-100 rounded-lg overflow-hidden">
+                            <div className="w-24 h-24 bg-gray-100 rounded-lg overflow-hidden">
                               {mainImage ? (
                                 <img
                                   src={mainImage}
@@ -631,29 +679,29 @@ export default function ProjectsIndex({
                                 />
                               ) : (
                                 <div className="h-full w-full flex items-center justify-center">
-                                  <Images className="h-6 w-6 text-gray-400" />
+                                  <Images className="h-8 w-8 text-gray-400" />
                                 </div>
                               )}
                             </div>
                             {imageCount > 1 && (
-                              <span className="absolute -top-1 -right-1 w-6 h-6 bg-blue-600 text-white text-xs rounded-full flex items-center justify-center font-medium">
+                              <span className="absolute -top-2 -right-2 w-6 h-6 bg-blue-600 text-white text-xs rounded-full flex items-center justify-center font-medium">
                                 {imageCount}
                               </span>
                             )}
                           </div>
 
                           <div className="flex-1 min-w-0">
-                            <div className="flex items-start justify-between">
+                            <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
                               <div className="flex-1">
-                                <div className="flex items-center gap-3 mb-2">
-                                  <h3 className="text-lg font-semibold text-gray-900">
+                                <div className="flex flex-wrap items-center gap-3 mb-2">
+                                  <h3 className="text-xl font-semibold text-gray-900">
                                     {project.title}
                                   </h3>
-                                  <span className="text-sm text-blue-600 font-medium bg-blue-50 px-2 py-1 rounded">
+                                  <span className="text-sm text-blue-600 font-medium bg-blue-50 px-2.5 py-1 rounded">
                                     {project.year}
                                   </span>
                                   <span
-                                    className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                                    className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
                                       project.isActive
                                         ? 'bg-green-100 text-green-800'
                                         : 'bg-gray-100 text-gray-800'
@@ -691,19 +739,19 @@ export default function ProjectsIndex({
 
                                 {project.role && (
                                   <div className="flex items-center gap-1 mb-2">
-                                    <User className="h-3 w-3 text-gray-400" />
-                                    <span className="text-sm text-gray-600">{project.role}</span>
+                                    <User className="h-4 w-4 text-gray-400" />
+                                    <span className="text-gray-600">{project.role}</span>
                                   </div>
                                 )}
 
                                 {project.description && (
-                                  <p className="text-sm text-gray-600 mb-2 line-clamp-1">
+                                  <p className="text-gray-600 mb-3 line-clamp-2">
                                     {project.description}
                                   </p>
                                 )}
 
                                 {project.technologies && project.technologies.length > 0 && (
-                                  <div className="flex flex-wrap gap-1 mb-2">
+                                  <div className="flex flex-wrap gap-1 mb-3">
                                     {project.technologies.slice(0, 5).map((tech) => (
                                       <span
                                         key={tech.id}
@@ -720,9 +768,9 @@ export default function ProjectsIndex({
                                   </div>
                                 )}
 
-                                <div className="flex items-center gap-4 text-xs text-gray-500">
+                                <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500">
                                   <div className="flex items-center gap-1">
-                                    <Calendar className="h-3 w-3" />
+                                    <Calendar className="h-4 w-4" />
                                     Créé le {formatDate(project.createdAt.toString())}
                                   </div>
                                   {project.updatedAt && (
@@ -731,16 +779,16 @@ export default function ProjectsIndex({
                                 </div>
                               </div>
 
-                              <div className="flex items-center gap-2 ml-4">
+                              <div className="flex items-center gap-2">
                                 <Link href={`/admin/projects/${project.id}`}>
-                                  <Button size="sm" variant="outline" className="border-none">
-                                    <Eye className="h-3 w-3 mr-1" />
+                                  <Button size="sm" variant="outline" className="border-gray-300">
+                                    <Eye className="h-4 w-4 mr-1" />
                                     Voir
                                   </Button>
                                 </Link>
                                 <Link href={`/admin/projects/${project.id}/edit`}>
-                                  <Button size="sm" variant="outline" className="border-none">
-                                    <Edit className="h-3 w-3 mr-1" />
+                                  <Button size="sm" variant="outline" className="border-gray-300">
+                                    <Edit className="h-4 w-4 mr-1" />
                                     Modifier
                                   </Button>
                                 </Link>
@@ -748,9 +796,9 @@ export default function ProjectsIndex({
                                   size="sm"
                                   variant="outline"
                                   onClick={() => handleDeleteClick(project.id, project.title)}
-                                  className="text-red-600 hover:text-red-800 hover:bg-red-50 border-none"
+                                  className="text-red-600 hover:text-red-800 hover:bg-red-50 border-red-300"
                                 >
-                                  <Trash2 className="h-3 w-3" />
+                                  <Trash2 className="h-4 w-4" />
                                 </Button>
                               </div>
                             </div>
@@ -767,26 +815,28 @@ export default function ProjectsIndex({
           {/* Empty State */}
           {filteredAndSortedProjects.length === 0 && (
             <div className="text-center py-12">
-              <Images className="mx-auto h-12 w-12 text-gray-400" />
-              <h3 className="mt-2 text-sm font-semibold text-gray-900">
+              <div className="mx-auto h-16 w-16 bg-gray-100 rounded-full flex items-center justify-center">
+                <Images className="h-8 w-8 text-gray-400" />
+              </div>
+              <h3 className="mt-4 text-lg font-medium text-gray-900">
                 {searchTerm || selectedTechnology || selectedYear || selectedStatus
                   ? 'Aucun projet trouvé'
                   : 'Aucun projet'}
               </h3>
-              <p className="mt-1 text-sm text-gray-500">
+              <p className="mt-1 text-gray-500">
                 {searchTerm || selectedTechnology || selectedYear || selectedStatus
                   ? 'Essayez de modifier vos critères de recherche.'
                   : 'Commencez par créer votre premier projet.'}
               </p>
               <div className="mt-6">
                 {searchTerm || selectedTechnology || selectedYear || selectedStatus ? (
-                  <Button onClick={handleReset} variant="outline">
+                  <Button onClick={handleReset} variant="outline" className="border-gray-300">
                     Réinitialiser les filtres
                   </Button>
                 ) : (
                   <Link href={'/admin/projects/create'}>
-                    <Button>
-                      <Plus className="h-4 w-4 mr-2" />
+                    <Button className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 mx-auto">
+                      <Plus className="h-4 w-4" />
                       Nouveau projet
                     </Button>
                   </Link>

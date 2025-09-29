@@ -38,11 +38,6 @@ export interface InertiaProps {
   [key: string]: any
 }
 
-// Type pour les erreurs de validation
-export interface ValidationErrors {
-  [key: string]: string
-}
-
 // Type pour l'utilisateur authentifié
 export interface AuthenticatedUser {
   id?: number

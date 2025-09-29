@@ -3,10 +3,11 @@ import { useState } from 'react'
 import { HeadLayout } from '~/layout/HeadLayout'
 import { Label } from '@/components/ui/label'
 import { cn } from '@/utils'
-import { Eye, EyeOff, Mail, ArrowRight, Terminal, Code, Coffee } from 'lucide-react'
+import { Eye, EyeOff, Mail, ArrowRight, Terminal, Code, Coffee, AlertTriangle } from 'lucide-react'
 
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false)
+  const [attemptCount, setAttemptCount] = useState(0)
 
   return (
     <>
@@ -80,6 +81,16 @@ export default function Login() {
               </div>
               <h1 className="text-3xl font-bold text-gray-900 mb-2">Connexion</h1>
               <p className="text-gray-600">Accédez à votre dashboard administrateur</p>
+
+              {/* Warning for multiple failed attempts */}
+              {attemptCount >= 3 && (
+                <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg flex items-center gap-2">
+                  <AlertTriangle className="w-5 h-5 text-yellow-600 flex-shrink-0" />
+                  <p className="text-sm text-yellow-700">
+                    Trop de tentatives de connexion échouées. Veuillez patienter avant de réessayer.
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Form */}
@@ -91,10 +102,25 @@ export default function Login() {
                 replace: true,
                 preserveScroll: true,
               }}
+              onSuccess={() => {
+                // Réinitialiser le compteur en cas de succès
+                setAttemptCount(0)
+              }}
+              onError={() => {
+                // Incrémenter le compteur en cas d'erreur
+                setAttemptCount((prev) => prev + 1)
+              }}
               className="space-y-6 inert:opacity-50 inert:pointer-events-none"
             >
               {({ errors }) => (
                 <>
+                  <input
+                    type="text"
+                    name="website"
+                    style={{ position: 'absolute', left: '-9999px', opacity: 0 }}
+                    tabIndex={-1}
+                    autoComplete="off"
+                  />
                   {/* Email field */}
                   <div>
                     <Label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
@@ -178,15 +204,25 @@ export default function Login() {
                   {/* Submit button */}
                   <button
                     type="submit"
+                    disabled={attemptCount >= 5}
                     className={cn(
-                      'w-full flex justify-center items-center px-4 py-3 rounded-lg hover:cursor-pointer',
-                      'bg-black text-white font-medium transition-all duration-200',
-                      'hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2',
-                      'group'
+                      'w-full flex justify-center items-center px-4 py-3 rounded-lg font-medium transition-all duration-200',
+                      attemptCount >= 5
+                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                        : 'bg-black text-white hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 group hover:cursor-pointer'
                     )}
                   >
-                    Se connecter
-                    <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                    {attemptCount >= 5 ? (
+                      <>
+                        <AlertTriangle className="w-4 h-4 mr-2" />
+                        Trop de tentatives
+                      </>
+                    ) : (
+                      <>
+                        Se connecter
+                        <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                      </>
+                    )}
                   </button>
                 </>
               )}

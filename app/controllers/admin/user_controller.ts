@@ -31,8 +31,7 @@ export default class UserController {
   /**
    * Enregistre un nouvel utilisateur
    */
-  async store({ request, response, session, bouncer }: HttpContext) {
-    // Vérification d'autorisation simplifiée
+  async store({ request, response, session, bouncer, logger }: HttpContext) {
     const authResult = await this.bouncerUserService.canStoreUser(bouncer)
     if (!authResult.authorized) {
       return this.bouncerUserService.handleUnauthorized(response, session, authResult.error)
@@ -64,7 +63,8 @@ export default class UserController {
         const fileName = photoUrl.split('/').pop()
         if (fileName) await FileUploadService.deleteFile(fileName)
       }
-      session.flash('error', "Erreur lors de la création de l'utilisateur")
+      logger.error(error)
+      session.flash('error', "Erreur lors de la création de l'utilisateur" + error.message)
       return response.redirect().back()
     }
   }
@@ -88,8 +88,7 @@ export default class UserController {
   /**
    * Met à jour un utilisateur
    */
-  async update({ request, response, params, session, bouncer, auth }: HttpContext) {
-    // Vérification d'autorisation simplifiée
+  async update({ request, response, params, session, bouncer, auth, logger }: HttpContext) {
     const authResult = await this.bouncerUserService.canUpdateUser(bouncer, params.id)
     if (!authResult.authorized) {
       return this.bouncerUserService.handleUnauthorized(response, session, authResult.error)
@@ -121,11 +120,11 @@ export default class UserController {
         },
         auth.user
       )
-
       session.flash('success', 'Utilisateur mis à jour avec succès')
       return response.redirect().back()
     } catch (error) {
-      session.flash('error', error.message)
+      logger.error(error)
+      session.flash('error', 'Erreur lors de la mise a jour du compte')
       return response.redirect().back()
     }
   }
@@ -133,8 +132,7 @@ export default class UserController {
   /**
    * Supprime un utilisateur
    */
-  async destroy({ response, params, session, bouncer }: HttpContext) {
-    // Vérification d'autorisation simplifiée
+  async destroy({ response, params, session, bouncer, logger }: HttpContext) {
     const authResult = await this.bouncerUserService.canDestroyUser(bouncer, params.id)
     if (!authResult.authorized) {
       return this.bouncerUserService.handleUnauthorized(response, session, authResult.error)
@@ -142,11 +140,11 @@ export default class UserController {
 
     try {
       await this.userService.deleteUser(params.id)
-
       session.flash('success', 'Utilisateur supprimé avec succès')
       return response.redirect().back()
     } catch (error) {
-      session.flash('error', "Erreur lors de la suppression de l'utilisateur")
+      logger.error(error)
+      session.flash('error', `Erreur lors de la suppression de l'utilisateur ${error.message}`)
       return response.redirect().back()
     }
   }
@@ -154,14 +152,13 @@ export default class UserController {
   /**
    * Active/désactive un utilisateur
    */
-  async toggleStatus({ response, params, session }: HttpContext) {
+  async toggleStatus({ response, params, session, logger }: HttpContext) {
     try {
       await this.userService.toggleUserStatus(params.id)
-
-      session.flash('success', "Statut de l'utilisateur mis à jour")
       return response.redirect().back()
     } catch (error) {
-      session.flash('error', 'Erreur lors de la mise à jour du statut')
+      logger.error(error)
+      session.flash('error', `Erreur lors de la mise à jour du statut ${error.message}`)
       return response.redirect().back()
     }
   }

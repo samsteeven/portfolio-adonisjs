@@ -16,12 +16,23 @@ import limiter from '@adonisjs/limiter/services/main'
  * Il limite les tentatives par une combinaison d'adresse IP ET d'adresse e-mail,
  * ce qui est plus précis et plus sûr.
  */
-export const limitter = limiter.define('login', (ctx) => {
+export const loginLimiter = limiter.define('login', (ctx) => {
   const email = ctx.request.input('email')
 
   // On utilise une clé composite (email + IP) pour être plus précis.
   // Si l'email n'est pas là, la clé sera juste l'IP.
   const key = email ? `${email}_${ctx.request.ip()}` : ctx.request.ip()
 
-  return limiter.allowRequests(5).every('5 minutes').blockFor('30 minutes').usingKey(key)
+  return limiter.allowRequests(5).every('10 minutes').blockFor('30 minutes').usingKey(key)
+})
+
+/**
+ * Limiteur pour les tentatives de connexion échouées
+ * Plus strict que le limiteur général
+ */
+export const failedLoginLimiter = limiter.define('failed_login', (ctx) => {
+  const email = ctx.request.input('email')
+  const key = email ? `${email}_${ctx.request.ip()}` : ctx.request.ip()
+  
+  return limiter.allowRequests(3).every('15 minutes').blockFor('1 hour').usingKey(key)
 })

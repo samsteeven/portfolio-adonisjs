@@ -48,9 +48,8 @@ export class UserService {
     if (userPayload.role !== undefined && authenticatedUser) {
       // Si l'utilisateur tente de modifier son propre rôle
       if (authenticatedUser.id === user.id) {
-        // Vérifier si l'utilisateur a le droit de modifier son propre rôle
-        const canChangeOwnRole = authenticatedUser.role === UserRole.ADMIN
-        if (!canChangeOwnRole) {
+        // Seul un admin peut modifier son propre rôle
+        if (authenticatedUser.role !== UserRole.ADMIN) {
           // Supprimer la modification du rôle
           delete userPayload.role
         }

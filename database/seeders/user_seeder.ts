@@ -7,7 +7,7 @@ export default class extends BaseSeeder {
     await User.create({
       username: 'admin',
       email: 'admin@example.com',
-      password: 'password',
+      password: 'Admin123!',
       role: UserRole.ADMIN,
     })
   }

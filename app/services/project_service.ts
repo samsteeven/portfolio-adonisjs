@@ -10,41 +10,13 @@ export default class ProjectService {
    * Get all projects with filters and pagination
    */
   async getProjects(filters: ProjectFilters = {}): Promise<ModelPaginatorContract<Project>> {
-    const { search, technology, isActive, year, page = 1, limit = 10 } = filters
+    const { page = 1, limit = 10 } = filters
 
     const query = Project.query()
       .preload('technologies')
       .preload('images', (imageQuery) => {
         imageQuery.orderBy('order', 'asc')
       })
-
-    // Search filter
-    if (search) {
-      query.where((subQuery) => {
-        subQuery
-          .whereLike('title', `%${search}%`)
-          .orWhereLike('description', `%${search}%`)
-          .orWhereLike('role', `%${search}%`)
-      })
-    }
-
-    // Technology filter
-    if (technology) {
-      query.whereHas('technologies', (techQuery) => {
-        techQuery.where('name', technology)
-      })
-    }
-
-    // Active status filter
-    if (typeof isActive === 'boolean') {
-      query.where('isActive', isActive)
-    }
-
-    // Year filter
-    if (year) {
-      query.where('year', year)
-    }
-
     // Order by most recent
     query.orderBy('createdAt', 'desc')
 
@@ -54,14 +26,14 @@ export default class ProjectService {
   /**
    * Get a single project by ID
    */
-  async getProjectById(id: number): Promise<Project | null> {
+  async getProjectById(id: number): Promise<Project> {
     return await Project.query()
       .where('id', id)
       .preload('technologies')
       .preload('images', (imageQuery) => {
         imageQuery.orderBy('order', 'asc')
       })
-      .first()
+      .firstOrFail()
   }
 
   /**

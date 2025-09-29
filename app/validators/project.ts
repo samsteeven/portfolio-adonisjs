@@ -63,6 +63,29 @@ export const updateProjectValidator = vine.compile(
   })
 )
 
+/**
+ * Validates the reorder images action
+ */
+export const reorderImagesValidator = vine.compile(
+  vine.object({
+    imageOrders: vine.array(
+      vine.object({
+        id: vine.number(),
+        order: vine.number(),
+      })
+    ),
+  })
+)
+
+/**
+ * Validates the set primary image action
+ */
+export const setPrimaryImageValidator = vine.compile(
+  vine.object({
+    imageId: vine.number(),
+  })
+)
+
 export interface CreateProjectData {
   title: string
   description?: string

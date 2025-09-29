@@ -50,6 +50,6 @@ export default class SubInfo extends BaseModel {
       return this.photoPath
     }
     // await drive.use('fs').getUrl(this.photoPath)
-    return `uploads/${this.photoPath}`
+    return `/admin/uploads/${this.photoPath}`
   }
 }
