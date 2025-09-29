@@ -1,5 +1,5 @@
 'use client'
-import parse from 'html-react-parser'
+import SafeHTML from '~/components/safeHTML'
 import ArrowAnimation from '@/components/ArrowAnimation'
 import TransitionLink from '@/components/TransitionLink'
 import { useGSAP } from '@gsap/react'
@@ -136,13 +136,17 @@ export default function ProjectDetails({ slug }: Props) {
               <div className="fade-in-later">
                 <p className="text-muted-foreground font-anton mb-3">Description</p>
 
-                <div className="text-lg prose-xl markdown-text">{parse(project.description)}</div>
+                <div className="text-lg prose-xl markdown-text">
+                  <SafeHTML html={project.description} />
+                </div>
               </div>
               {project.role && (
                 <div className="fade-in-later">
                   <p className="text-muted-foreground font-anton mb-3">My Role</p>
 
-                  <div className="text-lg">{parse(project.role)}</div>
+                  <div className="text-lg">
+                    <SafeHTML html={project.role} />
+                  </div>
                 </div>
               )}
             </div>

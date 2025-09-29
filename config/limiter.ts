@@ -9,6 +9,8 @@ const limiterConfig = defineConfig({
      * MYSQL or PostgreSQL database.
      */
     database: stores.database({
+      connectionName: 'mysql',
+      dbName: env.get('DB_DATABASE'),
       tableName: 'rate_limits',
     }),
 

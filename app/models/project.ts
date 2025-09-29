@@ -1,5 +1,5 @@
 import { DateTime } from 'luxon'
-import { BaseModel, column, manyToMany, hasMany } from '@adonisjs/lucid/orm'
+import { BaseModel, column, manyToMany, hasMany, computed } from '@adonisjs/lucid/orm'
 import Technology from '#models/technology'
 import ProjectImage from '#models/project_image'
 import type { ManyToMany, HasMany } from '@adonisjs/lucid/types/relations'
@@ -44,4 +44,9 @@ export default class Project extends BaseModel {
 
   @column.dateTime({ columnName: 'updated_at', autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime | null
+
+  @computed()
+  get slug(): string {
+    return this.title.toLowerCase().replace(/ /g, '-')
+  }
 }

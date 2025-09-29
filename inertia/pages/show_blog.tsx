@@ -2,6 +2,7 @@ import { Head, Link } from '@inertiajs/react'
 import { Clock, User, Share2, Eye, Heart, ChevronLeft } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import Newsletter_signup from '~/pages/components/newsletter_signup'
+import SafeHTML from '~/components/safeHTML'
 
 interface Blog extends BlogPost {
   _count?: {
@@ -129,16 +130,9 @@ export default function BlogShow({ post, relatedPosts = [] }: BlogShowProps) {
 
           {/* Article Content - Typography responsive */}
           <article className="prose prose-sm sm:prose-base lg:prose-lg prose-invert max-w-none">
-            <div
+            <SafeHTML 
+              html={post.content} 
               className="text-gray-300 leading-relaxed text-sm sm:text-base lg:text-lg"
-              style={{
-                wordBreak: 'break-word',
-                overflowWrap: 'break-word',
-                hyphens: 'auto',
-              }}
-              dangerouslySetInnerHTML={{
-                __html: post.content.replace(/\n/g, '<br />'),
-              }}
             />
           </article>
 

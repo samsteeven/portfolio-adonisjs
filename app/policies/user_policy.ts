@@ -20,12 +20,8 @@ export default class UserPolicy extends BasePolicy {
   }
 
   // Modifier le rôle (seulement admin)
-  changeRole(user: User, targetUser: User): AuthorizerResponse {
-    // Un utilisateur peut modifier son propre rôle seulement s'il est admin
-    if (user.id === targetUser.id) {
-      return user.role === UserRole.ADMIN
-    }
-    // Un admin peut modifier le rôle des autres utilisateurs
+  changeRole(user: User): AuthorizerResponse {
+    // Seul un admin peut modifier un rôle
     return user.role === UserRole.ADMIN
   }
 

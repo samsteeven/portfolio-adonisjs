@@ -24,6 +24,7 @@ import {
 } from 'lucide-react'
 import { ProjectShowProps } from '~/types/projets'
 import { toast } from 'sonner'
+import SafeHTML from '~/components/safeHTML'
 
 export default function ShowProject({ project }: ProjectShowProps) {
   const [isClient, setIsClient] = useState(false)
@@ -203,11 +204,7 @@ export default function ShowProject({ project }: ProjectShowProps) {
       {
         onSuccess: () => {
           setPrimaryImageId(imageId)
-          toast.success('Image principale définie avec succès')
           router.reload({ only: ['project'] })
-        },
-        onError: () => {
-          toast.error("Erreur lors de la définition de l'image principale")
         },
       }
     )
@@ -216,25 +213,25 @@ export default function ShowProject({ project }: ProjectShowProps) {
   return (
     <>
       <Head title={`Projet ${project.title}`} />
-      <div className="min-h-screen sm:bg-gray-50 sm:p-3">
-        <div className="px-3 sm:px-6 lg:px-8 max-w-6xl mx-auto">
+      <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
+        <div className="max-w-7xl mx-auto">
           {/* Header */}
-          <div className="mb-8">
+          <div className="mb-6">
             <div className="flex items-center gap-4 mb-4">
               <Link
                 href={'/admin/projects'}
-                className="inline-flex items-center text-base text-gray-500 hover:text-gray-700"
+                className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900 transition-colors"
               >
                 <ArrowLeft className="h-4 w-4 mr-1" />
-                Retour aux projets
+                Projets
               </Link>
             </div>
 
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
               <div>
-                <div className="flex items-center gap-3 mb-2">
-                  <h1 className="text-3xl font-bold text-gray-900">{project.title}</h1>
-                  <span className="text-lg text-blue-600 font-medium bg-blue-50 px-3 py-1 rounded-lg">
+                <div className="flex flex-wrap items-center gap-3 mb-3">
+                  <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">{project.title}</h1>
+                  <span className="text-base sm:text-lg text-blue-600 font-medium bg-blue-50 px-3 py-1 rounded-lg">
                     {project.year}
                   </span>
                   <span
@@ -258,16 +255,8 @@ export default function ShowProject({ project }: ProjectShowProps) {
                   </span>
                 </div>
 
-                {/* Rôle */}
-                {project.role && (
-                  <div className="flex items-center gap-2 mb-2">
-                    <User className="h-4 w-4 text-gray-400" />
-                    <span className="text-gray-700 font-medium">{project.role}</span>
-                  </div>
-                )}
-
                 {/* Liens externes */}
-                <div className="flex items-center gap-4 mb-2">
+                <div className="flex flex-wrap items-center gap-4 mb-4">
                   {project.demoPath && (
                     <a
                       href={project.demoPath}
@@ -294,35 +283,42 @@ export default function ShowProject({ project }: ProjectShowProps) {
               </div>
 
               <div className="flex flex-wrap gap-2">
+                <a
+                  href={`/projects/${project.slug}`}
+                  className="inline-flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                >
+                  <Eye className="h-4 w-4" />
+                  <span className="hidden sm:inline">Voir</span>
+                </a>
                 <Link
                   href={`/admin/projects/${project.id}/edit`}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+                  className="inline-flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                 >
                   <Edit className="h-4 w-4" />
-                  Modifier
+                  <span className="hidden sm:inline">Modifier</span>
                 </Link>
                 <button
                   onClick={toggleStatus}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+                  className="inline-flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                 >
                   {project.isActive ? (
                     <>
                       <EyeOff className="h-4 w-4" />
-                      Désactiver
+                      <span className="hidden sm:inline">Désactiver</span>
                     </>
                   ) : (
                     <>
                       <Eye className="h-4 w-4" />
-                      Activer
+                      <span className="hidden sm:inline">Activer</span>
                     </>
                   )}
                 </button>
                 <button
                   onClick={handleDeleteClick}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                  className="inline-flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
                 >
                   <Trash2 className="h-4 w-4" />
-                  Supprimer
+                  <span className="hidden sm:inline">Supprimer</span>
                 </button>
               </div>
             </div>
@@ -330,37 +326,37 @@ export default function ShowProject({ project }: ProjectShowProps) {
 
           {/* Galerie d'images */}
           {allImages.length > 0 && (
-            <div className="mb-8 bg-white rounded-xl shadow-sm p-6">
-              <div className="flex items-center justify-between mb-6">
+            <div className="mb-6 bg-white rounded-xl shadow-sm p-4 sm:p-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
                 <h2 className="text-xl font-semibold text-gray-900">Galerie d'images</h2>
-                {!isReordering && allImages.length > 1 && (
-                  <div className="flex gap-2">
+                <div className="flex gap-2">
+                  {!isReordering && allImages.length > 1 && (
                     <button
                       onClick={startReordering}
                       className="inline-flex items-center gap-2 px-3 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                     >
                       <GripVertical className="h-4 w-4" />
-                      Réorganiser
+                      <span className="hidden sm:inline">Réorganiser</span>
                     </button>
-                  </div>
-                )}
-                {isReordering && (
-                  <div className="flex gap-2">
-                    <button
-                      onClick={cancelReordering}
-                      className="inline-flex items-center gap-2 px-3 py-1.5 text-sm bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
-                    >
-                      Annuler
-                    </button>
-                    <button
-                      onClick={saveReordering}
-                      className="inline-flex items-center gap-2 px-3 py-1.5 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                    >
-                      <Check className="h-4 w-4" />
-                      Enregistrer
-                    </button>
-                  </div>
-                )}
+                  )}
+                  {isReordering && (
+                    <>
+                      <button
+                        onClick={cancelReordering}
+                        className="inline-flex items-center gap-2 px-3 py-1.5 text-sm bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                      >
+                        Annuler
+                      </button>
+                      <button
+                        onClick={saveReordering}
+                        className="inline-flex items-center gap-2 px-3 py-1.5 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                      >
+                        <Check className="h-4 w-4" />
+                        <span className="hidden sm:inline">Enregistrer</span>
+                      </button>
+                    </>
+                  )}
+                </div>
               </div>
 
               {isReordering ? (
@@ -371,12 +367,12 @@ export default function ShowProject({ project }: ProjectShowProps) {
                         <img
                           src={image.imagePublicUrl}
                           alt={`Image ${index + 1}`}
-                          className="w-full h-48 object-cover"
+                          className="w-full h-40 sm:h-48 object-cover"
                         />
                         {image.id === primaryImageId && (
                           <div className="absolute top-2 left-2 bg-yellow-500 text-white text-xs px-2 py-1 rounded flex items-center gap-1">
                             <Star className="w-3 h-3" />
-                            Principal
+                            <span className="hidden sm:inline">Principal</span>
                           </div>
                         )}
                         <div className="absolute top-2 right-2 flex gap-1">
@@ -426,25 +422,26 @@ export default function ShowProject({ project }: ProjectShowProps) {
                     <>
                       <button
                         onClick={prevImage}
-                        className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/80 hover:bg-white rounded-full shadow-md flex items-center justify-center transition-all"
+                        className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/80 hover:bg-white rounded-full shadow-md flex items-center justify-center transition-all z-10"
                       >
                         <ChevronLeft className="h-5 w-5 text-gray-700" />
                       </button>
                       <button
                         onClick={nextImage}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/80 hover:bg-white rounded-full shadow-md flex items-center justify-center transition-all"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/80 hover:bg-white rounded-full shadow-md flex items-center justify-center transition-all z-10"
                       >
                         <ChevronRight className="h-5 w-5 text-gray-700" />
                       </button>
                     </>
                   )}
 
-                  <div className="relative w-full aspect-video rounded-lg overflow-hidden bg-gray-100">
+                  {/* Image avec hauteur fixe */}
+                  <div className="relative w-full h-64 sm:h-80 lg:h-96 rounded-lg overflow-hidden bg-gray-100">
                     {allImages.length > 0 ? (
                       <img
                         src={allImages[currentImageIndex]?.url}
                         alt={`Image ${currentImageIndex + 1} de ${project.title}`}
-                        className="w-full h-full object-contain"
+                        className="w-full h-full object-cover"
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
@@ -486,31 +483,48 @@ export default function ShowProject({ project }: ProjectShowProps) {
           )}
 
           {/* Contenu principal */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Description */}
-            <div className="lg:col-span-2 bg-white rounded-xl shadow-sm p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Description</h2>
-              {project.description ? (
-                <div
-                  className="prose max-w-none text-gray-700"
-                  dangerouslySetInnerHTML={{ __html: project.description }}
-                />
-              ) : (
-                <p className="text-gray-500 italic">Aucune description fournie.</p>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Description et Rôle */}
+            <div className="lg:col-span-2 space-y-6">
+              {/* Rôle avec hauteur limitée */}
+              {project.role && (
+                <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6">
+                  <div className="flex items-center gap-2 mb-4">
+                    <User className="h-5 w-5 text-blue-600" />
+                    <h2 className="text-xl font-semibold text-gray-900">Mon rôle dans ce projet</h2>
+                  </div>
+                  <div className="prose prose-sm max-w-none text-gray-700 max-h-32 overflow-hidden relative">
+                    <SafeHTML html={project.role} />
+                    <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-white to-transparent pointer-events-none"></div>
+                  </div>
+                </div>
               )}
+
+              {/* Description avec hauteur limitée */}
+              <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6">
+                <h2 className="text-xl font-semibold text-gray-900 mb-4">Description du projet</h2>
+                {project.description ? (
+                  <div className="prose prose-sm max-w-none text-gray-700 max-h-40 overflow-hidden relative">
+                    <SafeHTML html={project.description} />
+                    <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-white to-transparent pointer-events-none"></div>
+                  </div>
+                ) : (
+                  <p className="text-gray-500 italic py-4">Aucune description fournie.</p>
+                )}
+              </div>
             </div>
 
             {/* Informations secondaires */}
             <div className="space-y-6">
               {/* Dates */}
-              <div className="bg-white rounded-xl shadow-sm p-6">
+              <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Dates</h3>
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">
-                    <Calendar className="h-5 w-5 text-gray-400" />
+                    <Calendar className="h-5 w-5 text-gray-400 flex-shrink-0" />
                     <div>
                       <p className="text-sm text-gray-500">Création</p>
-                      <p className="font-medium">
+                      <p className="font-medium text-sm sm:text-base">
                         {formatDate(project.createdAt.toString(), {
                           year: 'numeric',
                           month: 'long',
@@ -523,10 +537,10 @@ export default function ShowProject({ project }: ProjectShowProps) {
                   </div>
                   {project.updatedAt && (
                     <div className="flex items-center gap-3">
-                      <Clock className="h-5 w-5 text-gray-400" />
+                      <Clock className="h-5 w-5 text-gray-400 flex-shrink-0" />
                       <div>
                         <p className="text-sm text-gray-500">Dernière mise à jour</p>
-                        <p className="font-medium">
+                        <p className="font-medium text-sm sm:text-base">
                           {formatDate(project.updatedAt.toString(), {
                             year: 'numeric',
                             month: 'long',
@@ -543,7 +557,7 @@ export default function ShowProject({ project }: ProjectShowProps) {
 
               {/* Technologies */}
               {project.technologies && project.technologies.length > 0 && (
-                <div className="bg-white rounded-xl shadow-sm p-6">
+                <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Technologies</h3>
                   <div className="space-y-4">
                     {Object.entries(groupedTechnologies).map(([category, techs]) => (
@@ -555,7 +569,7 @@ export default function ShowProject({ project }: ProjectShowProps) {
                           {techs.map((tech) => (
                             <span
                               key={tech.id}
-                              className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-gray-100 text-gray-800"
+                              className="inline-flex items-center px-2.5 py-1 rounded-full text-xs sm:text-sm bg-gray-100 text-gray-800"
                             >
                               {tech.name}
                             </span>
@@ -568,27 +582,29 @@ export default function ShowProject({ project }: ProjectShowProps) {
               )}
 
               {/* Statistiques */}
-              <div className="bg-white rounded-xl shadow-sm p-6">
+              <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Statistiques</h3>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                  <div className="text-center p-4 bg-purple-50 rounded-lg">
-                    <div className="text-2xl font-bold text-purple-600">{allImages.length}</div>
-                    <div className="text-sm text-purple-800">Images</div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 gap-4">
+                  <div className="text-center p-3 sm:p-4 bg-purple-50 rounded-lg">
+                    <div className="text-xl sm:text-2xl font-bold text-purple-600">
+                      {allImages.length}
+                    </div>
+                    <div className="text-xs sm:text-sm text-purple-800">Images</div>
                   </div>
-                  <div className="text-center p-4 bg-blue-50 rounded-lg">
-                    <div className="text-2xl font-bold text-blue-600">
+                  <div className="text-center p-3 sm:p-4 bg-blue-50 rounded-lg">
+                    <div className="text-xl sm:text-2xl font-bold text-blue-600">
                       {project.technologies?.length || 0}
                     </div>
-                    <div className="text-sm text-blue-800">Technologies</div>
+                    <div className="text-xs sm:text-sm text-blue-800">Technologies</div>
                   </div>
-                  <div className="text-center p-4 bg-green-50 rounded-lg">
-                    <div className="text-2xl font-bold text-green-600">
+                  <div className="text-center p-3 sm:p-4 bg-green-50 rounded-lg">
+                    <div className="text-xl sm:text-2xl font-bold text-green-600">
                       {project.isActive ? '100%' : '0%'}
                     </div>
-                    <div className="text-sm text-green-800">Visibilité</div>
+                    <div className="text-xs sm:text-sm text-green-800">Visibilité</div>
                   </div>
-                  <div className="text-center p-4 bg-orange-50 rounded-lg">
-                    <div className="text-2xl font-bold text-orange-600">
+                  <div className="text-center p-3 sm:p-4 bg-orange-50 rounded-lg">
+                    <div className="text-xl sm:text-2xl font-bold text-orange-600">
                       {isClient
                         ? Math.floor(
                             (Date.now() - new Date(project.createdAt).getTime()) /
@@ -596,7 +612,7 @@ export default function ShowProject({ project }: ProjectShowProps) {
                           )
                         : '...'}
                     </div>
-                    <div className="text-sm text-orange-800">Jours</div>
+                    <div className="text-xs sm:text-sm text-orange-800">Jours</div>
                   </div>
                 </div>
               </div>

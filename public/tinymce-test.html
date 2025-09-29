@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>TinyMCE Test</title>
+    <script src="/tinymce/tinymce.min.js"></script>
+</head>
+<body>
+    <h1>TinyMCE Self-hosted Test</h1>
+    <textarea id="mytextarea">Hello, World!</textarea>
+    <script>
+        tinymce.init({
+            selector: '#mytextarea',
+            base_url: '/tinymce',
+            suffix: '.min'
+        });
+    </script>
+</body>
+</html>

@@ -32,7 +32,7 @@ export const createUserSchema = vine.compile(
       .trim()
       .toLowerCase()
       .unique({ table: 'users', column: 'email' }),
-    password: vine.string().minLength(4),
+    password: vine.string().minLength(8).regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/),
     username: vine.string().minLength(2).maxLength(50).trim(),
     role: vine.enum(Object.values(UserRole)),
     provider: vine.string().optional(),
@@ -62,7 +62,7 @@ export const updateUserSchema = vine.compile(
         return !user
       })
       .optional(),
-    password: vine.string().minLength(4).optional(),
+    password: vine.string().minLength(8).regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/).optional(),
     username: vine.string().minLength(2).maxLength(50).trim().optional(),
     role: vine.enum(Object.values(UserRole)).optional(),
     isActive: vine.boolean().optional(),

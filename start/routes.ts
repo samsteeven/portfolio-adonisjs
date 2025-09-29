@@ -1,6 +1,6 @@
 import router from '@adonisjs/core/services/router'
 import { middleware } from '#start/kernel'
-import { limitter } from '#start/limiter'
+import { loginLimiter, failedLoginLimiter } from '#start/limiter'
 import { HttpContext } from '@adonisjs/core/http'
 const FaqController = () => import('#controllers/admin/admin_faq_controller')
 const AdminNewsletterController = () => import('#controllers/admin/admin_newsletters_controller')
@@ -17,6 +17,7 @@ const UserController = () => import('#controllers/admin/user_controller')
 const AuthController = () => import('#controllers/auth_controller')
 const ContactRequestController = () => import('#controllers/contact_requests_controller')
 const NewsletterController = () => import('#controllers/newsletters_controller')
+const AlliesController = () => import('#controllers/allies_controller')
 
 // Routes publiques avec silent_auth pour avoir accès à l'utilisateur connecté
 router.get('/', [DashboardController, 'portfolio']).as('home')
@@ -38,10 +39,10 @@ router.get('/guestbook', [CommentaireController, 'indexGuestBook'])
 router
   .group(() => {
     router
-      .get('/oauth/:provider/redirect', '#controllers/allies_controller.redirect')
+      .get('/oauth/:provider/redirect', [AlliesController, 'redirect'])
       .where('provider', /github|google/)
     router
-      .get('/oauth/:provider/callback', '#controllers/allies_controller.callback')
+      .get('/oauth/:provider/callback', [AlliesController, 'callback'])
       .where('provider', /github|google/)
   })
   .middleware(middleware.guest())
@@ -67,8 +68,8 @@ router.get('/blog', '#controllers/blog_controller.index')
 router.get('/blog/:slug', '#controllers/blog_controller.show').where('slug', /^[a-z0-9\-]+$/)
 
 // Newsletter
-router.post('/newsletter/subscribe', [NewsletterController, 'subscribe']).use(limitter)
-router.get('/newsletter/unsubscribe/:token', [NewsletterController, 'unsubscribe']).use(limitter)
+router.post('/newsletter/subscribe', [NewsletterController, 'subscribe']).use(loginLimiter)
+router.get('/newsletter/unsubscribe/:token', [NewsletterController, 'unsubscribe']).use(loginLimiter)
 
 router.get('/services', [ServicesController, 'publicIndex'])
 // // Page détail d'un service (par slug)
@@ -86,7 +87,7 @@ router.get('/misc/faq', [FaqController, 'indexPublic'])
 router
   .group(() => {
     router.get('/auth/login', [AuthController, 'showLogin'])
-    router.post('/auth/login', [AuthController, 'login']).use(limitter)
+    router.post('/auth/login', [AuthController, 'login']).use([loginLimiter, failedLoginLimiter])
   })
   .middleware(middleware.guest())
 

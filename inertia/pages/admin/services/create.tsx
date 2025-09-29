@@ -20,6 +20,8 @@ import {
 import { useImageUpload } from '~/utils/hooks/use_image_upload'
 import { toast } from 'sonner'
 import AdminLayout from '~/layout/AdminLayout'
+import TinyMCEEditor from '~/components/TinyMCEEditor'
+import { Label } from '@/components/ui/label'
 
 interface Props {
   maxDisplayOrder: number
@@ -146,28 +148,21 @@ export default function AdminServiceCreate({ maxDisplayOrder }: Props) {
 
                     {/* Description */}
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Description détaillée *
-                      </label>
-                      <textarea
+                      <Label htmlFor="description" className="text-sm font-medium">
+                        Description *
+                      </Label>
+                      <TinyMCEEditor
                         value={data.description}
-                        onChange={(e) => setData('description', e.target.value)}
-                        placeholder="Décrivez votre service en détail : méthodologie, livrables, bénéfices client..."
-                        rows={6}
-                        className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-400 focus:border-transparent resize-none text-sm sm:text-base"
-                        required
+                        onEditorChange={(content) => setData('description', content)}
+                        placeholder="Description détaillée du service..."
+                        height={300}
                       />
-                      <div className="flex justify-between items-center mt-2">
-                        {errors?.description ? (
-                          <p className="text-sm text-red-600 flex items-center gap-2">
-                            <AlertCircle className="h-4 w-4" />
-                            {errors.description}
-                          </p>
-                        ) : (
-                          <p className="text-sm text-gray-500">Minimum 10 caractères</p>
-                        )}
-                        <p className="text-sm text-gray-400">{data.description.length}/2000</p>
-                      </div>
+                      {errors.description && (
+                        <p className="text-sm text-red-600 mt-1">{errors.description}</p>
+                      )}
+                      <p className="text-sm text-gray-500 mt-1">
+                        {data.description.split(' ').filter((word) => word.length > 0).length} mots
+                      </p>
                     </div>
                   </div>
                 </Card>

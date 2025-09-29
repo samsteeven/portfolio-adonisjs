@@ -21,6 +21,7 @@ import { useImageUpload } from '~/utils/hooks/use_image_upload'
 import { toast } from 'sonner'
 import AdminLayout from '~/layout/AdminLayout'
 import { ServiceType } from '~/types/services'
+import TinyMCEEditor from '~/components/TinyMCEEditor'
 
 interface Props {
   service: ServiceType
@@ -151,13 +152,11 @@ export default function AdminServiceEdit({ service }: Props) {
                       <label className="block text-sm font-semibold text-gray-700 mb-2">
                         Description détaillée *
                       </label>
-                      <textarea
+                      <TinyMCEEditor
                         value={data.description}
-                        onChange={(e) => setData('description', e.target.value)}
+                        onEditorChange={(content) => setData('description', content)}
                         placeholder="Décrivez votre service en détail : méthodologie, livrables, bénéfices client..."
-                        rows={6}
-                        className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-400 focus:border-transparent resize-none text-sm sm:text-base"
-                        required
+                        height={300}
                       />
                       <div className="flex justify-between items-center mt-2">
                         {errors?.description ? (
@@ -166,7 +165,7 @@ export default function AdminServiceEdit({ service }: Props) {
                             {errors.description}
                           </p>
                         ) : (
-                          <p className="text-sm text-gray-500">Minimum 10 caractères</p>
+                          <p className="text-sm text-gray-500">Éditeur de texte riche</p>
                         )}
                         <p className="text-sm text-gray-400">{data.description.length}/2000</p>
                       </div>

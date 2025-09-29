@@ -9,7 +9,6 @@ export default class AuthController {
 
   async login({ request, response, auth, session }: HttpContext) {
     const { email, password, rememberMe } = await request.validateUsing(loginValidator)
-
     try {
       const user = await User.verifyCredentials(email, password)
       if (auth.use('guestbook').isAuthenticated) await auth.use('guestbook').logout()
@@ -23,7 +22,7 @@ export default class AuthController {
 
       return response.redirect().toRoute('dashboard')
     } catch (error) {
-      session.flash('error', 'Email ou mot de passe invalide')
+      session.flash('error', 'Email ou mot de passe invalide. Veuillez réessayer.')
       return response.redirect().back()
     }
   }
@@ -33,6 +32,7 @@ export default class AuthController {
 
     return response.redirect().toRoute('home')
   }
+
   async guestbookLogout({ response, auth, session }: HttpContext) {
     await auth.use('guestbook').logout()
     session.flash('success', 'Vous vous etes déconnecté de mon guestbook.')

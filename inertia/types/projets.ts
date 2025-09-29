@@ -4,6 +4,7 @@ import { Technology } from '~/types/technology'
 export interface ProjectType {
   id: number
   title: string
+  slug: string
   description: string | null
   year: string
   role: string | null
@@ -54,14 +55,4 @@ export interface ProjectEditProps {
 
 export interface ProjectShowProps {
   project: ProjectType
-}
-
-export interface ProjectFormData {
-  title: string
-  description: string
-  image: File | null
-  demoPath: string
-  githubPath: string
-  isActive: boolean
-  technologies: number[]
 }

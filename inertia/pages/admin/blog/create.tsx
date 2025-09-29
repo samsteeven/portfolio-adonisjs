@@ -11,11 +11,11 @@ import {
   Upload,
   X,
   Calendar,
-  FileText,
   Image as ImageIcon,
   Tag as TagIcon,
 } from 'lucide-react'
 import { generateSlug } from '~/utils/utils_string'
+import TinyMCEEditor from '~/components/TinyMCEEditor'
 
 interface CreateProps {
   tags: Tag[]
@@ -214,23 +214,12 @@ export default function CreateBlogPost({ tags }: CreateProps) {
                   <Label htmlFor="content" className="text-sm font-medium mb-4 block">
                     Contenu de l'article *
                   </Label>
-                  <div className="border border-gray-300 rounded-lg">
-                    <div className="border-b border-gray-200 p-3 bg-gray-50 rounded-t-lg">
-                      <div className="flex items-center gap-2 text-sm text-gray-600">
-                        <FileText className="w-4 h-4" />
-                        Éditeur Markdown supporté
-                      </div>
-                    </div>
-                    <textarea
-                      id="content"
-                      value={data.content}
-                      onChange={(e) => setData('content', e.target.value)}
-                      placeholder="Écrivez votre article ici... Vous pouvez utiliser la syntaxe Markdown."
-                      rows={20}
-                      className="w-full p-4 border-none focus:ring-0 resize-none font-mono text-sm"
-                      required
-                    />
-                  </div>
+                  <TinyMCEEditor
+                    value={data.content}
+                    onEditorChange={(content) => setData('content', content)}
+                    placeholder="Écrivez votre article ici..."
+                    height={500}
+                  />
                   {errors.content && <p className="text-sm text-red-600 mt-2">{errors.content}</p>}
                 </Card>
               </div>

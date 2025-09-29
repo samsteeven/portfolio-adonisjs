@@ -10,6 +10,7 @@ import {
   MessageCircle,
 } from 'lucide-react'
 import { ServiceType } from '~/types/services'
+import SafeHTML from '~/components/safeHTML'
 
 interface Props {
   services: ServiceType[]
@@ -200,9 +201,9 @@ export default function ServicesIndex({ services, stats }: Props) {
                           </h3>
 
                           {/* Description */}
-                          <p className="text-lg text-gray-300 leading-relaxed group-hover:text-gray-200 transition-colors duration-300">
-                            {service.description}
-                          </p>
+                          <div className="text-lg text-gray-300 leading-relaxed group-hover:text-gray-200 transition-colors duration-300">
+                            <SafeHTML html={service.description} />
+                          </div>
 
                           {/* Features */}
                           <div className="flex flex-wrap gap-4">

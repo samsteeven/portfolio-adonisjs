@@ -12,9 +12,12 @@ import {
   Upload,
   User,
   UserPlus,
+  X,
 } from 'lucide-react'
 import { USER_ROLE_LABELS, UserRole } from '~/enums/user_role'
 import { AuthenticatedUser } from '~/types'
+import { toast } from 'sonner'
+import { useImageUpload } from '~/utils/hooks/use_image_upload'
 
 interface UserFormProps {
   user?: AuthenticatedUser
@@ -25,6 +28,31 @@ export default function UserForm({ user, isEditing = false }: UserFormProps) {
   const [showPassword, setShowPassword] = useState(false)
   const formAction = isEditing && user?.id ? `/admin/users/${user.id}` : '/admin/users'
   const formMethod = isEditing ? 'patch' : 'post'
+
+  const {
+    preview,
+    dragActive,
+    uploading,
+    fileInputRef,
+    handleDrop,
+    handleDrag,
+    handleInputChange,
+    removeImage,
+    handleContainerClick,
+  } = useImageUpload({
+    maxSize: 2,
+    allowedTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/jpg', 'image/gif'],
+    onError: (error) => {
+      toast.error(error)
+    },
+    initialPreview: user?.subInfo?.photoPathPublicUrl || null,
+  })
+
+  // Fonction pour réinitialiser le formulaire et les états
+  const resetForm = (resetFunction: () => void) => {
+    resetFunction()
+    removeImage() // Supprimer la prévisualisation de l'image
+  }
 
   const title = isEditing ? "Modifier l'utilisateur" : 'Nouvel utilisateur'
   const description = isEditing
@@ -46,7 +74,7 @@ export default function UserForm({ user, isEditing = false }: UserFormProps) {
         </Link>
       </div>
 
-      <div className="rounded-lg  border-gray-200 p-6">
+      <div className="rounded-lg border border-gray-200 p-4 sm:p-6">
         <div className="flex items-center gap-3 mb-6">
           <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
             {isEditing ? (
@@ -57,7 +85,7 @@ export default function UserForm({ user, isEditing = false }: UserFormProps) {
           </div>
           <div>
             <h1 className="text-xl font-semibold text-gray-900">{title}</h1>
-            <p className="text-gray-600">{description}</p>
+            <p className="text-gray-600 text-sm sm:text-base">{description}</p>
           </div>
         </div>
 
@@ -70,13 +98,18 @@ export default function UserForm({ user, isEditing = false }: UserFormProps) {
           options={{
             preserveScroll: true,
           }}
+          onSuccess={() => {
+            if (!isEditing) {
+              removeImage()
+            }
+          }}
           encType="multipart/form-data"
           className="space-y-6 inert:opacity-50 inert:pointer-events-none"
         >
           {({ processing, errors, reset, isDirty }) => (
             <>
               {/* Informations personnelles */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 <div>
                   <label
                     htmlFor="username"
@@ -85,13 +118,13 @@ export default function UserForm({ user, isEditing = false }: UserFormProps) {
                     Nom d'utilisateur *
                   </label>
                   <div className="relative">
-                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                     <input
                       type="text"
                       id="username"
                       name="username"
                       defaultValue={user?.username || ''}
-                      className={`w-full pl-10 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                      className={`w-full pl-12 px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                         errors?.username ? 'border-red-300' : 'border-gray-300'
                       }`}
                       placeholder="Nom d'utilisateur"
@@ -109,13 +142,13 @@ export default function UserForm({ user, isEditing = false }: UserFormProps) {
                     Email *
                   </label>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                     <input
                       type="email"
                       id="email"
                       name="email"
                       defaultValue={user?.email || ''}
-                      className={`w-full pl-10 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                      className={`w-full pl-12 px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                         errors?.email ? 'border-red-300' : 'border-gray-300'
                       }`}
                       placeholder="email@exemple.com"
@@ -137,12 +170,12 @@ export default function UserForm({ user, isEditing = false }: UserFormProps) {
                     )}
                   </label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                     <input
                       type={showPassword ? 'text' : 'password'}
                       id="password"
                       name="password"
-                      className={`w-full pl-10 pr-12 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                      className={`w-full pl-12 pr-12 px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                         errors?.password ? 'border-red-300' : 'border-gray-300'
                       }`}
                       placeholder={isEditing ? 'Nouveau mot de passe (optionnel)' : 'Mot de passe'}
@@ -164,18 +197,18 @@ export default function UserForm({ user, isEditing = false }: UserFormProps) {
 
               {/* Rôle et statut */}
               {((isEditing && user?.role === UserRole.ADMIN) || !isEditing) && (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                   <div>
                     <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-2">
                       Rôle
                     </label>
                     <div className="relative">
-                      <Shield className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <Shield className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                       <select
                         id="role"
                         name="role"
                         defaultValue={user?.role || UserRole.VISITOR}
-                        className={`w-full pl-10 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                        className={`w-full pl-12 px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none ${
                           errors?.role ? 'border-red-300' : 'border-gray-300'
                         }`}
                       >
@@ -189,15 +222,14 @@ export default function UserForm({ user, isEditing = false }: UserFormProps) {
                     {errors?.role && <p className="mt-1 text-sm text-red-600">{errors.role}</p>}
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Statut</label>
+                  <div className="flex items-end">
                     <div className="flex items-center">
                       <input
                         type="checkbox"
                         id="isActive"
                         name="isActive"
                         defaultChecked={user?.isActive ?? true}
-                        className={`w-4 h-4 text-blue-600  focus:outline-none border-gray-300 rounded focus:ring-blue-500 ${
+                        className={`w-4 h-4 text-blue-600 focus:outline-none border-gray-300 rounded focus:ring-blue-500 ${
                           errors?.isActive ? 'border-red-300' : ''
                         }`}
                       />
@@ -214,10 +246,10 @@ export default function UserForm({ user, isEditing = false }: UserFormProps) {
 
               {/* SubInfo */}
               <div className="space-y-4">
-                <h2 className="text-sm font-semibold text-gray-800">
+                <h2 className="text-lg font-semibold text-gray-800">
                   Informations supplémentaires
                 </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
                   <div>
                     <label
                       htmlFor="profilGithub"
@@ -230,17 +262,11 @@ export default function UserForm({ user, isEditing = false }: UserFormProps) {
                         {/* GitHub SVG icon */}
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
-                          fill="none"
+                          fill="currentColor"
                           viewBox="0 0 24 24"
-                          strokeWidth={1.5}
-                          stroke="currentColor"
                           className="w-5 h-5"
                         >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M12 2C6.477 2 2 6.477 2 12c0 4.418 2.867 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.009-.868-.014-1.703-2.782.604-3.369-1.342-3.369-1.342-.454-1.154-1.11-1.462-1.11-1.462-.908-.62.069-.608.069-.608 1.004.07 1.532 1.032 1.532 1.032.892 1.529 2.341 1.088 2.91.832.091-.647.35-1.088.636-1.339-2.221-.253-4.555-1.111-4.555-4.944 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.025A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.295 2.748-1.025 2.748-1.025.546 1.378.202 2.397.1 2.65.64.699 1.028 1.592 1.028 2.683 0 3.842-2.337 4.687-4.566 4.936.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.749 0 .267.18.577.688.48C19.135 20.162 22 16.418 22 12c0-5.523-4.477-10-10-10z"
-                          />
+                          <path d="M12 2C6.477 2 2 6.477 2 12c0 4.418 2.867 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.009-.868-.014-1.703-2.782.604-3.369-1.342-3.369-1.342-.454-1.154-1.11-1.462-1.11-1.462-.908-.62.069-.608.069-.608 1.004.07 1.532 1.032 1.532 1.032.892 1.529 2.341 1.088 2.91.832.091-.647.35-1.088.636-1.339-2.221-.253-4.555-1.111-4.555-4.944 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.025A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.295 2.748-1.025 2.748-1.025.546 1.378.202 2.397.1 2.65.64.699 1.028 1.592 1.028 2.683 0 3.842-2.337 4.687-4.566 4.936.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.749 0 .267.18.577.688.48C19.135 20.162 22 16.418 22 12c0-5.523-4.477-10-10-10z" />
                         </svg>
                       </span>
                       <input
@@ -248,7 +274,7 @@ export default function UserForm({ user, isEditing = false }: UserFormProps) {
                         id="profilGithub"
                         name="subInfo[profilGithub]"
                         defaultValue={user?.subInfo?.profilGithub || ''}
-                        className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:outline-none focus:ring-blue-500 focus:border-transparent ${
+                        className={`w-full pl-12 pr-4 px-4 py-2.5 border rounded-lg focus:ring-2 focus:outline-none focus:ring-blue-500 focus:border-transparent ${
                           errors?.['subInfo.profilGithub'] ? 'border-red-300' : 'border-gray-300'
                         }`}
                         placeholder="https://github.com/username"
@@ -271,8 +297,7 @@ export default function UserForm({ user, isEditing = false }: UserFormProps) {
                         {/* LinkedIn SVG icon */}
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
-                          fill="none"
-                          stroke="currentColor"
+                          fill="currentColor"
                           viewBox="0 0 24 24"
                           className="w-5 h-5"
                         >
@@ -284,7 +309,7 @@ export default function UserForm({ user, isEditing = false }: UserFormProps) {
                         id="profilLinkedin"
                         name="subInfo[profilLinkedin]"
                         defaultValue={user?.subInfo?.profilLinkedin || ''}
-                        className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                        className={`w-full pl-12 pr-4 px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                           errors?.['subInfo.profilLinkedin'] ? 'border-red-300' : 'border-gray-300'
                         }`}
                         placeholder="https://www.linkedin.com/in/username"
@@ -309,8 +334,7 @@ export default function UserForm({ user, isEditing = false }: UserFormProps) {
                         {/* Twitter/X SVG icon */}
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
-                          fill="none"
-                          stroke="currentColor"
+                          fill="currentColor"
                           viewBox="0 0 24 24"
                           className="w-5 h-5"
                         >
@@ -322,7 +346,7 @@ export default function UserForm({ user, isEditing = false }: UserFormProps) {
                         id="profilTwitter"
                         name="subInfo[profilTwitter]"
                         defaultValue={user?.subInfo?.profilTwitter || ''}
-                        className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                        className={`w-full pl-12 pr-4 px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                           errors?.['subInfo.profilTwitter'] ? 'border-red-300' : 'border-gray-300'
                         }`}
                         placeholder="https://x.com/username"
@@ -346,7 +370,6 @@ export default function UserForm({ user, isEditing = false }: UserFormProps) {
                         <svg
                           viewBox="0 0 256 199"
                           fill="currentColor"
-                          stroke="currentColor"
                           className="w-5 h-5"
                           xmlns="http://www.w3.org/2000/svg"
                           preserveAspectRatio="xMidYMid"
@@ -359,8 +382,8 @@ export default function UserForm({ user, isEditing = false }: UserFormProps) {
                         id="profilDiscord"
                         name="subInfo[profilDiscord]"
                         defaultValue={user?.subInfo?.profilDiscord || ''}
-                        className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                          errors?.['subInfo.profilTwitter'] ? 'border-red-300' : 'border-gray-300'
+                        className={`w-full pl-12 pr-4 px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                          errors?.['subInfo.profilDiscord'] ? 'border-red-300' : 'border-gray-300'
                         }`}
                         placeholder="https://discord.com/username"
                       />
@@ -400,7 +423,7 @@ export default function UserForm({ user, isEditing = false }: UserFormProps) {
                         id="profilMail"
                         name="subInfo[profilMail]"
                         defaultValue={user?.subInfo?.profilMail || ''}
-                        className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                        className={`w-full pl-12 pr-4 px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                           errors?.['subInfo.profilMail'] ? 'border-red-300' : 'border-gray-300'
                         }`}
                         placeholder="email.public@example.com"
@@ -417,19 +440,65 @@ export default function UserForm({ user, isEditing = false }: UserFormProps) {
                       Photo de profil
                     </label>
                     <div className="space-y-2">
-                      <div className="relative">
-                        <Upload className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <div
+                        className={`relative border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-colors ${
+                          dragActive
+                            ? 'border-blue-500 bg-blue-50'
+                            : 'border-gray-300 hover:border-blue-500'
+                        }`}
+                        onClick={handleContainerClick}
+                        onDrop={handleDrop}
+                        onDragOver={handleDrag}
+                        onDragEnter={handleDrag}
+                        onDragLeave={handleDrag}
+                      >
                         <input
                           type="file"
-                          id="photoPath"
-                          name="subInfo[photoPath]"
+                          ref={fileInputRef}
+                          onChange={(e) => {
+                            handleInputChange(e)
+                            // Le fichier sera automatiquement soumis avec le form
+                          }}
                           accept="image/png, image/jpeg, image/jpg, image/gif, image/webp"
-                          className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:outline-none focus:ring-blue-500 focus:border-transparent ${
-                            errors?.['subInfo.photoPath'] ? 'border-red-300' : 'border-gray-300'
-                          }`}
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                          name="subInfo[photoPath]"
                         />
+                        {preview ? (
+                          <div className="relative">
+                            <img
+                              src={preview}
+                              alt="Preview"
+                              className="mx-auto max-h-40 rounded-lg object-cover"
+                            />
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                removeImage()
+                                // Reset the file input
+                                if (fileInputRef.current) {
+                                  fileInputRef.current.value = ''
+                                }
+                              }}
+                              className="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1 m-1 hover:bg-red-600 transition-colors"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="flex flex-col items-center justify-center text-gray-500">
+                            <Upload className="w-8 h-8 mb-2" />
+                            <p className="text-sm">Cliquez ou glissez une image ici</p>
+                            <p className="text-xs mt-1">PNG, JPG, GIF, WEBP (max 2MB)</p>
+                          </div>
+                        )}
+                        {uploading && (
+                          <div className="absolute inset-0 bg-white bg-opacity-80 flex items-center justify-center">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                          </div>
+                        )}
                       </div>
-                      {user?.subInfo?.photoPathPublicUrl && (
+                      {user?.subInfo?.photoPathPublicUrl && !preview && (
                         <p className="text-xs text-gray-500">
                           Fichier actuel: {user.subInfo.photoPathPublicUrl.split('/').pop()}
                         </p>
@@ -445,13 +514,13 @@ export default function UserForm({ user, isEditing = false }: UserFormProps) {
                       Téléphone
                     </label>
                     <div className="relative">
-                      <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                       <input
                         type="text"
                         id="phone"
                         name="subInfo[phone]"
                         defaultValue={user?.subInfo?.phone || ''}
-                        className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:outline-none focus:ring-blue-500 focus:border-transparent ${
+                        className={`w-full pl-12 px-4 py-2.5 border rounded-lg focus:ring-2 focus:outline-none focus:ring-blue-500 focus:border-transparent ${
                           errors?.['subInfo.phone'] ? 'border-red-300' : 'border-gray-300'
                         }`}
                         placeholder="+237 6 00 00 00 00"
@@ -471,7 +540,7 @@ export default function UserForm({ user, isEditing = false }: UserFormProps) {
                     id="bio"
                     name="subInfo[bio]"
                     defaultValue={user?.subInfo?.bio || ''}
-                    className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                    className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                       errors?.['subInfo.bio'] ? 'border-red-300' : 'border-gray-300'
                     }`}
                     rows={4}
@@ -484,18 +553,18 @@ export default function UserForm({ user, isEditing = false }: UserFormProps) {
               </div>
 
               {/* Actions */}
-              <div className="flex items-center justify-end gap-3 pt-6 border-t border-gray-200">
+              <div className="flex flex-col sm:flex-row items-center justify-end gap-3 pt-6 border-t border-gray-200">
                 <Link
                   as="button"
-                  onClick={() => reset()}
-                  className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                  onClick={() => resetForm(reset)}
+                  className="w-full sm:w-auto px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-center"
                 >
                   Annuler
                 </Link>
                 <button
                   type="submit"
                   disabled={!isDirty || processing}
-                  className={`px-6 py-2 bg-blue-600 text-white rounded-lg flex items-center gap-2 transition-colors ${
+                  className={`w-full sm:w-auto px-4 py-2 sm:px-6 sm:py-2.5 bg-blue-600 text-white rounded-lg flex items-center justify-center gap-2 transition-colors ${
                     processing || !isDirty
                       ? 'opacity-50 cursor-not-allowed'
                       : 'hover:bg-blue-700 hover:cursor-pointer'
@@ -519,7 +588,7 @@ export default function UserForm({ user, isEditing = false }: UserFormProps) {
                       <path
                         className="opacity-75"
                         fill="currentColor"
-                        d="M4.293 9.293a1 1 0 011.414 0L12 15.586l6.293-6.293a1 1 0 011.414 1.414l-7 7a1 1 0 01-1.414 0l-7-7a1 1 0 010-1.414z"
+                        d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                       />
                     </svg>
                   )}
