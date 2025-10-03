@@ -25,11 +25,12 @@ export default class CommentairesController {
 
     let query = Commentaire.query().preload('user').orderBy('created_at', 'desc')
 
-    // Pagination
     const commentaires = await query.paginate(page, limit)
 
-    // Sérialiser les données pour Inertia
     const serializedCommentaires = commentaires.serialize({
+      fields: {
+        pick: ['id', 'message', 'reaction', 'commentType', 'displayName', 'createdAt'],
+      },
       relations: {
         user: {
           fields: ['id', 'name', 'email', 'username', 'avatar', 'provider'],
@@ -79,9 +80,9 @@ export default class CommentairesController {
   /**
    * Créer un nouveau commentaire (utilisateur authentifié)
    */
-  async storeAuthenticated({ request, response, auth, session }: HttpContext) {
+  async storeAuthenticated({ request, response, auth, session, logger }: HttpContext) {
+    const data = await request.validateUsing(createAuthenticatedCommentValidator)
     try {
-      const data = await request.validateUsing(createAuthenticatedCommentValidator)
       const user = auth.user!
 
       // Récupération des données de géolocalisation
@@ -115,7 +116,7 @@ export default class CommentairesController {
       return response.redirect().back()
     } catch (error) {
       session.flash('error', 'Erreur lors de la publication du commentaire')
-      console.error('Erreur création commentaire authentifié:', error)
+      logger.error('Erreur création commentaire authentifié:', error)
       return response.redirect().back()
     }
   }
@@ -124,9 +125,8 @@ export default class CommentairesController {
    * Créer un nouveau commentaire (visiteur invité)
    */
   async storeGuest({ request, response, session }: HttpContext) {
+    const data = await request.validateUsing(createGuestCommentValidator)
     try {
-      const data = await request.validateUsing(createGuestCommentValidator)
-
       // Récupération des données de géolocalisation
       const locationData = await GeolocationService.getEnhancedLocationData(request)
 
@@ -176,10 +176,9 @@ export default class CommentairesController {
       return this.CommentAuthorizationService.handleUnauthorized(response, session)
     }
 
+    const commentaire = await Commentaire.findOrFail(params.id)
+    const data = await request.validateUsing(addReactionValidator)
     try {
-      const commentaire = await Commentaire.findOrFail(params.id)
-      const data = await request.validateUsing(addReactionValidator)
-
       commentaire.reaction = data.reaction || null
       await commentaire.save()
 
@@ -211,8 +210,7 @@ export default class CommentairesController {
                   'message',
                   'reaction',
                   'commentType',
-                  'guestName',
-                  'guestEmail',
+                  'displayName',
                   'country',
                   'city',
                   'createdAt',
@@ -256,16 +254,15 @@ export default class CommentairesController {
   }
 
   /**
-   * Supprimer un commentaire (admin uniquement)
+   * Supprimer un commentaire
    */
   async destroy({ params, response, bouncer, session }: HttpContext) {
+    const commentaire = await Commentaire.findOrFail(params.id)
+    const authorize = await bouncer.with('CommentairePolicy').allows('delete', commentaire)
+    if (!authorize) {
+      return this.CommentAuthorizationService.handleUnauthorized(response, session)
+    }
     try {
-      const commentaire = await Commentaire.findOrFail(params.id)
-      const authorize = await bouncer.with('CommentairePolicy').allows('delete', commentaire)
-      if (!authorize) {
-        return this.CommentAuthorizationService.handleUnauthorized(response, session)
-      }
-
       await commentaire.delete()
 
       session.flash('success', 'Commentaire supprimé avec succès')
@@ -279,7 +276,11 @@ export default class CommentairesController {
   /**
    * Voir un commentaire spécifique
    */
-  async show({ params, inertia }: HttpContext) {
+  async show({ params, inertia, bouncer, session, response }: HttpContext) {
+    const authorize = await bouncer.with('CommentairePolicy').allows('show')
+    if (!authorize) {
+      return this.CommentAuthorizationService.handleUnauthorized(response, session)
+    }
     const commentaire = await Commentaire.query()
       .where('id', params.id)
       .preload('user')

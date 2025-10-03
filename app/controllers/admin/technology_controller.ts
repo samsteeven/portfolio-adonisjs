@@ -56,7 +56,6 @@ export default class TechnologyController {
    * Enregistre une nouvelle technologie
    */
   async store({ request, response, session, bouncer }: HttpContext) {
-    // Vérification d'autorisation
     const authResult = await this.technologyServiceAuthorization.canCreateTechnology(bouncer)
     if (!authResult.authorized) {
       return this.technologyServiceAuthorization.handleUnauthorized(
@@ -134,7 +133,6 @@ export default class TechnologyController {
    * Met à jour une technologie
    */
   async update({ request, response, params, session, bouncer }: HttpContext) {
-    // Vérification d'autorisation
     const authResult = await this.technologyServiceAuthorization.canUpdateTechnology(bouncer)
     if (!authResult.authorized) {
       return this.technologyServiceAuthorization.handleUnauthorized(
@@ -187,7 +185,6 @@ export default class TechnologyController {
    * Supprime une technologie
    */
   async destroy({ response, params, session, bouncer, logger }: HttpContext) {
-    // Vérification d'autorisation
     const authResult = await this.technologyServiceAuthorization.canDeleteTechnology(bouncer)
     if (!authResult.authorized) {
       return this.technologyServiceAuthorization.handleUnauthorized(

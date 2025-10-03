@@ -28,6 +28,7 @@ import { ContactRequestType } from '~/types/contact_request'
 import { toast } from 'sonner'
 import { ServiceType } from '~/types/services'
 import ContactRequestReplyModal from '~/components/ContactRequestReplyModal'
+import { IsRestricted } from '~/components/IsRestricted'
 
 interface Props {
   contactRequests: {
@@ -57,12 +58,25 @@ interface Props {
     withService: number
     withoutService: number
   }
+  isRestricted: boolean
 }
 
 type SortField = 'date' | 'name' | 'status' | 'service'
 type SortDirection = 'asc' | 'desc'
 
-export default function AdminContactRequestsIndex({ contactRequests, services, stats }: Props) {
+export default function AdminContactRequestsIndex({
+  contactRequests,
+  services,
+  stats,
+  isRestricted,
+}: Props) {
+  if (isRestricted) {
+    return (
+      <IsRestricted
+        message={"Vous n'avez pas les permissions nécessaires pour consulter cette page."}
+      />
+    )
+  }
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
   const [serviceFilter, setServiceFilter] = useState('')
@@ -248,35 +262,35 @@ export default function AdminContactRequestsIndex({ contactRequests, services, s
           color: 'bg-amber-100 text-amber-800 border-amber-200',
           icon: Clock,
           label: 'En attente',
-          dot: 'bg-amber-500',
+          dot: 'bg-amber-600',
         }
       case 'read':
         return {
           color: 'bg-blue-100 text-blue-800 border-blue-200',
           icon: Eye,
           label: 'Lu',
-          dot: 'bg-blue-500',
+          dot: 'bg-blue-600',
         }
       case 'replied':
         return {
-          color: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+          color: 'bg-green-100 text-green-800 border-green-200',
           icon: Reply,
           label: 'Répondu',
-          dot: 'bg-emerald-500',
+          dot: 'bg-green-600',
         }
       case 'closed':
         return {
           color: 'bg-gray-100 text-gray-800 border-gray-200',
           icon: Archive,
           label: 'Fermé',
-          dot: 'bg-gray-500',
+          dot: 'bg-gray-600',
         }
       default:
         return {
           color: 'bg-gray-100 text-gray-800 border-gray-200',
           icon: AlertCircle,
           label: 'Inconnu',
-          dot: 'bg-gray-500',
+          dot: 'bg-gray-600',
         }
     }
   }
@@ -305,13 +319,13 @@ export default function AdminContactRequestsIndex({ contactRequests, services, s
     )
 
     if (request.status === 'pending' && hoursSinceCreation > 24) {
-      return 'border-l-red-500 bg-red-50/30'
+      return 'border-l-red-500 bg-red-50'
     } else if (request.status === 'pending' && hoursSinceCreation > 6) {
-      return 'border-l-amber-500 bg-amber-50/30'
+      return 'border-l-amber-500 bg-amber-50'
     } else if (request.service) {
-      return 'border-l-blue-500 bg-blue-50/30'
+      return 'border-l-blue-500 bg-blue-50'
     }
-    return 'border-l-gray-200 bg-white'
+    return 'border-l-gray-300 bg-white'
   }
 
   const SortButton = ({ field, children }: { field: SortField; children: React.ReactNode }) => (
@@ -337,7 +351,7 @@ export default function AdminContactRequestsIndex({ contactRequests, services, s
     <>
       <Head title="Demandes de Contact" />
 
-      <div className="min-h-screen bg-gray-50/30 p-3 sm:p-6">
+      <div className="min-h-screen bg-gray-50 p-3 sm:p-6">
         <div className="max-w-7xl mx-auto space-y-6">
           {/* Header */}
           <div className="flex flex-col gap-4">
@@ -346,55 +360,45 @@ export default function AdminContactRequestsIndex({ contactRequests, services, s
                 Demandes de Contact
               </h1>
               <p className="text-gray-600 text-sm sm:text-base">
-                Gérez et suivez toutes vos demandes clients avec efficacité
+                Gérez et suivez toutes vos demandes clients
               </p>
             </div>
           </div>
 
-          {/* Statistiques compactes */}
-          <Card className="p-4 sm:p-6 border-0 shadow-lg bg-gradient-to-r from-blue-50 to-indigo-50">
-            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-4">
+          {/* Statistiques */}
+          <Card className="p-6 border-gray-200 shadow-sm bg-white">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-6">
               <div className="text-center">
-                <div className="text-2xl sm:text-3xl font-bold text-blue-900 mb-1">
-                  {stats.total}
-                </div>
-                <div className="text-xs sm:text-sm text-blue-600 font-medium">Total</div>
+                <div className="text-3xl font-bold text-gray-900 mb-1">{stats.total}</div>
+                <div className="text-sm text-gray-600 font-medium">Total</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl sm:text-3xl font-bold text-amber-900 mb-1">
-                  {stats.pending}
-                </div>
-                <div className="text-xs sm:text-sm text-amber-600 font-medium">En attente</div>
+                <div className="text-3xl font-bold text-amber-600 mb-1">{stats.pending}</div>
+                <div className="text-sm text-gray-600 font-medium">En attente</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl sm:text-3xl font-bold text-emerald-900 mb-1">
-                  {stats.replied}
-                </div>
-                <div className="text-xs sm:text-sm text-emerald-600 font-medium">Répondues</div>
+                <div className="text-3xl font-bold text-green-600 mb-1">{stats.replied}</div>
+                <div className="text-sm text-gray-600 font-medium">Répondues</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">
-                  {stats.closed}
-                </div>
-                <div className="text-xs sm:text-sm text-gray-600 font-medium">Fermées</div>
+                <div className="text-3xl font-bold text-gray-600 mb-1">{stats.closed}</div>
+                <div className="text-sm text-gray-600 font-medium">Fermées</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl sm:text-3xl font-bold text-purple-900 mb-1">
-                  {stats.withService}
-                </div>
-                <div className="text-xs sm:text-sm text-purple-600 font-medium">Services</div>
+                <div className="text-3xl font-bold text-blue-600 mb-1">{stats.withService}</div>
+                <div className="text-sm text-gray-600 font-medium">Services</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl sm:text-3xl font-bold text-orange-900 mb-1">
+                <div className="text-3xl font-bold text-orange-600 mb-1">
                   {stats.withoutService}
                 </div>
-                <div className="text-xs sm:text-sm text-orange-600 font-medium">Générales</div>
+                <div className="text-sm text-gray-600 font-medium">Générales</div>
               </div>
             </div>
           </Card>
 
           {/* Filtres et recherche */}
-          <Card className="p-4 sm:p-6 border-0 shadow-lg bg-white">
+          <Card className="p-5 border-gray-200 shadow-sm bg-white">
             <div className="space-y-4">
               {/* Ligne de recherche */}
               <div className="relative">
@@ -404,14 +408,14 @@ export default function AdminContactRequestsIndex({ contactRequests, services, s
                   placeholder="Rechercher par nom, email, message..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-12 h-12 border-gray-200 focus:border-blue-400 focus:ring-blue-400 rounded-xl"
+                  className="pl-12 h-11 border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg"
                 />
                 {searchTerm && (
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => setSearchTerm('')}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 p-0"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 p-0 hover:bg-gray-100"
                   >
                     <X className="h-4 w-4" />
                   </Button>
@@ -419,11 +423,11 @@ export default function AdminContactRequestsIndex({ contactRequests, services, s
               </div>
 
               {/* Filtres */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  className="h-10 px-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent bg-white text-sm"
+                  className="h-10 px-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-sm"
                 >
                   <option value="">Tous les statuts</option>
                   <option value="pending">En attente</option>
@@ -435,7 +439,7 @@ export default function AdminContactRequestsIndex({ contactRequests, services, s
                 <select
                   value={serviceFilter}
                   onChange={(e) => setServiceFilter(e.target.value)}
-                  className="h-10 px-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent bg-white text-sm"
+                  className="h-10 px-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-sm"
                 >
                   <option value="">Tous les services</option>
                   {services.map((service) => (
@@ -448,7 +452,7 @@ export default function AdminContactRequestsIndex({ contactRequests, services, s
                 <select
                   value={hasServiceFilter}
                   onChange={(e) => setHasServiceFilter(e.target.value)}
-                  className="h-10 px-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent bg-white text-sm"
+                  className="h-10 px-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-sm"
                 >
                   <option value="">Service ou générale</option>
                   <option value="with">Avec service</option>
@@ -466,9 +470,9 @@ export default function AdminContactRequestsIndex({ contactRequests, services, s
               </div>
 
               {/* Tri et options */}
-              <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center pt-4 border-t border-gray-100">
+              <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center pt-4 border-t border-gray-200">
                 <div className="flex flex-wrap gap-2">
-                  <span className="text-sm text-gray-600 mr-2">Trier par:</span>
+                  <span className="text-sm text-gray-600 font-medium mr-2">Trier par:</span>
                   <SortButton field="date">Date</SortButton>
                   <SortButton field="name">Nom</SortButton>
                   <SortButton field="status">Statut</SortButton>
@@ -486,7 +490,7 @@ export default function AdminContactRequestsIndex({ contactRequests, services, s
                       onClick={() => setShowBulkActions(!showBulkActions)}
                       variant="outline"
                       size="sm"
-                      className={`border-gray-300 hover:border-blue-400 transition-all duration-200 ${
+                      className={`border-gray-300 hover:border-blue-400 transition-colors ${
                         showBulkActions ? 'bg-blue-50 border-blue-400 text-blue-600' : ''
                       }`}
                     >
@@ -501,7 +505,7 @@ export default function AdminContactRequestsIndex({ contactRequests, services, s
 
           {/* Actions en lot */}
           {showBulkActions && (
-            <Card className="p-4 border-0 shadow-lg bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-l-blue-500">
+            <Card className="p-4 border-gray-200 shadow-sm bg-blue-50 border-l-4 border-l-blue-600">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
                   <div className="flex items-center gap-3">
@@ -515,7 +519,7 @@ export default function AdminContactRequestsIndex({ contactRequests, services, s
                       onChange={handleSelectAll}
                       className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                     />
-                    <span className="font-medium text-gray-700 text-sm sm:text-base">
+                    <span className="font-semibold text-gray-900 text-sm sm:text-base">
                       {selectedRequests.length === 0
                         ? 'Sélectionner tout'
                         : `${selectedRequests.length} sélectionnée${selectedRequests.length > 1 ? 's' : ''}`}
@@ -525,7 +529,7 @@ export default function AdminContactRequestsIndex({ contactRequests, services, s
                   {selectedRequests.length > 0 && (
                     <Button
                       onClick={handleBulkMarkAsRead}
-                      className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-md hover:shadow-lg transition-all duration-200"
+                      className="bg-green-600 hover:bg-green-700 text-white"
                       size="sm"
                     >
                       <Eye className="h-4 w-4 mr-2" />
@@ -541,6 +545,7 @@ export default function AdminContactRequestsIndex({ contactRequests, services, s
                   }}
                   variant="outline"
                   size="sm"
+                  className="border-gray-300"
                 >
                   Annuler
                 </Button>
@@ -557,35 +562,35 @@ export default function AdminContactRequestsIndex({ contactRequests, services, s
                 return (
                   <Card
                     key={request.id}
-                    className={`border-l-4 shadow-md hover:shadow-xl transition-all duration-300 ${getPriorityColor(request)}`}
+                    className={`border-l-4 border-gray-200 shadow-sm hover:shadow-md transition-shadow ${getPriorityColor(request)}`}
                   >
-                    <div className="p-4 sm:p-6">
+                    <div className="p-5">
                       <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
                         {/* Contenu principal */}
                         <div className="flex-1 space-y-4">
                           {/* En-tête */}
                           <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-                            <div className="flex-shrink-0 p-3 bg-gradient-to-br from-blue-100 to-purple-100 rounded-xl">
-                              <User className="h-6 w-6 text-blue-600" />
+                            <div className="flex-shrink-0 p-3 bg-gray-100 rounded-lg">
+                              <User className="h-6 w-6 text-gray-600" />
                             </div>
 
                             <div className="flex-1 min-w-0">
                               <div className="flex flex-wrap items-center gap-2 mb-2">
-                                <h3 className="text-lg font-bold text-gray-900 truncate">
+                                <h3 className="text-lg font-semibold text-gray-900 truncate">
                                   {request.fullName}
                                 </h3>
 
                                 <span
-                                  className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border ${statusConfig.color}`}
+                                  className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border ${statusConfig.color}`}
                                 >
                                   <div
-                                    className={`w-2 h-2 rounded-full mr-2 ${statusConfig.dot}`}
+                                    className={`w-1.5 h-1.5 rounded-full mr-1.5 ${statusConfig.dot}`}
                                   />
                                   {statusConfig.label}
                                 </span>
 
                                 {request.service && (
-                                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700 border border-blue-200">
+                                  <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800 border border-blue-200">
                                     <Star className="h-3 w-3 mr-1" />
                                     <span className="truncate max-w-32">
                                       {request.service.title}
@@ -616,8 +621,8 @@ export default function AdminContactRequestsIndex({ contactRequests, services, s
                           </div>
 
                           {/* Aperçu du message */}
-                          <div className="bg-gray-50 rounded-lg p-4">
-                            <p className="text-gray-700 line-clamp-2 leading-relaxed text-sm sm:text-base">
+                          <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                            <p className="text-gray-700 line-clamp-2 leading-relaxed text-sm">
                               {request.message}
                             </p>
                           </div>
@@ -644,19 +649,19 @@ export default function AdminContactRequestsIndex({ contactRequests, services, s
                             <select
                               value={request.status}
                               onChange={(e) => handleStatusChange(request.id, e.target.value)}
-                              className="text-sm px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent bg-white font-medium"
+                              className="text-sm px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white font-medium"
                             >
-                              <option value="pending">🔄 En attente</option>
-                              <option value="read">👁️ Lu</option>
-                              <option value="replied">✅ Répondu</option>
-                              <option value="closed">📁 Fermé</option>
+                              <option value="pending">En attente</option>
+                              <option value="read">Lu</option>
+                              <option value="replied">Répondu</option>
+                              <option value="closed">Fermé</option>
                             </select>
 
                             <Link href={`mailto:${request.email}`}>
                               <Button
                                 variant="outline"
                                 size="sm"
-                                className="border-gray-200 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700"
+                                className="border-gray-300 hover:border-blue-400 hover:bg-blue-50 hover:text-blue-700"
                               >
                                 <Mail className="h-4 w-4 mr-2" />
                                 Email
@@ -671,7 +676,7 @@ export default function AdminContactRequestsIndex({ contactRequests, services, s
                             <Button
                               variant="outline"
                               size="sm"
-                              className="border-gray-200 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700"
+                              className="border-gray-300 hover:border-blue-400 hover:bg-blue-50 hover:text-blue-700"
                             >
                               <Eye className="h-4 w-4" />
                             </Button>
@@ -680,7 +685,7 @@ export default function AdminContactRequestsIndex({ contactRequests, services, s
                           <Button
                             variant="outline"
                             size="sm"
-                            className="border-gray-200 hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700"
+                            className="border-gray-300 hover:border-green-400 hover:bg-green-50 hover:text-green-700"
                             onClick={() => handleReplyClick(request)}
                           >
                             <Reply className="h-4 w-4" />
@@ -689,7 +694,7 @@ export default function AdminContactRequestsIndex({ contactRequests, services, s
                           <Button
                             variant="outline"
                             size="sm"
-                            className="border-gray-200 hover:border-red-300 hover:bg-red-50 hover:text-red-700"
+                            className="border-gray-300 hover:border-red-400 hover:bg-red-50 hover:text-red-700"
                             onClick={() => {
                               if (confirm('Êtes-vous sûr de vouloir supprimer cette demande ?')) {
                                 router.delete(`/admin/contact-requests/${request.id}`)
@@ -706,26 +711,26 @@ export default function AdminContactRequestsIndex({ contactRequests, services, s
               })}
             </div>
           ) : (
-            <Card className="p-8 sm:p-16 text-center border-0 shadow-lg bg-white">
+            <Card className="p-12 text-center border-gray-200 shadow-sm bg-white">
               <div className="flex flex-col items-center gap-6 max-w-md mx-auto">
                 <div className="p-6 bg-gray-100 rounded-full">
                   <MessageSquare className="h-12 w-12 text-gray-400" />
                 </div>
                 <div>
-                  <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3">
+                  <h3 className="text-xl font-semibold text-gray-900 mb-3">
                     {searchTerm || statusFilter || serviceFilter || hasServiceFilter
                       ? 'Aucun résultat trouvé'
                       : 'Aucune demande reçue'}
                   </h3>
-                  <p className="text-gray-600 mb-6 leading-relaxed text-sm sm:text-base">
+                  <p className="text-gray-600 mb-6 leading-relaxed text-sm">
                     {searchTerm || statusFilter || serviceFilter || hasServiceFilter
                       ? 'Aucune demande ne correspond à vos critères. Essayez de modifier vos filtres.'
-                      : 'Les nouvelles demandes de contact apparaîtront ici. Patience !'}
+                      : 'Les nouvelles demandes de contact apparaîtront ici.'}
                   </p>
                   {(searchTerm || statusFilter || serviceFilter || hasServiceFilter) && (
                     <Button
                       onClick={handleReset}
-                      className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                      className="bg-blue-600 hover:bg-blue-700 text-white"
                     >
                       Réinitialiser les filtres
                     </Button>
@@ -737,7 +742,7 @@ export default function AdminContactRequestsIndex({ contactRequests, services, s
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <Card className="p-4 sm:p-6 border-0 shadow-lg bg-white">
+            <Card className="p-4 border-gray-200 shadow-sm bg-white">
               <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                 <p className="text-sm text-gray-600 font-medium">
                   Page {currentPage} sur {totalPages} • {filteredAndSortedRequests.length} résultat

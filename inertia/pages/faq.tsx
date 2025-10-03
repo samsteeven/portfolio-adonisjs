@@ -15,6 +15,7 @@ import {
   Monitor,
   ArrowRight,
 } from 'lucide-react'
+import SafeHTML from '~/components/safeHTML'
 
 interface FaqItem {
   id: number
@@ -193,12 +194,12 @@ const LevelBadge = ({ level }: { level: string }) => {
   const colors = {
     Expert: 'bg-green-500/20 text-green-400 border-green-500/30',
     Avancé: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-    Intermédiaire: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
+    Intermediaire: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
   }
 
   return (
     <span
-      className={`px-2 py-1 text-xs font-medium rounded-full border ${colors[level as keyof typeof colors] || colors.Intermédiaire}`}
+      className={`px-2 py-1 text-xs font-medium rounded-full border ${colors[level as keyof typeof colors] || colors.Intermediaire}`}
     >
       {level}
     </span>
@@ -214,7 +215,7 @@ export default function FaqPage({ faqs = mockFaqs }: FaqPageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white">
+    <div className="min-h-screen pt-7 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white">
       {/* Background Effects */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-pink-500/10 rounded-full blur-3xl animate-pulse"></div>
@@ -287,13 +288,13 @@ export default function FaqPage({ faqs = mockFaqs }: FaqPageProps) {
                     animation: 'fadeInUp 0.6s ease-out forwards',
                   }}
                 >
-                  <div className="bg-gray-800/30 backdrop-blur-sm border border-gray-700/30 rounded-2xl overflow-hidden hover:border-gray-600/50 transition-all duration-300">
+                  <div className="bg-gray-800/30 w-full backdrop-blur-sm border border-gray-700/30 rounded-2xl overflow-hidden hover:border-gray-600/50 transition-all duration-300">
                     <button
                       onClick={() => toggleFaq(faq.id)}
                       className="w-full text-left p-6 focus:outline-none group"
                     >
                       <div className="flex items-center justify-between gap-4">
-                        <h3 className="text-lg font-semibold text-white group-hover:text-pink-300 transition-colors duration-300">
+                        <h3 className="text-lg font-semibold text-white break-words group-hover:text-pink-300 transition-colors duration-300">
                           {faq.question}
                         </h3>
                         <div className="flex-shrink-0 p-1.5 bg-gray-700/50 rounded-lg group-hover:bg-pink-500/20 transition-colors">
@@ -309,7 +310,13 @@ export default function FaqPage({ faqs = mockFaqs }: FaqPageProps) {
                     {openFaq === faq.id && (
                       <div className="px-6 pb-6">
                         <div className="border-t border-gray-700/30 pt-4">
-                          <p className="text-gray-300 leading-relaxed">{faq.answer}</p>
+                          <div className="break-words">
+                            <SafeHTML
+                              as="p"
+                              html={faq.answer}
+                              className="text-gray-300 leading-relaxed"
+                            />
+                          </div>
                         </div>
                       </div>
                     )}

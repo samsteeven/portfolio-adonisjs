@@ -16,6 +16,7 @@ import { Technology } from '~/types/technology'
 import AdminLayout from '~/layout/AdminLayout'
 import React, { useEffect, useState } from 'react'
 import { getProjectMainImage } from '~/utils/others'
+import SafeHTML from '~/components/safeHTML'
 
 export default function TechnologiesShow({ technology }: { technology: Technology }) {
   const [isClient, setIsClient] = useState(false)
@@ -135,9 +136,7 @@ export default function TechnologiesShow({ technology }: { technology: Technolog
                             Description
                           </h3>
                           <div className="bg-gray-50 rounded-lg p-4">
-                            <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
-                              {technology.description}
-                            </p>
+                            <SafeHTML className="text-gray-700" html={technology.description} />
                           </div>
                         </div>
                       ) : (
@@ -196,7 +195,12 @@ export default function TechnologiesShow({ technology }: { technology: Technolog
                                 )}
                               </div>
                               <div className="flex-1 min-w-0">
-                                <h4 className="font-medium text-gray-900 mb-1">{project.title}</h4>
+                                <h4
+                                  className="font-medium text-gray-900 mb-1 hover:cursor-pointer"
+                                  onClick={() => router.visit(`/admin/projects/${project.id}`)}
+                                >
+                                  {project.title}
+                                </h4>
                                 {project.description && (
                                   <p className="text-sm text-gray-600 line-clamp-2">
                                     {project.description}

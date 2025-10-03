@@ -20,6 +20,7 @@ import { Technology } from '~/types/technology'
 import { ProjectEditProps } from '~/types/projets'
 import { toast } from 'sonner'
 import TinyMCEEditor from '~/components/TinyMCEEditor'
+import SafeHTML from '~/components/safeHTML'
 
 export default function EditProject({ project, technologies }: ProjectEditProps) {
   const { data, setData, patch, processing, errors, isDirty } = useForm({
@@ -231,9 +232,7 @@ export default function EditProject({ project, technologies }: ProjectEditProps)
 
                 {/* Status */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-900 mb-2">
-                    Visibilité
-                  </label>
+                  <label className="block text-sm font-medium text-gray-900 mb-2">Visibilité</label>
                   <div className="flex items-center h-full">
                     <label className="flex items-center gap-2 cursor-pointer">
                       <div className="relative">
@@ -308,23 +307,24 @@ export default function EditProject({ project, technologies }: ProjectEditProps)
                   <h3 className="text-lg font-medium text-gray-900 mb-3">Aperçu</h3>
                   <div className="space-y-3">
                     <div>
-                      <h4 className="font-medium text-gray-900">{data.title || 'Titre du projet'}</h4>
+                      <h4 className="font-medium text-gray-900">
+                        {data.title || 'Titre du projet'}
+                      </h4>
                       <div className="flex items-center gap-2 mt-1">
                         <span className="text-sm text-blue-600 font-medium bg-blue-50 px-2 py-0.5 rounded">
                           {data.year}
                         </span>
-                        <span className="text-xs text-gray-500">{data.role || 'Votre rôle'}</span>
+                        {data.role && (
+                          <span className="text-xs text-gray-500">
+                            <SafeHTML html={data.role} className="line-clamp-2" />
+                          </span>
+                        )}
                       </div>
                     </div>
-                    
+
                     {data.description && (
                       <div className="prose prose-sm max-w-none">
-                        <div 
-                          className="text-gray-700"
-                          dangerouslySetInnerHTML={{ 
-                            __html: data.description.replace(/\n/g, '<br />') 
-                          }} 
-                        />
+                        <SafeHTML html={data.description} className="text-gray-700 line-clamp-6" />
                       </div>
                     )}
                   </div>
@@ -666,7 +666,9 @@ export default function EditProject({ project, technologies }: ProjectEditProps)
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between">
                   <span className="text-gray-600">Titre :</span>
-                  <span className="font-medium truncate max-w-[50%]">{data.title || 'Non défini'}</span>
+                  <span className="font-medium truncate max-w-[50%]">
+                    {data.title || 'Non défini'}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Année :</span>

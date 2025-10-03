@@ -10,9 +10,7 @@ import {
   Filter,
   MessageCircle,
   User,
-  Mail,
   Calendar,
-  Clock,
   Trash2,
   Eye,
   Github,
@@ -23,14 +21,14 @@ import {
   ExternalLink,
   MapPin,
   Globe,
-  Phone,
-  Shield,
   Users,
   BarChart3,
-  Wifi,
+  Grid3X3,
+  List,
+  SortAsc,
+  SortDesc,
 } from 'lucide-react'
 import { CommentaireType } from '~/types/commentaire'
-import { toast } from 'sonner'
 
 interface Props {
   commentaires: {
@@ -65,6 +63,10 @@ export default function CommentsIndex({ commentaires, reactions, filters = {}, s
   const [showReactionPicker, setShowReactionPicker] = useState<number | null>(null)
   const [isClient, setIsClient] = useState(false)
   const [filteredComments, setFilteredComments] = useState<CommentaireType[]>(commentaires.data)
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('list')
+  const [sortBy, setSortBy] = useState<'createdAt' | 'displayName'>('createdAt')
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
+  const [showFilters, setShowFilters] = useState(false)
 
   // États pour les filtres
   const [searchTerm, setSearchTerm] = useState(filters.search || '')
@@ -85,7 +87,7 @@ export default function CommentsIndex({ commentaires, reactions, filters = {}, s
   }, [])
 
   useEffect(() => {
-    let results = commentaires.data
+    let results = [...commentaires.data]
 
     if (searchTerm) {
       results = results.filter(
@@ -116,8 +118,41 @@ export default function CommentsIndex({ commentaires, reactions, filters = {}, s
       results = results.filter((c) => c.country === selectedCountry)
     }
 
+    // Tri
+    results.sort((a, b) => {
+      let aValue: string | Date
+      let bValue: string | Date
+
+      switch (sortBy) {
+        case 'displayName':
+          aValue = (a.displayName || '').toLowerCase()
+          bValue = (b.displayName || '').toLowerCase()
+          break
+        case 'createdAt':
+        default:
+          aValue = new Date(a.createdAt)
+          bValue = new Date(b.createdAt)
+      }
+
+      if (typeof aValue === 'string' && typeof bValue === 'string') {
+        return sortOrder === 'asc' ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue)
+      }
+
+      return sortOrder === 'asc'
+        ? (aValue as Date).getTime() - (bValue as Date).getTime()
+        : (bValue as Date).getTime() - (aValue as Date).getTime()
+    })
+
     setFilteredComments(results)
-  }, [searchTerm, selectedStatus, selectedType, selectedCountry, commentaires.data])
+  }, [
+    searchTerm,
+    selectedStatus,
+    selectedType,
+    selectedCountry,
+    commentaires.data,
+    sortBy,
+    sortOrder,
+  ])
 
   // Fonction pour formater les dates
   const formatDate = (dateString: string, short: boolean = false) => {
@@ -138,8 +173,14 @@ export default function CommentsIndex({ commentaires, reactions, filters = {}, s
     setSelectedStatus('')
     setSelectedType('')
     setSelectedCountry('')
-    setFilteredComments(commentaires.data)
+    setSortBy('createdAt')
+    setSortOrder('desc')
   }
+
+  // Active filters count
+  const activeFiltersCount = [searchTerm, selectedStatus, selectedType, selectedCountry].filter(
+    Boolean
+  ).length
 
   const handleDeleteClick = (id: number, name: string) => {
     setDeleteModal({
@@ -166,7 +207,6 @@ export default function CommentsIndex({ commentaires, reactions, filters = {}, s
       },
       preserveScroll: true,
       onError: () => {
-        toast.error('Erreur lors de la suppression')
         setDeleteModal((prev) => ({ ...prev, isLoading: false }))
       },
     })
@@ -191,9 +231,6 @@ export default function CommentsIndex({ commentaires, reactions, filters = {}, s
       },
       {
         preserveScroll: true,
-        onError: () => {
-          toast.error("Erreur lors de l'ajout de la réaction")
-        },
       }
     )
   }
@@ -206,9 +243,6 @@ export default function CommentsIndex({ commentaires, reactions, filters = {}, s
       },
       {
         preserveScroll: true,
-        onError: () => {
-          toast.error('Erreur lors de la suppression de la réaction')
-        },
       }
     )
   }
@@ -268,136 +302,89 @@ export default function CommentsIndex({ commentaires, reactions, filters = {}, s
 
   return (
     <>
-      <div className="min-h-screen sm:bg-gray-50 sm:p-3">
-        <div className="px-3 sm:px-6 lg:px-8">
+      <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
+        <div className="max-w-7xl mx-auto">
           {/* Header */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 sm:mb-8">
-            <div className="flex-auto mb-4 sm:mb-0">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+            <div>
               <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Commentaires</h1>
-              <p className="mt-2 text-sm sm:text-base text-gray-700">
+              <p className="mt-1 text-gray-600">
                 Gérez les commentaires et réactions de votre livre d'or
               </p>
-              <div className="mt-2 text-sm text-gray-500">
-                {filteredComments.length} commentaire(s) affiché(s) sur {commentaires.meta.total}
+              <div className="mt-1 text-sm text-gray-500">
+                {filteredComments.length} commentaire
+                {filteredComments.length > 1 ? 's' : ''} sur {commentaires.meta.total} au total
               </div>
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap items-center gap-3">
+              <Button
+                variant="outline"
+                onClick={() => setShowFilters(!showFilters)}
+                className="md:hidden flex items-center gap-2"
+              >
+                <Filter className="h-4 w-4" />
+                Filtres{' '}
+                {activeFiltersCount > 0 && (
+                  <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-0.5 rounded-full">
+                    {activeFiltersCount}
+                  </span>
+                )}
+              </Button>
               <Button
                 variant="outline"
                 onClick={() => router.visit('/guestbook')}
-                className="border-none"
+                className="flex items-center gap-2"
               >
-                <ExternalLink className="h-4 w-4 mr-2" />
+                <ExternalLink className="h-4 w-4" />
                 Voir le livre d'or
               </Button>
             </div>
           </div>
 
-          {/* Statistiques rapides */}
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 mb-6 sm:mb-8">
-            <Card className="p-3 sm:p-4">
-              <div className="flex items-center">
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <MessageCircle className="h-4 sm:h-5 w-4 sm:w-5 text-blue-600" />
-                </div>
-                <div className="ml-2 sm:ml-3">
-                  <p className="text-xs sm:text-sm font-medium text-gray-500">Total</p>
-                  <p className="text-lg sm:text-xl font-semibold">
-                    {stats?.total || commentaires.meta.total || 0}
-                  </p>
-                </div>
-              </div>
-            </Card>
-
-            <Card className="p-3 sm:p-4">
-              <div className="flex items-center">
-                <div className="p-2 bg-green-100 rounded-lg">
-                  <UserCheck className="h-4 sm:h-5 w-4 sm:w-5 text-green-600" />
-                </div>
-                <div className="ml-2 sm:ml-3">
-                  <p className="text-xs sm:text-sm font-medium text-gray-500">Connectés</p>
-                  <p className="text-lg sm:text-xl font-semibold">
-                    {stats?.authenticated ||
-                      commentaires.data.filter((c) => c.commentType === 'authenticated').length ||
-                      0}
-                  </p>
-                </div>
-              </div>
-            </Card>
-
-            <Card className="p-3 sm:p-4">
-              <div className="flex items-center">
-                <div className="p-2 bg-purple-100 rounded-lg">
-                  <Users className="h-4 sm:h-5 w-4 sm:w-5 text-purple-600" />
-                </div>
-                <div className="ml-2 sm:ml-3">
-                  <p className="text-xs sm:text-sm font-medium text-gray-500">Invités</p>
-                  <p className="text-lg sm:text-xl font-semibold">
-                    {stats?.guests ||
-                      commentaires.data.filter((c) => c.commentType === 'guest').length ||
-                      0}
-                  </p>
-                </div>
-              </div>
-            </Card>
-
-            <Card className="p-3 sm:p-4">
-              <div className="flex items-center">
-                <div className="p-2 bg-yellow-100 rounded-lg">
-                  <Smile className="h-4 sm:h-5 w-4 sm:w-5 text-yellow-600" />
-                </div>
-                <div className="ml-2 sm:ml-3">
-                  <p className="text-xs sm:text-sm font-medium text-gray-500">Réactions</p>
-                  <p className="text-lg sm:text-xl font-semibold">
-                    {stats?.withReactions ||
-                      commentaires.data.filter((c) => c.reaction).length ||
-                      0}
-                  </p>
-                </div>
-              </div>
-            </Card>
-
-            <Card className="p-3 sm:p-4">
-              <div className="flex items-center">
-                <div className="p-2 bg-orange-100 rounded-lg">
-                  <Globe className="h-4 sm:h-5 w-4 sm:w-5 text-orange-600" />
-                </div>
-                <div className="ml-2 sm:ml-3">
-                  <p className="text-xs sm:text-sm font-medium text-gray-500">Pays</p>
-                  <p className="text-lg sm:text-xl font-semibold">{uniqueCountries.length || 0}</p>
-                </div>
-              </div>
-            </Card>
-          </div>
-
-          {/* Filtres */}
-          <Card className="mb-6 sm:mb-8 p-4 sm:p-6 bg-white">
+          {/* Filtres et contrôles */}
+          <Card
+            className={`mb-6 p-4 sm:p-6 bg-white transition-all duration-300 ${showFilters ? 'block' : 'hidden md:block'}`}
+          >
             <div className="space-y-4">
-              {/* Recherche */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Rechercher</label>
-                <div className="relative">
-                  <Input
-                    type="text"
-                    placeholder="Nom, email, message, ville, pays..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value.trim())}
-                    className="pl-10 h-10"
-                  />
-                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                </div>
+              {/* Mobile filter header */}
+              <div className="flex md:hidden items-center justify-between">
+                <h3 className="text-lg font-medium text-gray-900">Filtres</h3>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowFilters(false)}
+                  className="p-1"
+                >
+                  <X className="h-5 w-5" />
+                </Button>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* Ligne 1: Recherche et filtres */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+                {/* Recherche */}
+                <div className="lg:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Rechercher</label>
+                  <div className="relative">
+                    <Input
+                      type="text"
+                      placeholder="Nom, email, message, ville, pays..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value.trim())}
+                      className="pl-10 h-10"
+                    />
+                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                  </div>
+                </div>
+
                 {/* Type de commentaire */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Type</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
                   <select
                     value={selectedType}
                     onChange={(e) => setSelectedType(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                   >
-                    <option value="">Tous les types</option>
+                    <option value="">Tous</option>
                     <option value="authenticated">Utilisateurs connectés</option>
                     <option value="guest">Visiteurs invités</option>
                   </select>
@@ -405,11 +392,11 @@ export default function CommentsIndex({ commentaires, reactions, filters = {}, s
 
                 {/* Statut de réaction */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Réactions</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Réactions</label>
                   <select
                     value={selectedStatus}
                     onChange={(e) => setSelectedStatus(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                   >
                     <option value="">Toutes</option>
                     <option value="true">Avec réaction</option>
@@ -421,13 +408,13 @@ export default function CommentsIndex({ commentaires, reactions, filters = {}, s
                 {uniqueCountries.length > 0 &&
                   uniqueCountries.every((country) => country != null) && (
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Pays</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Pays</label>
                       <select
                         value={selectedCountry}
                         onChange={(e) => setSelectedCountry(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                       >
-                        <option value="">Tous les pays</option>
+                        <option value="">Tous</option>
                         {uniqueCountries.map((country) => (
                           <option key={country} value={country}>
                             {country}
@@ -436,111 +423,506 @@ export default function CommentsIndex({ commentaires, reactions, filters = {}, s
                       </select>
                     </div>
                   )}
+              </div>
 
-                {/* Actions */}
+              {/* Ligne 2: Tri et actions */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+                {/* Tri */}
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Tri</label>
+                  <div className="flex gap-2">
+                    <select
+                      value={sortBy}
+                      onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                    >
+                      <option value="createdAt">Date création</option>
+                      <option value="displayName">Nom</option>
+                    </select>
+                    <button
+                      type="button"
+                      onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+                      className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                    >
+                      {sortOrder === 'asc' ? (
+                        <SortAsc className="h-4 w-4" />
+                      ) : (
+                        <SortDesc className="h-4 w-4" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Actions de filtres */}
                 <div className="flex items-end">
-                  <Button variant="ghost" onClick={handleReset} className="border-none w-full">
-                    <Filter className="h-4 w-4 mr-2" />
+                  <Button
+                    variant="ghost"
+                    onClick={handleReset}
+                    className="w-full border border-gray-300 text-sm"
+                    size="sm"
+                  >
+                    <Filter className="h-4 w-4 mr-1" />
                     Réinitialiser
                   </Button>
+                </div>
+
+                {/* Mode d'affichage */}
+                <div className="flex items-end">
+                  <div className="flex w-full bg-gray-100 rounded-lg p-1">
+                    <button
+                      onClick={() => setViewMode('grid')}
+                      className={`flex-1 py-2 rounded text-sm font-medium ${
+                        viewMode === 'grid'
+                          ? 'bg-white shadow-sm text-gray-900'
+                          : 'text-gray-600 hover:text-gray-900'
+                      }`}
+                      title="Vue grille"
+                    >
+                      <Grid3X3 className="h-4 w-4 mx-auto" />
+                      <span className="sr-only">Grille</span>
+                    </button>
+                    <button
+                      onClick={() => setViewMode('list')}
+                      className={`flex-1 py-2 rounded text-sm font-medium ${
+                        viewMode === 'list'
+                          ? 'bg-white shadow-sm text-gray-900'
+                          : 'text-gray-600 hover:text-gray-900'
+                      }`}
+                      title="Vue liste"
+                    >
+                      <List className="h-4 w-4 mx-auto" />
+                      <span className="sr-only">Liste</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
           </Card>
 
-          {/* Liste des commentaires */}
-          <div className="space-y-4">
-            {filteredComments.map((commentaire) => (
-              <Card key={commentaire.id} className="bg-white hover:shadow-md transition-shadow">
-                <div className="p-4 sm:p-6">
-                  {/* Version mobile */}
-                  <div className="block sm:hidden">
-                    <div className="flex items-start gap-3 mb-3">
-                      {/* Avatar */}
-                      <div
-                        className={`p-2 rounded-full flex-shrink-0 ${getProviderColor(commentaire.user?.provider)}`}
-                      >
-                        {getProviderIcon(commentaire.user?.provider)}
-                      </div>
+          {/* Statistiques rapides */}
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
+            <Card className="p-3">
+              <div className="flex items-center">
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <MessageCircle className="h-4 w-4 text-blue-600" />
+                </div>
+                <div className="ml-3">
+                  <p className="text-xs font-medium text-gray-500">Total</p>
+                  <p className="text-lg font-semibold">
+                    {stats?.total || commentaires.meta.total || 0}
+                  </p>
+                </div>
+              </div>
+            </Card>
 
-                      {/* Info utilisateur */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between">
-                          <div className="min-w-0">
-                            <h3 className="font-semibold text-gray-900 truncate">
-                              {commentaire.displayName}
-                            </h3>
-                            <div className="flex items-center gap-2 mt-1 flex-wrap">
-                              <span
-                                className={`inline-flex items-center px-2 py-1 rounded-full text-xs ${getCommentTypeColor(commentaire.commentType)}`}
-                              >
-                                {commentaire.commentType === 'authenticated' ? (
-                                  <>
-                                    <UserCheck className="h-3 w-3 mr-1" />
-                                    Connecté
-                                  </>
-                                ) : (
-                                  <>
-                                    <User className="h-3 w-3 mr-1" />
-                                    Invité
-                                  </>
-                                )}
-                              </span>
-                              {commentaire.fullLocation && (
-                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-600">
-                                  <MapPin className="h-3 w-3 mr-1" />
-                                  {commentaire.city}
-                                </span>
-                              )}
+            <Card className="p-3">
+              <div className="flex items-center">
+                <div className="p-2 bg-green-100 rounded-lg">
+                  <UserCheck className="h-4 w-4 text-green-600" />
+                </div>
+                <div className="ml-3">
+                  <p className="text-xs font-medium text-gray-500">Connectés</p>
+                  <p className="text-lg font-semibold">
+                    {stats?.authenticated ||
+                      commentaires.data.filter((c) => c.commentType === 'authenticated').length ||
+                      0}
+                  </p>
+                </div>
+              </div>
+            </Card>
+
+            <Card className="p-3">
+              <div className="flex items-center">
+                <div className="p-2 bg-purple-100 rounded-lg">
+                  <Users className="h-4 w-4 text-purple-600" />
+                </div>
+                <div className="ml-3">
+                  <p className="text-xs font-medium text-gray-500">Invités</p>
+                  <p className="text-lg font-semibold">
+                    {stats?.guests ||
+                      commentaires.data.filter((c) => c.commentType === 'guest').length ||
+                      0}
+                  </p>
+                </div>
+              </div>
+            </Card>
+
+            <Card className="p-3">
+              <div className="flex items-center">
+                <div className="p-2 bg-yellow-100 rounded-lg">
+                  <Smile className="h-4 w-4 text-yellow-600" />
+                </div>
+                <div className="ml-3">
+                  <p className="text-xs font-medium text-gray-500">Réactions</p>
+                  <p className="text-lg font-semibold">
+                    {stats?.withReactions ||
+                      commentaires.data.filter((c) => c.reaction).length ||
+                      0}
+                  </p>
+                </div>
+              </div>
+            </Card>
+
+            <Card className="p-3">
+              <div className="flex items-center">
+                <div className="p-2 bg-orange-100 rounded-lg">
+                  <Globe className="h-4 w-4 text-orange-600" />
+                </div>
+                <div className="ml-3">
+                  <p className="text-xs font-medium text-gray-500">Pays</p>
+                  <p className="text-lg font-semibold">{uniqueCountries.length || 0}</p>
+                </div>
+              </div>
+            </Card>
+          </div>
+
+          {/* Liste des commentaires */}
+          {viewMode === 'list' ? (
+            <Card className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th
+                        scope="col"
+                        className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider"
+                      >
+                        Utilisateur
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider"
+                      >
+                        Message
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider"
+                      >
+                        Type
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider"
+                      >
+                        Date
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-6 py-3 text-right text-xs font-medium text-gray-700 uppercase tracking-wider"
+                      >
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {filteredComments.map((commentaire) => (
+                      <tr key={commentaire.id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center">
+                            <div
+                              className={`p-2 rounded-full ${getProviderColor(commentaire.user?.provider)}`}
+                            >
+                              {getProviderIcon(commentaire.user?.provider)}
+                            </div>
+                            <div className="ml-4">
+                              <div className="text-sm font-medium text-gray-900">
+                                {commentaire.displayName}
+                              </div>
+                              <div className="text-sm text-gray-500">
+                                {commentaire.displayEmail || commentaire.guestEmail}
+                              </div>
                             </div>
                           </div>
-
-                          {/* Réaction mobile */}
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="text-sm text-gray-900 line-clamp-2 max-w-md">
+                            {commentaire.message}
+                          </div>
                           {commentaire.reaction && (
-                            <div className="flex items-center gap-1 px-2 py-1 bg-yellow-50 rounded-lg border border-yellow-200">
+                            <div className="mt-1 flex items-center gap-1 px-2 py-1 bg-yellow-50 rounded-lg border border-yellow-200 w-fit">
                               <span className="text-lg">{commentaire.reaction}</span>
+                              <button
+                                onClick={() => handleRemoveReaction(commentaire.id)}
+                                className="text-gray-400 hover:text-red-500"
+                              >
+                                <X className="h-3 w-3" />
+                              </button>
                             </div>
                           )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span
+                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getCommentTypeColor(commentaire.commentType)}`}
+                          >
+                            {commentaire.commentType === 'authenticated' ? (
+                              <>
+                                <UserCheck className="h-3 w-3 mr-1" />
+                                Connecté
+                              </>
+                            ) : (
+                              <>
+                                <User className="h-3 w-3 mr-1" />
+                                Invité
+                              </>
+                            )}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          <div className="flex items-center gap-1">
+                            <Calendar className="h-4 w-4" />
+                            {formatDate(commentaire.createdAt, true)}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                          <div className="flex items-center justify-end gap-2">
+                            {/* Reaction button */}
+                            <div className="relative">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() =>
+                                  setShowReactionPicker(
+                                    showReactionPicker === commentaire.id ? null : commentaire.id
+                                  )
+                                }
+                                className="border-gray-300 emoji-button"
+                              >
+                                <Smile className="h-4 w-4" />
+                              </Button>
+
+                              {/* Picker d'emojis */}
+                              {showReactionPicker === commentaire.id && (
+                                <>
+                                  <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 sm:hidden">
+                                    <div className="bg-white border border-gray-200 rounded-lg shadow-lg w-full max-w-sm max-h-[80vh] overflow-y-auto emoji-picker">
+                                      <div className="sticky top-0 bg-white border-b border-gray-200 p-3 flex items-center justify-between">
+                                        <h3 className="font-semibold text-gray-900">
+                                          Choisir une réaction
+                                        </h3>
+                                        <button
+                                          onClick={() => setShowReactionPicker(null)}
+                                          className="p-1 hover:bg-gray-100 rounded"
+                                        >
+                                          <X className="h-5 w-5" />
+                                        </button>
+                                      </div>
+                                      <div className="p-4 space-y-4">
+                                        <div>
+                                          <p className="text-sm font-medium text-gray-700 mb-2">
+                                            Positives
+                                          </p>
+                                          <div className="flex flex-wrap gap-2">
+                                            {reactions.positive.map((emoji) => (
+                                              <button
+                                                key={emoji}
+                                                onClick={() =>
+                                                  handleReactionClick(commentaire.id, emoji)
+                                                }
+                                                className="p-2 hover:bg-gray-100 rounded text-2xl transition-colors"
+                                              >
+                                                {emoji}
+                                              </button>
+                                            ))}
+                                          </div>
+                                        </div>
+
+                                        <div>
+                                          <p className="text-sm font-medium text-gray-700 mb-2">
+                                            Neutres
+                                          </p>
+                                          <div className="flex flex-wrap gap-2">
+                                            {reactions.neutral.map((emoji) => (
+                                              <button
+                                                key={emoji}
+                                                onClick={() =>
+                                                  handleReactionClick(commentaire.id, emoji)
+                                                }
+                                                className="p-2 hover:bg-gray-100 rounded text-2xl transition-colors"
+                                              >
+                                                {emoji}
+                                              </button>
+                                            ))}
+                                          </div>
+                                        </div>
+
+                                        <div>
+                                          <p className="text-sm font-medium text-gray-700 mb-2">
+                                            Négatives
+                                          </p>
+                                          <div className="flex flex-wrap gap-2">
+                                            {reactions.negative.map((emoji) => (
+                                              <button
+                                                key={emoji}
+                                                onClick={() =>
+                                                  handleReactionClick(commentaire.id, emoji)
+                                                }
+                                                className="p-2 hover:bg-gray-100 rounded text-2xl transition-colors"
+                                              >
+                                                {emoji}
+                                              </button>
+                                            ))}
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div className="hidden sm:block absolute right-0 top-full mt-2 p-3 bg-white border border-gray-200 rounded-lg shadow-lg z-10 w-64 emoji-picker">
+                                    <div className="space-y-3">
+                                      <div>
+                                        <p className="text-xs font-medium text-gray-700 mb-2">
+                                          Positives
+                                        </p>
+                                        <div className="flex flex-wrap gap-1">
+                                          {reactions.positive.map((emoji) => (
+                                            <button
+                                              key={emoji}
+                                              onClick={() =>
+                                                handleReactionClick(commentaire.id, emoji)
+                                              }
+                                              className="p-1 hover:bg-gray-100 rounded text-lg transition-colors"
+                                            >
+                                              {emoji}
+                                            </button>
+                                          ))}
+                                        </div>
+                                      </div>
+
+                                      <div>
+                                        <p className="text-xs font-medium text-gray-700 mb-2">
+                                          Neutres
+                                        </p>
+                                        <div className="flex flex-wrap gap-1">
+                                          {reactions.neutral.map((emoji) => (
+                                            <button
+                                              key={emoji}
+                                              onClick={() =>
+                                                handleReactionClick(commentaire.id, emoji)
+                                              }
+                                              className="p-1 hover:bg-gray-100 rounded text-lg transition-colors"
+                                            >
+                                              {emoji}
+                                            </button>
+                                          ))}
+                                        </div>
+                                      </div>
+
+                                      <div>
+                                        <p className="text-xs font-medium text-gray-700 mb-2">
+                                          Négatives
+                                        </p>
+                                        <div className="flex flex-wrap gap-1">
+                                          {reactions.negative.map((emoji) => (
+                                            <button
+                                              key={emoji}
+                                              onClick={() =>
+                                                handleReactionClick(commentaire.id, emoji)
+                                              }
+                                              className="p-1 hover:bg-gray-100 rounded text-lg transition-colors"
+                                            >
+                                              {emoji}
+                                            </button>
+                                          ))}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </>
+                              )}
+                            </div>
+
+                            <Link href={`/admin/comments/${commentaire.id}`}>
+                              <Button size="sm" variant="outline" className="border-gray-300">
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                            </Link>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleDeleteClick(commentaire.id, commentaire.message)}
+                              className="text-red-600 hover:text-red-800 border-red-300 hover:bg-red-50"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              {filteredComments.map((commentaire) => (
+                <Card
+                  key={commentaire.id}
+                  className="overflow-hidden hover:shadow-lg transition-all duration-300 bg-white border border-gray-200 rounded-xl"
+                >
+                  <div className="p-4">
+                    {/* Header */}
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <div
+                          className={`p-2 rounded-full ${getProviderColor(commentaire.user?.provider)}`}
+                        >
+                          {getProviderIcon(commentaire.user?.provider)}
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-gray-900 truncate">
+                            {commentaire.displayName}
+                          </h3>
+                          <p className="text-xs text-gray-500 truncate">
+                            {commentaire.displayEmail || commentaire.guestEmail}
+                          </p>
                         </div>
                       </div>
+                      <span
+                        className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getCommentTypeColor(commentaire.commentType)}`}
+                      >
+                        {commentaire.commentType === 'authenticated' ? 'Connecté' : 'Invité'}
+                      </span>
                     </div>
 
-                    {/* Message mobile */}
-                    <div className="bg-gray-50 rounded-lg p-3 mb-3">
-                      <p className="text-gray-700 text-sm leading-relaxed line-clamp-3">
-                        {commentaire.message}
-                      </p>
+                    {/* Message */}
+                    <div className="mb-3">
+                      <p className="text-sm text-gray-700 line-clamp-3">{commentaire.message}</p>
                     </div>
 
-                    {/* Infos supplémentaires mobile */}
-                    {(commentaire.displayEmail || commentaire.guestPhone) && (
-                      <div className="text-xs text-gray-500 mb-3 space-y-1">
-                        {commentaire.displayEmail && (
-                          <div className="flex items-center gap-1">
-                            <Mail className="h-3 w-3" />
-                            {commentaire.displayEmail}
-                          </div>
-                        )}
-                        {commentaire.guestPhone && (
-                          <div className="flex items-center gap-1">
-                            <Phone className="h-3 w-3" />
-                            {commentaire.guestPhone}
-                          </div>
-                        )}
+                    {/* Réaction */}
+                    {commentaire.reaction && (
+                      <div className="flex items-center gap-1 mb-3 px-2 py-1 bg-yellow-50 rounded-lg border border-yellow-200 w-fit">
+                        <span className="text-lg">{commentaire.reaction}</span>
+                        <button
+                          onClick={() => handleRemoveReaction(commentaire.id)}
+                          className="text-gray-400 hover:text-red-500"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
                       </div>
                     )}
 
-                    {/* Meta info mobile */}
-                    <div className="flex items-center justify-between text-xs text-gray-500 mb-3">
+                    {/* Location */}
+                    {commentaire.fullLocation && (
+                      <div className="flex items-center gap-1 mb-3 text-xs text-gray-500">
+                        <MapPin className="h-3 w-3" />
+                        <span>{commentaire.fullLocation}</span>
+                      </div>
+                    )}
+
+                    {/* Meta info */}
+                    <div className="flex items-center justify-between text-xs text-gray-500 mb-4">
                       <div className="flex items-center gap-1">
                         <Calendar className="h-3 w-3" />
                         {formatDate(commentaire.createdAt, true)}
                       </div>
-                      <span>#{commentaire.id}</span>
+                      <span className="text-gray-300">•</span>
+                      <span>ID: #{commentaire.id}</span>
                     </div>
 
-                    {/* Actions mobile - identiques à l'original */}
+                    {/* Actions */}
                     <div className="flex items-center gap-2">
+                      {/* Reaction button */}
                       <div className="relative">
                         <Button
                           size="sm"
@@ -550,13 +932,13 @@ export default function CommentsIndex({ commentaires, reactions, filters = {}, s
                               showReactionPicker === commentaire.id ? null : commentaire.id
                             )
                           }
-                          className="border-none emoji-button px-2"
+                          className="border-gray-300 emoji-button"
                         >
                           <Smile className="h-4 w-4" />
                         </Button>
 
                         {showReactionPicker === commentaire.id && (
-                          <div className="fixed inset-x-4 bottom-4 p-4 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-64 overflow-y-auto emoji-picker">
+                          <div className="absolute right-0 top-full mt-2 p-3 bg-white border border-gray-200 rounded-lg shadow-lg z-10 w-64 emoji-picker">
                             <div className="space-y-3">
                               <div>
                                 <p className="text-xs font-medium text-gray-700 mb-2">Positives</p>
@@ -565,13 +947,14 @@ export default function CommentsIndex({ commentaires, reactions, filters = {}, s
                                     <button
                                       key={emoji}
                                       onClick={() => handleReactionClick(commentaire.id, emoji)}
-                                      className="p-2 hover:bg-gray-100 rounded text-lg transition-colors"
+                                      className="p-1 hover:bg-gray-100 rounded text-lg transition-colors"
                                     >
                                       {emoji}
                                     </button>
                                   ))}
                                 </div>
                               </div>
+
                               <div>
                                 <p className="text-xs font-medium text-gray-700 mb-2">Neutres</p>
                                 <div className="flex flex-wrap gap-1">
@@ -579,13 +962,14 @@ export default function CommentsIndex({ commentaires, reactions, filters = {}, s
                                     <button
                                       key={emoji}
                                       onClick={() => handleReactionClick(commentaire.id, emoji)}
-                                      className="p-2 hover:bg-gray-100 rounded text-lg transition-colors"
+                                      className="p-1 hover:bg-gray-100 rounded text-lg transition-colors"
                                     >
                                       {emoji}
                                     </button>
                                   ))}
                                 </div>
                               </div>
+
                               <div>
                                 <p className="text-xs font-medium text-gray-700 mb-2">Négatives</p>
                                 <div className="flex flex-wrap gap-1">
@@ -593,7 +977,7 @@ export default function CommentsIndex({ commentaires, reactions, filters = {}, s
                                     <button
                                       key={emoji}
                                       onClick={() => handleReactionClick(commentaire.id, emoji)}
-                                      className="p-2 hover:bg-gray-100 rounded text-lg transition-colors"
+                                      className="p-1 hover:bg-gray-100 rounded text-lg transition-colors"
                                     >
                                       {emoji}
                                     </button>
@@ -606,289 +990,25 @@ export default function CommentsIndex({ commentaires, reactions, filters = {}, s
                       </div>
 
                       <Link href={`/admin/comments/${commentaire.id}`} className="flex-1">
-                        <Button size="sm" variant="outline" className="border-none w-full">
-                          <Eye className="h-4 w-4 mr-1" />
+                        <Button size="sm" variant="outline" className="w-full border-gray-300">
+                          <Eye className="h-3 w-3 mr-1" />
                           Voir
                         </Button>
                       </Link>
-
                       <Button
                         size="sm"
                         variant="outline"
                         onClick={() => handleDeleteClick(commentaire.id, commentaire.message)}
-                        className="text-red-600 hover:text-red-800 border-none hover:bg-red-50 px-2"
+                        className="text-red-600 hover:text-red-800 border-red-300 hover:bg-red-50"
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 className="h-3 w-3" />
                       </Button>
-
-                      {commentaire.reaction && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleRemoveReaction(commentaire.id)}
-                          className="text-orange-600 hover:text-orange-800 border-none hover:bg-orange-50 px-2"
-                          title="Supprimer la réaction"
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      )}
                     </div>
                   </div>
-
-                  {/* Version desktop */}
-                  <div className="hidden sm:block">
-                    {/* Header du commentaire */}
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex items-center gap-3">
-                        {/* Avatar ou icône */}
-                        <div
-                          className={`p-2 rounded-full ${getProviderColor(commentaire.user?.provider)}`}
-                        >
-                          {getProviderIcon(commentaire.user?.provider)}
-                        </div>
-
-                        {/* Info utilisateur */}
-                        <div>
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <h3 className="font-semibold text-gray-900">
-                              {commentaire.displayName}
-                            </h3>
-                            <span
-                              className={`inline-flex items-center px-2 py-1 rounded-full text-xs ${getCommentTypeColor(commentaire.commentType)}`}
-                            >
-                              {commentaire.commentType === 'authenticated' ? (
-                                <>
-                                  <UserCheck className="h-3 w-3 mr-1" />
-                                  Connecté
-                                </>
-                              ) : (
-                                <>
-                                  <User className="h-3 w-3 mr-1" />
-                                  Invité
-                                </>
-                              )}
-                            </span>
-                            {commentaire.fullLocation && (
-                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-600">
-                                <MapPin className="h-3 w-3 mr-1" />
-                                {commentaire.fullLocation}
-                              </span>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-4 text-sm text-gray-500 mt-1 flex-wrap">
-                            {commentaire.displayEmail && (
-                              <div className="flex items-center gap-1">
-                                <Mail className="h-3 w-3" />
-                                {commentaire.displayEmail}
-                              </div>
-                            )}
-                            {commentaire.guestPhone && (
-                              <div className="flex items-center gap-1">
-                                <Phone className="h-3 w-3" />
-                                {commentaire.guestPhone}
-                              </div>
-                            )}
-                            <div className="flex items-center gap-1">
-                              <Calendar className="h-3 w-3" />
-                              {formatDate(commentaire.createdAt)}
-                            </div>
-                            {commentaire.ipAddress && (
-                              <div className="flex items-center gap-1">
-                                <Wifi className="h-3 w-3" />
-                                {commentaire.ipAddress}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Actions desktop */}
-                      <div className="flex items-center gap-2">
-                        {/* Réaction actuelle */}
-                        {commentaire.reaction && (
-                          <div className="flex items-center gap-1 px-2 py-1 bg-yellow-50 rounded-lg border border-yellow-200">
-                            <span className="text-lg">{commentaire.reaction}</span>
-                            <button
-                              onClick={() => handleRemoveReaction(commentaire.id)}
-                              className="text-gray-400 hover:text-red-500 transition-colors"
-                            >
-                              <X className="h-3 w-3" />
-                            </button>
-                          </div>
-                        )}
-
-                        {/* Bouton réaction */}
-                        <div className="relative">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() =>
-                              setShowReactionPicker(
-                                showReactionPicker === commentaire.id ? null : commentaire.id
-                              )
-                            }
-                            className="border-none emoji-button"
-                          >
-                            <Smile className="h-4 w-4" />
-                          </Button>
-
-                          {/* Picker d'emojis desktop */}
-                          {showReactionPicker === commentaire.id && (
-                            <div className="absolute right-0 top-full mt-2 p-3 bg-white border border-gray-200 rounded-lg shadow-lg z-10 w-64 emoji-picker">
-                              <div className="space-y-3">
-                                <div>
-                                  <p className="text-xs font-medium text-gray-700 mb-2">
-                                    Positives
-                                  </p>
-                                  <div className="flex flex-wrap gap-1">
-                                    {reactions.positive.map((emoji) => (
-                                      <button
-                                        key={emoji}
-                                        onClick={() => handleReactionClick(commentaire.id, emoji)}
-                                        className="p-1 hover:bg-gray-100 rounded text-lg transition-colors"
-                                      >
-                                        {emoji}
-                                      </button>
-                                    ))}
-                                  </div>
-                                </div>
-
-                                <div>
-                                  <p className="text-xs font-medium text-gray-700 mb-2">Neutres</p>
-                                  <div className="flex flex-wrap gap-1">
-                                    {reactions.neutral.map((emoji) => (
-                                      <button
-                                        key={emoji}
-                                        onClick={() => handleReactionClick(commentaire.id, emoji)}
-                                        className="p-1 hover:bg-gray-100 rounded text-lg transition-colors"
-                                      >
-                                        {emoji}
-                                      </button>
-                                    ))}
-                                  </div>
-                                </div>
-
-                                <div>
-                                  <p className="text-xs font-medium text-gray-700 mb-2">
-                                    Négatives
-                                  </p>
-                                  <div className="flex flex-wrap gap-1">
-                                    {reactions.negative.map((emoji) => (
-                                      <button
-                                        key={emoji}
-                                        onClick={() => handleReactionClick(commentaire.id, emoji)}
-                                        className="p-1 hover:bg-gray-100 rounded text-lg transition-colors"
-                                      >
-                                        {emoji}
-                                      </button>
-                                    ))}
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Bouton voir */}
-                        <Link href={`/admin/comments/${commentaire.id}`}>
-                          <Button size="sm" variant="outline" className="border-none">
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                        </Link>
-
-                        {/* Bouton supprimer */}
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleDeleteClick(commentaire.id, commentaire.message)}
-                          className="text-red-600 hover:text-red-800 border-none hover:bg-red-50"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-
-                    {/* Message */}
-                    <div className="bg-gray-50 rounded-lg p-4 mb-4">
-                      <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
-                        {commentaire.message}
-                      </p>
-                    </div>
-
-                    {/* Informations techniques supplémentaires */}
-                    {(commentaire.userAgent || commentaire.isp || commentaire.organization) && (
-                      <div className="bg-blue-50 rounded-lg p-3 mb-4">
-                        <h4 className="text-sm font-medium text-blue-900 mb-2 flex items-center gap-2">
-                          <Shield className="h-4 w-4" />
-                          Informations techniques
-                        </h4>
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 text-xs text-blue-800">
-                          {commentaire.isp && (
-                            <div>
-                              <strong>FAI:</strong> {commentaire.isp}
-                            </div>
-                          )}
-                          {commentaire.organization && (
-                            <div>
-                              <strong>Organisation:</strong> {commentaire.organization}
-                            </div>
-                          )}
-                          {commentaire.timezone && (
-                            <div>
-                              <strong>Fuseau horaire:</strong> {commentaire.timezone}
-                            </div>
-                          )}
-                          {commentaire.userAgent && (
-                            <div className="lg:col-span-2">
-                              <strong>User Agent:</strong>
-                              <span className="block mt-1 truncate" title={commentaire.userAgent}>
-                                {commentaire.userAgent}
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Métadonnées */}
-                    <div className="flex items-center justify-between text-xs text-gray-500 pt-4 border-t border-gray-100">
-                      <div className="flex items-center gap-4 flex-wrap">
-                        <span>ID: #{commentaire.id}</span>
-                        {commentaire.updatedAt && (
-                          <div className="flex items-center gap-1">
-                            <Clock className="h-3 w-3" />
-                            Modifié le {formatDate(commentaire.updatedAt)}
-                          </div>
-                        )}
-                        {commentaire.latitude && commentaire.longitude && (
-                          <div className="flex items-center gap-1">
-                            <MapPin className="h-3 w-3" />
-                            {Number(commentaire.latitude).toFixed(4)},{' '}
-                            {Number(commentaire.longitude).toFixed(4)}
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="flex items-center gap-2">
-                        {commentaire.user?.provider && (
-                          <div className="flex items-center gap-1">
-                            {getProviderIcon(commentaire.user.provider)}
-                            <span className="capitalize">{commentaire.user.provider}</span>
-                          </div>
-                        )}
-                        {commentaire.commentType === 'guest' && !commentaire.user && (
-                          <div className="flex items-center gap-1">
-                            <User className="h-3 w-3" />
-                            <span>Visiteur invité</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </Card>
-            ))}
-          </div>
+                </Card>
+              ))}
+            </div>
+          )}
 
           {/* Top Countries sidebar - affiché seulement sur desktop */}
           {stats?.topCountries && stats.topCountries.length > 0 && (
@@ -915,24 +1035,34 @@ export default function CommentsIndex({ commentaires, reactions, filters = {}, s
           {/* Empty State */}
           {filteredComments.length === 0 && (
             <div className="text-center py-12">
-              <MessageCircle className="mx-auto h-12 w-12 text-gray-400" />
-              <h3 className="mt-2 text-sm font-semibold text-gray-900">
+              <div className="mx-auto h-16 w-16 bg-gray-100 rounded-full flex items-center justify-center">
+                <MessageCircle className="h-8 w-8 text-gray-400" />
+              </div>
+              <h3 className="mt-4 text-lg font-medium text-gray-900">
                 {searchTerm || selectedStatus || selectedType || selectedCountry
                   ? 'Aucun commentaire trouvé'
                   : 'Aucun commentaire'}
               </h3>
-              <p className="mt-1 text-sm text-gray-500">
+              <p className="mt-1 text-gray-500">
                 {searchTerm || selectedStatus || selectedType || selectedCountry
                   ? 'Essayez de modifier vos critères de recherche.'
                   : "Les visiteurs n'ont pas encore laissé de commentaires."}
               </p>
-              {(searchTerm || selectedStatus || selectedType || selectedCountry) && (
-                <div className="mt-6">
-                  <Button onClick={handleReset} variant="outline" className="border-none">
+              <div className="mt-6">
+                {searchTerm || selectedStatus || selectedType || selectedCountry ? (
+                  <Button onClick={handleReset} variant="outline" className="border-gray-300">
                     Réinitialiser les filtres
                   </Button>
-                </div>
-              )}
+                ) : (
+                  <Button
+                    onClick={() => router.visit('/guestbook')}
+                    className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 mx-auto"
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                    Voir le livre d'or
+                  </Button>
+                )}
+              </div>
             </div>
           )}
 
@@ -948,7 +1078,7 @@ export default function CommentsIndex({ commentaires, reactions, filters = {}, s
                   <Link
                     href={`/admin/comments?page=${commentaires.meta.page - 1}&search=${searchTerm}&hasReaction=${selectedStatus}&commentType=${selectedType}&country=${selectedCountry}`}
                   >
-                    <Button variant="outline" size="sm">
+                    <Button variant="outline" className="border-gray-300">
                       Précédent
                     </Button>
                   </Link>
@@ -957,7 +1087,7 @@ export default function CommentsIndex({ commentaires, reactions, filters = {}, s
                   <Link
                     href={`/admin/comments?page=${commentaires.meta.page + 1}&search=${searchTerm}&hasReaction=${selectedStatus}&commentType=${selectedType}&country=${selectedCountry}`}
                   >
-                    <Button variant="outline" size="sm">
+                    <Button variant="outline" className="border-gray-300">
                       Suivant
                     </Button>
                   </Link>

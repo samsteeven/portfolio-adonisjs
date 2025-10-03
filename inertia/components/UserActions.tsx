@@ -18,6 +18,7 @@ export default function UserActions({ user }: UserActionsProps) {
 
   const handleDelete = () => {
     deleteUser(`/admin/users/${user.id}`, {
+      preserveScroll: true,
       onSuccess: () => {
         setShowDeleteModal(false)
       },
@@ -25,7 +26,9 @@ export default function UserActions({ user }: UserActionsProps) {
   }
 
   const handleToggleStatus = () => {
-    toggleStatus(`/admin/users/${user.id}/toggle-status`)
+    toggleStatus(`/admin/users/${user.id}/toggle-status`, {
+      preserveScroll: true,
+    })
   }
 
   return (

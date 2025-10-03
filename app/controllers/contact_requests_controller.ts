@@ -11,6 +11,7 @@ import { inject } from '@adonisjs/core'
 import mail from '@adonisjs/mail/services/main'
 import env from '#start/env'
 import ContactRequestAuthorization from '#services/bouncer/bouncer_technology_service'
+import { UserRole } from '#enums/user_role'
 
 @inject()
 export default class ContactRequestsController {
@@ -47,9 +48,8 @@ export default class ContactRequestsController {
    * Créer une nouvelle demande de contact
    */
   async store({ request, response, session }: HttpContext) {
+    const data = await request.validateUsing(createContactRequestValidator)
     try {
-      const data = await request.validateUsing(createContactRequestValidator)
-
       // Vérifier que le service existe s'il est spécifié
       if (data.serviceId) {
         const service = await Service.find(data.serviceId)
@@ -123,7 +123,14 @@ export default class ContactRequestsController {
   /**
    * Afficher les demandes de contact côté admin avec filtres et pagination
    */
-  async index({ request, inertia }: HttpContext) {
+  async index({ request, inertia, auth }: HttpContext) {
+    const user = auth.user
+    const isAdmin = user && user.role === UserRole.ADMIN
+    if (!isAdmin) {
+      return inertia.render('admin/contact-requests/index', {
+        isRestricted: true,
+      })
+    }
     const filters = await request.validateUsing(contactRequestFilterValidator)
 
     const { page = 1, limit = 15 } = filters
@@ -170,22 +177,21 @@ export default class ContactRequestsController {
   /**
    * Afficher une demande de contact spécifique côté admin
    */
-  async show({ params, inertia, response }: HttpContext) {
-    try {
-      const contactRequest = await ContactRequest.query()
-        .where('id', params.id)
-        .preload('service')
-        .firstOrFail()
-
-      // Marquer comme lu si ce n'est pas déjà fait
-      await contactRequest.markAsRead()
-
-      return inertia.render('admin/contact-requests/show', {
-        contactRequest: contactRequest.serialize(),
-      })
-    } catch (error) {
-      return response.status(404).abort('Demande de contact introuvable')
+  async show({ params, inertia, response, bouncer, session }: HttpContext) {
+    const authorize = await bouncer.with('ContactRequestPolicy').allows('show')
+    if (!authorize) {
+      return this.ContactRequestAuthorizationService.handleUnauthorized(response, session)
     }
+    const contactRequest = await ContactRequest.query()
+      .where('id', params.id)
+      .preload('service')
+      .firstOrFail()
+    // Marquer comme lu si ce n'est pas déjà fait
+    await contactRequest.markAsRead()
+
+    return inertia.render('admin/contact-requests/show', {
+      contactRequest: contactRequest.serialize(),
+    })
   }
 
   /**
@@ -196,10 +202,9 @@ export default class ContactRequestsController {
     if (!authorize) {
       return this.ContactRequestAuthorizationService.handleUnauthorized(response, session)
     }
+    const contactRequest = await ContactRequest.findOrFail(params.id)
+    const data = await request.validateUsing(updateContactRequestStatusValidator)
     try {
-      const contactRequest = await ContactRequest.findOrFail(params.id)
-      const data = await request.validateUsing(updateContactRequestStatusValidator)
-
       contactRequest.status = data.status
       if (data.adminNotes) {
         contactRequest.adminNotes = data.adminNotes
@@ -237,12 +242,11 @@ export default class ContactRequestsController {
       return this.ContactRequestAuthorizationService.handleUnauthorized(response, session)
     }
     const data = await request.validateUsing(replyToContactRequestValidator)
+    const contactRequest = await ContactRequest.query()
+      .where('id', params.id)
+      .preload('service')
+      .firstOrFail()
     try {
-      const contactRequest = await ContactRequest.query()
-        .where('id', params.id)
-        .preload('service')
-        .firstOrFail()
-
       // Envoyer l'email de réponse
       await mail.send((message) => {
         message
@@ -282,8 +286,8 @@ export default class ContactRequestsController {
     if (!authorize) {
       return this.ContactRequestAuthorizationService.handleUnauthorized(response, session)
     }
+    const contactRequest = await ContactRequest.findOrFail(params.id)
     try {
-      const contactRequest = await ContactRequest.findOrFail(params.id)
       await contactRequest.delete()
 
       session.flash('success', 'Demande de contact supprimée avec succès')

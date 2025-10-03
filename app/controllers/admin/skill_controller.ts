@@ -155,7 +155,7 @@ export default class SkillsController {
 
       await skill.delete()
       session.flash('success', 'Skill supprimé avec succès')
-      return response.redirect().back()
+      return response.redirect('/admin/skills/index')
     } catch (e) {
       session.flash('error', e.message || 'Erreur lors de la suppression du skill')
       return response.redirect().back()

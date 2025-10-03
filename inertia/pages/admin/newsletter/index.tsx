@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react'
-import { Head, router } from '@inertiajs/react'
+import { router } from '@inertiajs/react'
 import AdminLayout from '~/layout/AdminLayout'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -39,8 +39,8 @@ interface NewsletterAdminProps {
   }
 }
 
-export default function NewsletterAdmin({ subscribers, filters }: NewsletterAdminProps) {
-  const [search, setSearch] = useState(filters.search || '')
+export default function NewsletterAdmin({ subscribers }: NewsletterAdminProps) {
+  const [search, setSearch] = useState('')
   const [status, setStatus] = useState('')
   const [selectedEmails, setSelectedEmails] = useState<number[]>([])
   const [deleteModal, setDeleteModal] = useState({
@@ -196,8 +196,6 @@ export default function NewsletterAdmin({ subscribers, filters }: NewsletterAdmi
 
   return (
     <>
-      <Head title="Newsletter - Admin" />
-
       <div className="min-h-screen bg-gray-50 p-6">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
@@ -544,7 +542,7 @@ export default function NewsletterAdmin({ subscribers, filters }: NewsletterAdmi
 
 NewsletterAdmin.layout = (page: React.ReactNode) => (
   <AdminLayout
-    title="Newsletter"
+    title="Newsletter Admin"
     description="Gestion de la newsletter et des abonnés"
     currentPath="/admin/newsletter/subscribers"
   >

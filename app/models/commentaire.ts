@@ -1,5 +1,5 @@
 import { DateTime } from 'luxon'
-import { BaseModel, column, belongsTo } from '@adonisjs/lucid/orm'
+import { BaseModel, column, belongsTo, computed } from '@adonisjs/lucid/orm'
 import User from '#models/user'
 import type { BelongsTo } from '@adonisjs/lucid/types/relations'
 
@@ -85,6 +85,7 @@ export default class Commentaire extends BaseModel {
   declare updatedAt: DateTime
 
   // Getter pour obtenir le nom d'affichage
+  @computed()
   get displayName(): string {
     if (this.user) {
       return this.user.username
@@ -93,6 +94,7 @@ export default class Commentaire extends BaseModel {
   }
 
   // Getter pour obtenir l'email d'affichage
+  @computed()
   get displayEmail(): string | null {
     if (this.user) {
       return this.user.email

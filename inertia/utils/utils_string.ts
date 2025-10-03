@@ -35,3 +35,7 @@ export const formatDateTimeLocal = (dateString: string | null) => {
   // remplace l'espace entre date et heure par un "T"
   return dateString.replace(' ', 'T').slice(0, 16)
 }
+
+export const truncateText = (text: string, maxLength: number = 100) => {
+  return text.length > maxLength ? text.substring(0, maxLength) + '...' : text
+}

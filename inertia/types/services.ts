@@ -12,6 +12,7 @@ export interface ServiceType {
 
   // Getters virtuels
   formattedPrice?: string | null
+  publicUrl: string | null
   hasImage?: boolean
 }
 

@@ -103,7 +103,7 @@ export default function BlogIndex({ posts, currentTag }: BlogIndexProps) {
     <>
       <Head title="Blog - Mon Portfolio" />
 
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white">
+      <div className="min-h-screen bg-gradient-to-br pt-7 from-gray-900 via-gray-800 to-gray-900 text-white">
         {/* Background Effects */}
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute -top-40 -right-40 w-80 h-80 bg-pink-500/10 rounded-full blur-3xl animate-pulse"></div>

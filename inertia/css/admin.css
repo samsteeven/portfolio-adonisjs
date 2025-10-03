@@ -98,6 +98,10 @@
   color: #ffffff !important;        /* texte blanc */
 }
 
+.visible-scrollbar::-webkit-scrollbar {
+  display: block;
+}
+
 html, body{
   scroll-behavior: smooth;
 }

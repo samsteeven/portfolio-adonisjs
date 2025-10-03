@@ -69,7 +69,9 @@ router.get('/blog/:slug', '#controllers/blog_controller.show').where('slug', /^[
 
 // Newsletter
 router.post('/newsletter/subscribe', [NewsletterController, 'subscribe']).use(loginLimiter)
-router.get('/newsletter/unsubscribe/:token', [NewsletterController, 'unsubscribe']).use(loginLimiter)
+router
+  .get('/newsletter/unsubscribe/:token', [NewsletterController, 'unsubscribe'])
+  .use(loginLimiter)
 
 router.get('/services', [ServicesController, 'publicIndex'])
 // // Page détail d'un service (par slug)
@@ -154,7 +156,7 @@ router
     router.patch('/reorder/services', [ServicesController, 'reorder'])
 
     // ==== DEMANDES DE CONTACT ====
-    router.resource('contact-requests', ContactRequestsController).except(['update'])
+    router.resource('contact-requests', ContactRequestsController).except(['update', 'store'])
     router.patch('/contact-requests/:id/status', [ContactRequestsController, 'updateStatus'])
     router.post('/contact-requests/:id/reply', [ContactRequestsController, 'reply'])
     // Actions en lot

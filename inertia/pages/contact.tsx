@@ -104,7 +104,7 @@ export default function ContactIndex({ selectedService, services = [], success, 
     <>
       <Head title={contextualService ? `Contact - ${contextualService.title}` : 'Contactez-moi'} />
 
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white">
+      <div className="min-h-screen pt-7 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white">
         {/* Background Effects */}
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute -top-40 -right-40 w-80 h-80 bg-pink-500/10 rounded-full blur-3xl animate-pulse"></div>

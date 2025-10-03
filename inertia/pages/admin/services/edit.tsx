@@ -31,7 +31,7 @@ export default function AdminServiceEdit({ service }: Props) {
   const { data, setData, put, processing, isDirty, errors } = useForm({
     title: service.title,
     description: service.description,
-    image: service.image,
+    image: service.image as File | string | null,
     price: service.price || '',
     isActive: service.isActive,
     displayOrder: service.displayOrder,
@@ -51,6 +51,7 @@ export default function AdminServiceEdit({ service }: Props) {
     maxSize: 2,
     allowedTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/svg+xml', 'image/webp'],
     onError: (error) => toast.error(error),
+    onImageChange: (file) => setData('image', file),
     initialPreview: service.image,
   })
 
@@ -58,12 +59,7 @@ export default function AdminServiceEdit({ service }: Props) {
     e.preventDefault()
 
     put(`/admin/services/${service.id}`, {
-      onSuccess: () => {
-        toast.success('Service mis à jour avec succès')
-      },
-      onError: () => {
-        toast.error('Erreur lors de la mise à jour du service')
-      },
+      preserveScroll: true,
     })
   }
 

@@ -21,7 +21,7 @@ interface Props {
   }
 }
 
-export default function ServicesIndex({ services, stats }: Props) {
+export default function ServicesIndex({ services }: Props) {
   const handleContactClick = (service: ServiceType) => {
     router.visit('/contact', {
       method: 'get',
@@ -45,7 +45,7 @@ export default function ServicesIndex({ services, stats }: Props) {
           <div className="relative max-w-5xl mx-auto">
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-pink-500/20 to-purple-500/20 backdrop-blur-sm text-pink-300 rounded-full text-sm font-medium mb-8 border border-pink-500/20">
               <Sparkles className="h-4 w-4 animate-pulse" />
-              {stats.total} services d'excellence disponibles
+              {services.length} services d'excellence disponibles
             </div>
 
             <h1 className="text-4xl sm:text-5xl md:text-7xl font-black mb-8 tracking-tight">
@@ -118,10 +118,10 @@ export default function ServicesIndex({ services, stats }: Props) {
                       {/* Service Image */}
                       <div className="relative flex-1 max-w-lg mx-auto lg:mx-0">
                         <div className="relative aspect-[4/3] rounded-3xl overflow-hidden border border-gray-700/50 group-hover:border-pink-500/50 transition-all duration-500">
-                          {service.image ? (
+                          {service.publicUrl ? (
                             <>
                               <img
-                                src={service.image}
+                                src={service.publicUrl}
                                 alt={service.title}
                                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                               />

@@ -26,7 +26,7 @@ import {
   Check,
 } from 'lucide-react'
 import { ServiceType } from '~/types/services'
-import { toast } from 'sonner'
+import SafeHTML from '~/components/safeHTML'
 
 interface Props {
   services: {
@@ -179,9 +179,6 @@ export default function AdminServicesIndex({ services, stats }: Props) {
       {},
       {
         preserveScroll: true,
-        onError: () => {
-          toast.error('Erreur lors du changement de statut')
-        },
       }
     )
   }
@@ -191,9 +188,7 @@ export default function AdminServicesIndex({ services, stats }: Props) {
       `/admin/services/${serviceId}/duplicate`,
       {},
       {
-        onError: () => {
-          toast.error('Erreur lors de la duplication')
-        },
+        preserveScroll: true,
       }
     )
   }
@@ -221,8 +216,8 @@ export default function AdminServicesIndex({ services, stats }: Props) {
           isLoading: false,
         })
       },
+      preserveScroll: true,
       onError: () => {
-        toast.error('Erreur lors de la suppression')
         setDeleteModal((prev) => ({ ...prev, isLoading: false }))
       },
     })
@@ -258,12 +253,8 @@ export default function AdminServicesIndex({ services, stats }: Props) {
       { services: servicesToSave },
       {
         onSuccess: () => {
-          toast.success('Ordre des services mis à jour avec succès')
           setIsReordering(false)
           setReorderedServices([])
-        },
-        onError: () => {
-          toast.error('Erreur lors de la réorganisation des services')
         },
       }
     )
@@ -300,31 +291,33 @@ export default function AdminServicesIndex({ services, stats }: Props) {
   )
 
   const ServiceCard = ({ service, index }: { service: ServiceType; index: number }) => (
-    <div className="group relative bg-white rounded-2xl border border-gray-100 hover:border-blue-200 transition-all duration-300 hover:shadow-xl hover:shadow-blue-100/50 overflow-hidden">
+    <div className="group relative bg-white rounded-xl border border-gray-200 hover:border-blue-300 transition-all duration-200 hover:shadow-lg overflow-hidden">
       {/* Image Header */}
-      <div className="relative h-48 overflow-hidden">
-        {service.image ? (
+      <div className="relative h-48 overflow-hidden bg-gray-100">
+        {service.publicUrl ? (
           <img
-            src={service.image}
+            src={service.publicUrl}
             alt={service.title}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           />
         ) : (
-          <div className="w-full h-full bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-700 flex items-center justify-center">
-            <ImageIcon className="h-12 w-12 text-white/30" />
+          <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+            <ImageIcon className="h-16 w-16 text-gray-400" />
           </div>
         )}
 
         {/* Status Badge */}
         <div className="absolute top-3 left-3">
           <span
-            className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold backdrop-blur-sm ${
-              service.isActive ? 'bg-emerald-500/90 text-white' : 'bg-red-500/90 text-white'
+            className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${
+              service.isActive
+                ? 'bg-green-100 text-green-800 border border-green-200'
+                : 'bg-gray-100 text-gray-800 border border-gray-200'
             }`}
           >
             <div
               className={`w-1.5 h-1.5 rounded-full mr-1.5 ${
-                service.isActive ? 'bg-white' : 'bg-white'
+                service.isActive ? 'bg-green-600' : 'bg-gray-600'
               }`}
             />
             {service.isActive ? 'Actif' : 'Inactif'}
@@ -332,36 +325,34 @@ export default function AdminServicesIndex({ services, stats }: Props) {
         </div>
 
         {/* Quick Actions */}
-        <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-all duration-300 flex gap-1">
+        <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex gap-1">
           {!isReordering && (
-            <>
-              <button
-                onClick={() => handleToggleStatus(service.id)}
-                className="p-2 bg-white/90 backdrop-blur-sm hover:bg-white rounded-xl shadow-lg transition-all duration-200 hover:scale-105"
-                title={service.isActive ? 'Désactiver' : 'Activer'}
-              >
-                {service.isActive ? (
-                  <EyeOff className="h-4 w-4 text-gray-700" />
-                ) : (
-                  <Eye className="h-4 w-4 text-gray-700" />
-                )}
-              </button>
-            </>
+            <button
+              onClick={() => handleToggleStatus(service.id)}
+              className="p-2 bg-white hover:bg-gray-50 rounded-lg shadow-md transition-colors"
+              title={service.isActive ? 'Désactiver' : 'Activer'}
+            >
+              {service.isActive ? (
+                <EyeOff className="h-4 w-4 text-gray-700" />
+              ) : (
+                <Eye className="h-4 w-4 text-gray-700" />
+              )}
+            </button>
           )}
         </div>
 
         {/* Order Badge */}
         <div className="absolute bottom-3 right-3">
-          <span className="inline-flex items-center px-2 py-1 rounded-lg text-xs font-mono bg-black/20 text-white backdrop-blur-sm">
+          <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-mono bg-white/90 text-gray-700 border border-gray-200">
             #{service.displayOrder}
           </span>
         </div>
 
         {/* Reorder Handle */}
         {isReordering && (
-          <div className="absolute top-3 left-3 cursor-move">
-            <div className="p-2 bg-black/20 backdrop-blur-sm rounded-xl">
-              <GripVertical className="h-4 w-4 text-white" />
+          <div className="absolute top-3 left-3">
+            <div className="p-2 bg-white rounded-lg shadow-md cursor-move">
+              <GripVertical className="h-4 w-4 text-gray-600" />
             </div>
           </div>
         )}
@@ -370,20 +361,18 @@ export default function AdminServicesIndex({ services, stats }: Props) {
       {/* Content */}
       <div className="p-5">
         <div className="flex items-start justify-between mb-3">
-          <h3 className="text-lg font-bold text-gray-900 line-clamp-1 group-hover:text-blue-600 transition-colors">
+          <h3 className="text-lg font-semibold text-gray-900 line-clamp-1 group-hover:text-blue-600 transition-colors">
             {service.title}
           </h3>
           {service.price && service.price > 0 && (
-            <span className="inline-flex items-center px-2 py-1 rounded-full text-sm font-semibold bg-blue-50 text-blue-700 ml-2 flex-shrink-0">
-              <DollarSign className="h-3 w-3 mr-1" />
+            <span className="inline-flex items-center px-2.5 py-1 rounded-full text-sm font-semibold bg-blue-50 text-blue-700 border border-blue-200 ml-2 flex-shrink-0">
+              <DollarSign className="h-3.5 w-3.5 mr-0.5" />
               {service.formattedPrice}
             </span>
           )}
         </div>
 
-        <p className="text-gray-600 text-sm line-clamp-2 mb-5 leading-relaxed">
-          {service.description}
-        </p>
+        <SafeHTML className="text-gray-600 text-sm line-clamp-2 mb-4" html={service.description} />
 
         {/* Actions */}
         <div className="flex items-center gap-2">
@@ -394,7 +383,7 @@ export default function AdminServicesIndex({ services, stats }: Props) {
                 size="sm"
                 onClick={() => moveService(index, 'up')}
                 disabled={index === 0}
-                className="flex-1 border-gray-200"
+                className="flex-1 border-gray-300"
               >
                 ↑
               </Button>
@@ -403,7 +392,7 @@ export default function AdminServicesIndex({ services, stats }: Props) {
                 size="sm"
                 onClick={() => moveService(index, 'down')}
                 disabled={index === reorderedServices.length - 1}
-                className="flex-1 border-gray-200"
+                className="flex-1 border-gray-300"
               >
                 ↓
               </Button>
@@ -414,18 +403,15 @@ export default function AdminServicesIndex({ services, stats }: Props) {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="w-full border-gray-200 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 transition-all duration-200"
+                  className="w-full border-gray-300 hover:border-blue-400 hover:bg-blue-50 hover:text-blue-700"
                 >
                   <Eye className="h-4 w-4 mr-2" />
-                  Détails
+                  Voir
                 </Button>
               </Link>
 
               <Link href={`/admin/services/${service.id}/edit`}>
-                <Button
-                  size="sm"
-                  className="bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg transition-all duration-200"
-                >
+                <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
                   <Edit className="h-4 w-4" />
                 </Button>
               </Link>
@@ -434,7 +420,7 @@ export default function AdminServicesIndex({ services, stats }: Props) {
                 variant="outline"
                 size="sm"
                 onClick={() => handleDuplicate(service.id)}
-                className="border-gray-200 hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700 transition-all duration-200"
+                className="border-gray-300 hover:border-green-400 hover:bg-green-50 hover:text-green-700"
                 title="Dupliquer"
               >
                 <Copy className="h-4 w-4" />
@@ -444,7 +430,7 @@ export default function AdminServicesIndex({ services, stats }: Props) {
                 variant="outline"
                 size="sm"
                 onClick={() => handleDeleteClick(service.id, service.title)}
-                className="border-gray-200 hover:border-red-300 hover:bg-red-50 hover:text-red-700 transition-all duration-200"
+                className="border-gray-300 hover:border-red-400 hover:bg-red-50 hover:text-red-700"
               >
                 <Trash2 className="h-4 w-4" />
               </Button>
@@ -456,26 +442,26 @@ export default function AdminServicesIndex({ services, stats }: Props) {
   )
 
   const ServiceRow = ({ service, index }: { service: ServiceType; index: number }) => (
-    <div className="group bg-white rounded-xl border border-gray-100 hover:border-blue-200 transition-all duration-300 hover:shadow-lg p-4 sm:p-6">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6">
+    <div className="group bg-white rounded-xl border border-gray-200 hover:border-blue-300 transition-all duration-200 hover:shadow-md p-4 sm:p-5">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
         {/* Reorder Handle */}
         {isReordering && (
-          <div className="cursor-move p-2 text-gray-400 hover:text-gray-600">
+          <div className="cursor-move p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-lg">
             <GripVertical className="h-5 w-5" />
           </div>
         )}
 
         {/* Image */}
-        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden flex-shrink-0 shadow-md">
-          {service.image ? (
+        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden flex-shrink-0 border border-gray-200">
+          {service.publicUrl ? (
             <img
-              src={service.image}
+              src={service.publicUrl}
               alt={service.title}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             />
           ) : (
-            <div className="w-full h-full bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center">
-              <ImageIcon className="h-6 w-6 sm:h-8 sm:w-8 text-white/50" />
+            <div className="w-full h-full bg-gray-100 flex items-center justify-center">
+              <ImageIcon className="h-6 w-6 sm:h-8 sm:w-8 text-gray-400" />
             </div>
           )}
         </div>
@@ -483,38 +469,43 @@ export default function AdminServicesIndex({ services, stats }: Props) {
         {/* Content */}
         <div className="flex-1 min-w-0">
           <div className="flex flex-wrap items-center gap-2 mb-2">
-            <h3 className="text-lg font-bold text-gray-900 truncate group-hover:text-blue-600 transition-colors">
+            <h3 className="text-lg font-semibold text-gray-900 truncate group-hover:text-blue-600 transition-colors">
               {service.title}
             </h3>
 
             <div className="flex flex-wrap items-center gap-2">
               <span
                 className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ${
-                  service.isActive ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
+                  service.isActive
+                    ? 'bg-green-100 text-green-800 border border-green-200'
+                    : 'bg-gray-100 text-gray-800 border border-gray-200'
                 }`}
               >
                 <div
                   className={`w-1.5 h-1.5 rounded-full mr-1.5 ${
-                    service.isActive ? 'bg-emerald-500' : 'bg-red-500'
+                    service.isActive ? 'bg-green-600' : 'bg-gray-600'
                   }`}
                 />
                 {service.isActive ? 'Actif' : 'Inactif'}
               </span>
 
               {service.price && service.price > 0 && (
-                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">
+                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800 border border-blue-200">
                   <DollarSign className="h-3 w-3 mr-1" />
                   {service.formattedPrice}
                 </span>
               )}
 
-              <span className="text-xs text-gray-400 font-mono bg-gray-100 px-2 py-1 rounded">
+              <span className="text-xs text-gray-500 font-mono bg-gray-100 px-2 py-1 rounded border border-gray-200">
                 #{service.displayOrder}
               </span>
             </div>
           </div>
 
-          <p className="text-gray-600 text-sm line-clamp-1 mb-0">{service.description}</p>
+          <SafeHTML
+            className="text-gray-600 text-sm line-clamp-1 mb-0"
+            html={service.description}
+          />
         </div>
 
         {/* Actions */}
@@ -526,7 +517,7 @@ export default function AdminServicesIndex({ services, stats }: Props) {
                 size="sm"
                 onClick={() => moveService(index, 'up')}
                 disabled={index === 0}
-                className="p-2"
+                className="p-2 border-gray-300"
               >
                 ↑
               </Button>
@@ -535,7 +526,7 @@ export default function AdminServicesIndex({ services, stats }: Props) {
                 size="sm"
                 onClick={() => moveService(index, 'down')}
                 disabled={index === reorderedServices.length - 1}
-                className="p-2"
+                className="p-2 border-gray-300"
               >
                 ↓
               </Button>
@@ -555,7 +546,7 @@ export default function AdminServicesIndex({ services, stats }: Props) {
               </button>
 
               <Link href={`/admin/services/${service.id}`}>
-                <Button variant="outline" size="sm" className="border-gray-200">
+                <Button variant="outline" size="sm" className="border-gray-300">
                   <Eye className="h-4 w-4" />
                 </Button>
               </Link>
@@ -570,7 +561,7 @@ export default function AdminServicesIndex({ services, stats }: Props) {
                 variant="outline"
                 size="sm"
                 onClick={() => handleDuplicate(service.id)}
-                className="border-gray-200"
+                className="border-gray-300 hover:bg-green-50 hover:border-green-400 hover:text-green-700"
                 title="Dupliquer"
               >
                 <Copy className="h-4 w-4" />
@@ -580,7 +571,7 @@ export default function AdminServicesIndex({ services, stats }: Props) {
                 variant="outline"
                 size="sm"
                 onClick={() => handleDeleteClick(service.id, service.title)}
-                className="border-gray-200 text-red-600 hover:bg-red-50 hover:border-red-300"
+                className="border-gray-300 text-red-600 hover:bg-red-50 hover:border-red-400"
               >
                 <Trash2 className="h-4 w-4" />
               </Button>
@@ -595,7 +586,7 @@ export default function AdminServicesIndex({ services, stats }: Props) {
     <>
       <Head title="Gestion des Services" />
 
-      <div className="min-h-screen bg-gray-50/30 p-3 sm:p-6">
+      <div className="min-h-screen bg-gray-50 p-3 sm:p-6">
         <div className="max-w-7xl mx-auto space-y-6">
           {/* Header */}
           <div className="flex flex-col gap-4">
@@ -604,7 +595,7 @@ export default function AdminServicesIndex({ services, stats }: Props) {
                 Gestion des Services
               </h1>
               <p className="text-gray-600 text-sm sm:text-base">
-                Créez et gérez vos services avec une interface moderne et intuitive
+                Gérez vos services de manière simple et efficace
               </p>
             </div>
 
@@ -623,7 +614,7 @@ export default function AdminServicesIndex({ services, stats }: Props) {
                     className="bg-green-600 hover:bg-green-700 text-white"
                   >
                     <Check className="h-4 w-4 mr-2" />
-                    Enregistrer l'ordre
+                    Enregistrer
                   </Button>
                 </div>
               ) : (
@@ -646,7 +637,7 @@ export default function AdminServicesIndex({ services, stats }: Props) {
                     </Button>
                   </Link>
                   <Link href={'/admin/services/create'} className="w-full sm:w-auto">
-                    <Button className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-300">
+                    <Button className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white">
                       <Plus className="h-4 w-4 mr-2" />
                       Créer un service
                     </Button>
@@ -656,61 +647,51 @@ export default function AdminServicesIndex({ services, stats }: Props) {
             </div>
           </div>
 
-          {/* Statistiques compactes */}
-          <Card className="p-4 sm:p-6 border-0 shadow-lg bg-gradient-to-r from-blue-50 to-indigo-50">
-            <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
+          {/* Statistiques */}
+          <Card className="p-6 border-gray-200 shadow-sm bg-white">
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-6">
               <div className="text-center">
-                <div className="text-2xl sm:text-3xl font-bold text-blue-900 mb-1">
-                  {stats.total}
-                </div>
-                <div className="text-xs sm:text-sm text-blue-600 font-medium">Total</div>
+                <div className="text-3xl font-bold text-gray-900 mb-1">{stats.total}</div>
+                <div className="text-sm text-gray-600 font-medium">Total</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl sm:text-3xl font-bold text-emerald-900 mb-1">
-                  {stats.active}
-                </div>
-                <div className="text-xs sm:text-sm text-emerald-600 font-medium">Actifs</div>
+                <div className="text-3xl font-bold text-green-600 mb-1">{stats.active}</div>
+                <div className="text-sm text-gray-600 font-medium">Actifs</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl sm:text-3xl font-bold text-red-900 mb-1">
-                  {stats.inactive}
-                </div>
-                <div className="text-xs sm:text-sm text-red-600 font-medium">Inactifs</div>
+                <div className="text-3xl font-bold text-gray-600 mb-1">{stats.inactive}</div>
+                <div className="text-sm text-gray-600 font-medium">Inactifs</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl sm:text-3xl font-bold text-yellow-900 mb-1">
-                  {stats.withPrice}
-                </div>
-                <div className="text-xs sm:text-sm text-yellow-600 font-medium">Avec prix</div>
+                <div className="text-3xl font-bold text-blue-600 mb-1">{stats.withPrice}</div>
+                <div className="text-sm text-gray-600 font-medium">Avec prix</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl sm:text-3xl font-bold text-purple-900 mb-1">
-                  {stats.withoutPrice}
-                </div>
-                <div className="text-xs sm:text-sm text-purple-600 font-medium">Sur devis</div>
+                <div className="text-3xl font-bold text-orange-600 mb-1">{stats.withoutPrice}</div>
+                <div className="text-sm text-gray-600 font-medium">Sur devis</div>
               </div>
             </div>
           </Card>
 
           {/* Filtres et recherche */}
-          <Card className="p-4 sm:p-6 border-0 shadow-lg bg-white">
+          <Card className="p-5 border-gray-200 shadow-sm bg-white">
             <div className="space-y-4">
               {/* Ligne de recherche */}
               <div className="relative">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                 <Input
                   type="text"
-                  placeholder="Rechercher un service par nom, description..."
+                  placeholder="Rechercher un service..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-12 h-12 border-gray-200 focus:border-blue-400 focus:ring-blue-400 rounded-xl"
+                  className="pl-12 h-11 border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg"
                 />
                 {searchTerm && (
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => setSearchTerm('')}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 p-0"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 p-0 hover:bg-gray-100"
                   >
                     <X className="h-4 w-4" />
                   </Button>
@@ -718,11 +699,11 @@ export default function AdminServicesIndex({ services, stats }: Props) {
               </div>
 
               {/* Filtres */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  className="h-10 px-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent bg-white text-sm"
+                  className="h-10 px-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-sm"
                 >
                   <option value="">Tous les statuts</option>
                   <option value="true">Actifs uniquement</option>
@@ -732,17 +713,17 @@ export default function AdminServicesIndex({ services, stats }: Props) {
                 <select
                   value={priceFilter}
                   onChange={(e) => setPriceFilter(e.target.value)}
-                  className="h-10 px-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent bg-white text-sm"
+                  className="h-10 px-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-sm"
                 >
                   <option value="">Tous les prix</option>
                   <option value="with">Avec prix</option>
                   <option value="without">Sur devis</option>
                 </select>
 
-                <div className="flex items-center gap-2 bg-gray-50 rounded-lg p-1">
+                <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
                   <button
                     onClick={() => setViewMode('grid')}
-                    className={`flex-1 p-2 rounded text-sm font-medium transition-all duration-200 ${
+                    className={`flex-1 p-2 rounded-md text-sm font-medium transition-all ${
                       viewMode === 'grid'
                         ? 'bg-white text-blue-600 shadow-sm'
                         : 'text-gray-600 hover:text-gray-900'
@@ -753,7 +734,7 @@ export default function AdminServicesIndex({ services, stats }: Props) {
                   </button>
                   <button
                     onClick={() => setViewMode('list')}
-                    className={`flex-1 p-2 rounded text-sm font-medium transition-all duration-200 ${
+                    className={`flex-1 p-2 rounded-md text-sm font-medium transition-all ${
                       viewMode === 'list'
                         ? 'bg-white text-blue-600 shadow-sm'
                         : 'text-gray-600 hover:text-gray-900'
@@ -767,7 +748,7 @@ export default function AdminServicesIndex({ services, stats }: Props) {
                 <Button
                   variant="outline"
                   onClick={handleReset}
-                  className="h-10 border-gray-200 hover:border-gray-300"
+                  className="h-10 border-gray-300 hover:border-gray-400"
                 >
                   <Filter className="h-4 w-4 mr-2" />
                   Réinitialiser
@@ -777,11 +758,11 @@ export default function AdminServicesIndex({ services, stats }: Props) {
           </Card>
 
           {/* Services List/Grid */}
-          <div className="space-y-6">
-            {/* Sort Controls - Only show when not reordering */}
+          <div className="space-y-5">
+            {/* Sort Controls */}
             {!isReordering && (
               <div className="flex flex-wrap items-center gap-2">
-                <span className="text-sm text-gray-600">Trier par :</span>
+                <span className="text-sm text-gray-600 font-medium">Trier par :</span>
                 <SortButton field="displayOrder">Ordre d'affichage</SortButton>
                 <SortButton field="title">Titre</SortButton>
                 <SortButton field="price">Prix</SortButton>
@@ -794,7 +775,7 @@ export default function AdminServicesIndex({ services, stats }: Props) {
               <div
                 className={
                   viewMode === 'grid'
-                    ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'
+                    ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5'
                     : 'space-y-4'
                 }
               >
@@ -823,20 +804,20 @@ export default function AdminServicesIndex({ services, stats }: Props) {
                 )}
               </div>
             ) : (
-              <Card className="p-12 text-center border-0 shadow-lg">
+              <Card className="p-12 text-center border-gray-200 shadow-sm">
                 <div className="max-w-md mx-auto">
                   <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                     <ImageIcon className="h-8 w-8 text-gray-400" />
                   </div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun service trouvé</h3>
-                  <p className="text-gray-500 mb-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Aucun service trouvé</h3>
+                  <p className="text-gray-600 mb-6">
                     {searchTerm || statusFilter || priceFilter
                       ? 'Aucun service ne correspond à vos critères de recherche.'
                       : 'Commencez par créer votre premier service.'}
                   </p>
                   {!searchTerm && !statusFilter && !priceFilter && (
                     <Link href={'/admin/services/create'}>
-                      <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white">
+                      <Button className="bg-blue-600 hover:bg-blue-700 text-white">
                         <Plus className="h-4 w-4 mr-2" />
                         Créer un service
                       </Button>
@@ -848,15 +829,21 @@ export default function AdminServicesIndex({ services, stats }: Props) {
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <Card className="p-4 border-0 shadow-lg bg-white">
+              <Card className="p-4 border-gray-200 shadow-sm bg-white">
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                   <div className="text-sm text-gray-600">
                     Affichage de{' '}
-                    <span className="font-medium">{(currentPage - 1) * itemsPerPage + 1}</span> à{' '}
-                    <span className="font-medium">
+                    <span className="font-semibold text-gray-900">
+                      {(currentPage - 1) * itemsPerPage + 1}
+                    </span>{' '}
+                    à{' '}
+                    <span className="font-semibold text-gray-900">
                       {Math.min(currentPage * itemsPerPage, filteredAndSortedServices.length)}
                     </span>{' '}
-                    sur <span className="font-medium">{filteredAndSortedServices.length}</span>{' '}
+                    sur{' '}
+                    <span className="font-semibold text-gray-900">
+                      {filteredAndSortedServices.length}
+                    </span>{' '}
                     services
                   </div>
 
@@ -865,7 +852,7 @@ export default function AdminServicesIndex({ services, stats }: Props) {
                       variant="outline"
                       onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                       disabled={currentPage === 1}
-                      className="border-gray-200"
+                      className="border-gray-300"
                     >
                       Précédent
                     </Button>
@@ -889,7 +876,7 @@ export default function AdminServicesIndex({ services, stats }: Props) {
                             className={
                               currentPage === pageNum
                                 ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                                : 'border-gray-200'
+                                : 'border-gray-300'
                             }
                           >
                             {pageNum}
@@ -902,7 +889,7 @@ export default function AdminServicesIndex({ services, stats }: Props) {
                       variant="outline"
                       onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
                       disabled={currentPage === totalPages}
-                      className="border-gray-200"
+                      className="border-gray-300"
                     >
                       Suivant
                     </Button>

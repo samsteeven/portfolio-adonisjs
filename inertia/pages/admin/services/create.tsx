@@ -50,20 +50,14 @@ export default function AdminServiceCreate({ maxDisplayOrder }: Props) {
   } = useImageUpload({
     maxSize: 2,
     allowedTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/svg+xml', 'image/webp'],
+    onImageChange: (file) => setData('image', file),
     onError: (error) => toast.error(error),
   })
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
-    post('/admin/services', {
-      onSuccess: () => {
-        toast.success('Service créé avec succès')
-      },
-      onError: () => {
-        toast.error('Erreur lors de la création du service')
-      },
-    })
+    post('/admin/services')
   }
 
   const removeImage = () => {

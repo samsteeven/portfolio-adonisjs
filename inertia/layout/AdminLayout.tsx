@@ -37,20 +37,6 @@ interface AdminLayoutProps {
   currentPath?: string
 }
 
-const adminMenuItems = [
-  { name: 'Dashboard', icon: Home, href: '/admin/dashboard', badge: null },
-  { name: 'Users', icon: Users, href: '/admin/users' },
-  { name: 'Projets', icon: Briefcase, href: '/admin/projects', badge: null },
-  { name: 'Skills', icon: Award, href: '/admin/skills', badge: null },
-  { name: 'Technologies', icon: Cpu, href: '/admin/technologies', badge: null },
-  { name: 'Services', icon: Briefcase, href: '/admin/services', badge: null },
-  { name: 'Contact', icon: Mail, href: '/admin/contact-requests', badge: null },
-  { name: 'Comments', icon: MessageSquare, href: '/admin/comments', badge: '3' },
-  { name: 'Blog', icon: FileText, href: '/admin/blog', badge: '3' },
-  { name: 'Subscribers', icon: UserStar, href: '/admin/newsletter/subscribers', badge: null },
-  { name: 'FAQs', icon: HelpCircle, href: '/admin/faqs', badge: null },
-]
-
 export default function AdminLayout({
   children,
   title = 'Admin',
@@ -69,6 +55,25 @@ export default function AdminLayout({
   const [mobileBaselineY, setMobileBaselineY] = useState<number | null>(null)
   const [isScrollCloseArmed, setIsScrollCloseArmed] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+
+  const adminMenuItems = [
+    { name: 'Dashboard', icon: Home, href: '/admin/dashboard', badge: null },
+    { name: 'Users', icon: Users, href: '/admin/users', badge: auth?.usersCount },
+    { name: 'Projets', icon: Briefcase, href: '/admin/projects', badge: null },
+    { name: 'Skills', icon: Award, href: '/admin/skills', badge: null },
+    { name: 'Technologies', icon: Cpu, href: '/admin/technologies', badge: null },
+    { name: 'Services', icon: Briefcase, href: '/admin/services', badge: null },
+    { name: 'Contact', icon: Mail, href: '/admin/contact-requests', badge: null },
+    { name: 'Comments', icon: MessageSquare, href: '/admin/comments', badge: auth?.commentsCount },
+    { name: 'Blog', icon: FileText, href: '/admin/blog', badge: null },
+    {
+      name: 'Subscribers',
+      icon: UserStar,
+      href: '/admin/newsletter/subscribers',
+      badge: auth?.subscribersCount,
+    },
+    { name: 'FAQs', icon: HelpCircle, href: '/admin/faqs', badge: null },
+  ]
 
   //toasts
   useEffect(() => {
@@ -150,7 +155,7 @@ export default function AdminLayout({
     <>
       <HeadLayout title={`${title} - Admin Portfolio`} description={description} />
       <Sonner className="text-black bg-gray-200" position="top-center" />
-      <div className="min-h-screen transition-colors duration-300 bg-gradient-to-br from-gray-50 to-gray-100">
+      <div className="min-h-screen visible-scrollbar transition-colors duration-300 bg-gradient-to-br from-gray-50 to-gray-100">
         {/* Header - Layout optimisé */}
         <header
           className={cn(
@@ -398,20 +403,10 @@ export default function AdminLayout({
                       <span
                         className={cn(
                           'ml-1 px-2 py-0.5 rounded-full text-xs font-semibold',
-                          isActive ? 'bg-white/20 text-white' : 'bg-red-100 text-red-700'
-                        )}
-                      >
-                        {item.badge}
-                      </span>
-                    )}
-                    {(item.name === 'Users' || item.name === 'Projets') && (
-                      <span
-                        className={cn(
-                          'ml-1 px-2 py-0.5 rounded-full text-xs font-semibold',
                           isActive ? 'bg-white/20 text-white' : 'bg-blue-100 text-blue-700'
                         )}
                       >
-                        {item.name === 'Users' ? auth!.usersCount : auth!.projectsCount}
+                        {item.badge}
                       </span>
                     )}
                   </Link>
@@ -475,20 +470,10 @@ export default function AdminLayout({
                             <span
                               className={cn(
                                 'px-2 py-1 rounded-full text-xs font-semibold',
-                                isActive ? 'bg-white/20 text-white' : 'bg-red-100 text-red-700'
-                              )}
-                            >
-                              {item.badge}
-                            </span>
-                          )}
-                          {(item.name === 'Users' || item.name === 'Projets') && (
-                            <span
-                              className={cn(
-                                'px-2 py-1 rounded-full text-xs font-semibold',
                                 isActive ? 'bg-white/20 text-white' : 'bg-blue-100 text-blue-700'
                               )}
                             >
-                              {item.name === 'Users' ? auth!.usersCount : auth!.projectsCount}
+                              {item.badge}
                             </span>
                           )}
                         </Link>

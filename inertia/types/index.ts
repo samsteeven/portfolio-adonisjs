@@ -32,7 +32,8 @@ export interface InertiaProps {
   auth?: {
     user: AuthenticatedUser
     usersCount: number
-    projectsCount: number | null
+    commentsCount: number | null
+    subscribersCount: number | null
   }
 
   [key: string]: any

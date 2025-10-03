@@ -8,6 +8,10 @@ export default class CommentairePolicy extends BasePolicy {
     return user.role === UserRole.ADMIN
   }
 
+  show(user: User) {
+    return user.role === UserRole.ADMIN
+  }
+
   delete(user: User, commentaire: Commentaire) {
     return user.id === commentaire.userId || user.role === UserRole.ADMIN
   }

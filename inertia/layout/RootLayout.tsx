@@ -30,13 +30,13 @@ export default function RootLayout({ children }: RootLayoutProps) {
   }, [props.error, props.success])
 
   return (
-    <div className="main-layout">
+    <div className="main-layout invisible-scrollbar">
       <ReactLenis root options={{ lerp: 0.1, duration: 1.4 }}>
         <Sonner className="text-black" position="top-center" />
         <AuthSync />
         <Navbar />
         <PageTransition>
-          <main>{children}</main>
+          <main className="main-layout">{children}</main>
         </PageTransition>
         <Footer />
         <BottomNavbar />

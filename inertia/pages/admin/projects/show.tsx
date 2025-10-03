@@ -493,9 +493,8 @@ export default function ShowProject({ project }: ProjectShowProps) {
                     <User className="h-5 w-5 text-blue-600" />
                     <h2 className="text-xl font-semibold text-gray-900">Mon rôle dans ce projet</h2>
                   </div>
-                  <div className="prose prose-sm max-w-none text-gray-700 max-h-32 overflow-hidden relative">
-                    <SafeHTML html={project.role} />
-                    <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-white to-transparent pointer-events-none"></div>
+                  <div className="prose prose-sm max-w-none text-gray-700">
+                    <SafeHTML html={project.role} className="line-clamp-4" />
                   </div>
                 </div>
               )}
@@ -504,9 +503,8 @@ export default function ShowProject({ project }: ProjectShowProps) {
               <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6">
                 <h2 className="text-xl font-semibold text-gray-900 mb-4">Description du projet</h2>
                 {project.description ? (
-                  <div className="prose prose-sm max-w-none text-gray-700 max-h-40 overflow-hidden relative">
-                    <SafeHTML html={project.description} />
-                    <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-white to-transparent pointer-events-none"></div>
+                  <div className="prose prose-sm max-w-none text-gray-700">
+                    <SafeHTML html={project.description} className="line-clamp-12" />
                   </div>
                 ) : (
                   <p className="text-gray-500 italic py-4">Aucune description fournie.</p>

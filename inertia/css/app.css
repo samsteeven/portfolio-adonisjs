@@ -38,7 +38,6 @@
   color: var(--color-foreground);
   font-family: var(--font-sans), serif;
   min-height: 100%;
-  scroll-behavior: smooth;
 }
 
 .main-layout .container {
@@ -73,9 +72,10 @@
   color: var(--color-foreground);
 }
 
-.main-layout ::-webkit-scrollbar {
+.invisible-scrollbar::-webkit-scrollbar {
   display: none;
 }
+
 
 @layer components {
   .main-layout .grid {

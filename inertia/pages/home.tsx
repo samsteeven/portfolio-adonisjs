@@ -37,7 +37,7 @@ export default function Home({ recentPosts = [] }: HomeProps) {
   return (
     <>
       <HeadLayout title="Samen-Portfolio" description="Portfolio du developpeur fullstack Samen" />
-      <div className="page-">
+      <div className="main-layout page-">
         <Banner />
         <AboutMe />
         <Skills />

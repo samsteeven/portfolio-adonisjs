@@ -1,5 +1,5 @@
 import { DateTime } from 'luxon'
-import { BaseModel, column, beforeCreate, hasMany, scope } from '@adonisjs/lucid/orm'
+import { BaseModel, column, beforeCreate, hasMany, scope, computed } from '@adonisjs/lucid/orm'
 import ContactRequest from '#models/contact_request'
 import type { HasMany } from '@adonisjs/lucid/types/relations'
 
@@ -52,6 +52,12 @@ export default class Service extends BaseModel {
 
       service.displayOrder = lastService ? lastService.displayOrder + 1 : 1
     }
+  }
+
+  @computed()
+  get publicUrl() {
+    if (!this.image) return null
+    return `/admin/uploads/${this.image}`
   }
 
   // Scopes

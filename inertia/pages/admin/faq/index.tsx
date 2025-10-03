@@ -1,21 +1,15 @@
 import React, { useState } from 'react'
-import { Head, useForm, router, Link } from '@inertiajs/react'
+import { useForm, router } from '@inertiajs/react'
 import AdminLayout from '~/layout/AdminLayout'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card } from '@/components/ui/card'
 import DeleteConfirmationModal from '~/components/DeleteConfirmationModal'
-import {
-  Plus,
-  HelpCircle,
-  Edit,
-  Trash2,
-  MessageSquare,
-  Search,
-  ChevronRight,
-  ExternalLink,
-} from 'lucide-react'
+import SafeHTML from '~/components/safeHTML'
+import { Plus, HelpCircle, Edit, Trash2, MessageSquare, Search, ExternalLink } from 'lucide-react'
+import { truncateText } from '~/utils/utils_string'
+import TinyMCEEditor from '~/components/TinyMCEEditor'
 
 interface Faq {
   id: number
@@ -117,25 +111,10 @@ export default function FaqAdmin({ faqs }: FaqAdminProps) {
     setEditingFaq(null)
   }
 
-  const truncateText = (text: string, maxLength: number = 100) => {
-    return text.length > maxLength ? text.substring(0, maxLength) + '...' : text
-  }
-
   return (
     <>
-      <Head title="Gestion FAQ - Admin" />
-
       <div className="min-h-screen bg-gray-50 p-6">
         <div className="max-w-6xl mx-auto">
-          {/* Breadcrumb */}
-          <nav className="flex items-center gap-2 text-sm text-gray-500 mb-4">
-            <Link href={'/admin'} className="hover:text-gray-700">
-              Dashboard
-            </Link>
-            <ChevronRight className="w-4 h-4" />
-            <span className="text-gray-900 font-medium">FAQ</span>
-          </nav>
-
           {/* Header */}
           <div className="mb-8">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -239,19 +218,15 @@ export default function FaqAdmin({ faqs }: FaqAdminProps) {
                   <Label htmlFor="answer" className="text-sm font-medium">
                     Réponse *
                   </Label>
-                  <textarea
-                    id="answer"
-                    value={data.answer}
-                    onChange={(e) => setData('answer', e.target.value)}
-                    placeholder="Vous pouvez me contacter via le formulaire de contact ou par email à..."
-                    rows={6}
-                    className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                    required
-                  />
+                  <div className="mt-1">
+                    <TinyMCEEditor
+                      value={data.answer}
+                      onEditorChange={(content) => setData('answer', content)}
+                      placeholder="Vous pouvez me contacter via le formulaire de contact ou par email à..."
+                      height={200}
+                    />
+                  </div>
                   {errors.answer && <p className="text-sm text-red-600 mt-1">{errors.answer}</p>}
-                  <p className="text-sm text-gray-500 mt-1">
-                    {data.answer.split(' ').filter((word) => word.length > 0).length} mots
-                  </p>
                 </div>
 
                 <div className="flex justify-end gap-3">
@@ -285,10 +260,12 @@ export default function FaqAdmin({ faqs }: FaqAdminProps) {
                         </div>
                       </div>
 
-                      <h3 className="text-lg font-semibold text-gray-900 mb-2">{faq.question}</h3>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                        <SafeHTML html={faq.question} />
+                      </h3>
 
                       <div className="text-gray-600 mb-4">
-                        <p className="line-clamp-3">{truncateText(faq.answer, 200)}</p>
+                        <SafeHTML html={faq.answer} className="line-clamp-3" />
                       </div>
                     </div>
 

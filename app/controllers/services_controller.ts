@@ -22,15 +22,8 @@ export default class ServicesController {
       .apply((scopes) => scopes.ordered())
       .exec()
 
-    const stats = {
-      total: services.length,
-      withPrice: services.filter((s) => s.price !== null).length,
-      withoutPrice: services.filter((s) => s.price === null).length,
-    }
-
     return inertia.render('services', {
       services: services.map((service) => service.serialize()),
-      stats,
     })
   }
 
@@ -95,8 +88,8 @@ export default class ServicesController {
     if (!authorize) {
       return this.ServiceAuthorizationService.handleUnauthorized(response, session)
     }
+    const data = await request.validateUsing(createServiceValidator)
     try {
-      const data = await request.validateUsing(createServiceValidator)
       let imagepath: string | undefined
       if (data.image) {
         imagepath = await FileServiceUpload.uploadTechnologyImage(data.image, 'services')
@@ -145,10 +138,9 @@ export default class ServicesController {
     if (!authorize) {
       return this.ServiceAuthorizationService.handleUnauthorized(response, session)
     }
+    const data = await request.validateUsing(updateServiceValidator)
+    const service = await Service.findOrFail(params.id)
     try {
-      const service = await Service.findOrFail(params.id)
-      const data = await request.validateUsing(updateServiceValidator)
-
       let imagePath: string | undefined
       if (data.image) {
         imagePath = await FileServiceUpload.replaceTechnologyImage(
@@ -179,9 +171,8 @@ export default class ServicesController {
     if (!authorize) {
       return this.ServiceAuthorizationService.handleUnauthorized(response, session)
     }
+    const service = await Service.findOrFail(params.id)
     try {
-      const service = await Service.findOrFail(params.id)
-
       // Vérifier s'il y a des demandes de contact associées
       await service.load('contactRequests')
       if (service.contactRequests && service.contactRequests.length > 0) {
@@ -218,9 +209,8 @@ export default class ServicesController {
     if (!authorize) {
       return this.ServiceAuthorizationService.handleUnauthorized(response, session)
     }
+    const service = await Service.findOrFail(params.id)
     try {
-      const service = await Service.findOrFail(params.id)
-
       service.isActive = !service.isActive
       await service.save()
 
@@ -243,9 +233,8 @@ export default class ServicesController {
       return this.ServiceAuthorizationService.handleUnauthorized(response, session)
     }
 
+    const data = await request.validateUsing(reorderServicesValidator)
     try {
-      const data = await request.validateUsing(reorderServicesValidator)
-
       // Mettre à jour l'ordre de chaque service
       await Promise.all(
         data.services.map(async (serviceData) => {
@@ -260,10 +249,7 @@ export default class ServicesController {
       return response.redirect().back()
     } catch (error) {
       logger.error('Erreur lors de la réorganisation des services:', error)
-      return response.status(400).json({
-        success: false,
-        message: 'Erreur lors de la réorganisation des services',
-      })
+      return response.redirect().back()
     }
   }
 

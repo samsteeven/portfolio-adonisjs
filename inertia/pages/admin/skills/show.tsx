@@ -1,4 +1,4 @@
-import { Link, router } from '@inertiajs/react'
+import { Head, Link, router } from '@inertiajs/react'
 import React, { useEffect, useState } from 'react'
 import AdminLayout from '~/layout/AdminLayout'
 import { Button } from '@/components/ui/button'
@@ -21,6 +21,7 @@ import {
 } from 'lucide-react'
 import { SkillType } from '~/types/skills'
 import { toast } from 'sonner'
+import SafeHTML from '~/components/safeHTML'
 
 interface Props {
   skill: SkillType
@@ -94,6 +95,7 @@ export default function ShowSkill({ skill }: Props) {
 
   return (
     <>
+      <Head title={skill.name} />
       <div className="min-h-screen sm:bg-gray-50 sm:p-3">
         <div className="px-3 sm:px-6 lg:px-8 max-w-6xl mx-auto">
           {/* Header */}
@@ -271,8 +273,8 @@ export default function ShowSkill({ skill }: Props) {
 
                 {skill.description ? (
                   <div className="prose prose-gray max-w-none">
-                    <div className="whitespace-pre-wrap text-gray-700 leading-relaxed">
-                      {skill.description}
+                    <div className="text-gray-700">
+                      <SafeHTML html={skill.description} className="line-clamp-12" />
                     </div>
                   </div>
                 ) : (
@@ -482,7 +484,10 @@ export default function ShowSkill({ skill }: Props) {
                     </span>
 
                     {skill.description && (
-                      <p className="text-sm text-gray-600 line-clamp-2">{skill.description}</p>
+                      <SafeHTML
+                        className="text-sm text-gray-600 line-clamp-2"
+                        html={skill.description}
+                      />
                     )}
                   </div>
 
@@ -578,11 +583,7 @@ export default function ShowSkill({ skill }: Props) {
 }
 
 ShowSkill.layout = (page: React.ReactNode) => (
-  <AdminLayout
-    title="Détails skill"
-    description="Voir les détails d'une compétence"
-    currentPath="/admin/skills"
-  >
+  <AdminLayout title="Détails skill" currentPath="/admin/skills">
     {page}
   </AdminLayout>
 )

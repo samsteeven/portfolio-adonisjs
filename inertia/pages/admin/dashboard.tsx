@@ -24,8 +24,6 @@ import {
   FilePlus,
   MailPlus,
   MessageCircle,
-  Lock,
-  ArrowRight,
 } from 'lucide-react'
 import {
   AreaChart,
@@ -38,6 +36,7 @@ import {
 } from 'recharts'
 import { toast } from 'sonner'
 import AdminLayout from '~/layout/AdminLayout'
+import { IsRestricted } from '~/components/IsRestricted'
 
 interface GrowthData {
   users: number
@@ -128,29 +127,11 @@ export default function AdminDashboard({
   // If user doesn't have admin rights, show restricted view
   if (isRestricted) {
     return (
-      <>
-        <Head title="Dashboard Admin" />
-        <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
-          <div className="max-w-7xl mx-auto">
-            <Card className="p-8 text-center">
-              <div className="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
-                <Lock className="h-8 w-8 text-red-600" />
-              </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Accès restreint</h2>
-              <p className="text-gray-600 mb-6">
-                Vous n'avez pas les permissions nécessaires pour accéder aux statistiques du tableau
-                de bord.
-              </p>
-              <Link href={'/admin/users'}>
-                <Button>
-                  Continuer
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </Link>
-            </Card>
-          </div>
-        </div>
-      </>
+      <IsRestricted
+        message={
+          "Vous n'avez pas les permissions nécessaires pour accéder aux statistiques du tableau de bord."
+        }
+      />
     )
   }
 
@@ -358,7 +339,9 @@ export default function AdminDashboard({
                         >
                           <IconComponent className="h-5 w-5 text-white" />
                         </div>
-                        <h3 className="text-xs font-medium text-gray-700 leading-tight">{action.name}</h3>
+                        <h3 className="text-xs font-medium text-gray-700 leading-tight">
+                          {action.name}
+                        </h3>
                       </div>
                     </Card>
                   </Link>

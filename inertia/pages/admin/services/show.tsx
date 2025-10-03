@@ -41,16 +41,7 @@ export default function AdminServiceShow({ service }: Props) {
   }, [])
 
   const handleDelete = () => {
-    deleteService(`/admin/services/${service.id}`, {
-      onSuccess: () => {
-        toast.success('Service supprimé avec succès')
-        setShowDeleteModal(false)
-      },
-      onError: () => {
-        toast.error('Erreur lors de la suppression du service')
-        setShowDeleteModal(false)
-      },
-    })
+    deleteService(`/admin/services/${service.id}`)
   }
 
   const toggleStatus = () => {
@@ -58,9 +49,7 @@ export default function AdminServiceShow({ service }: Props) {
       `/admin/services/${service.id}/toggle-status`,
       {},
       {
-        onSuccess: () => {
-          toast.success(`Service ${service.isActive ? 'désactivé' : 'activé'} avec succès`)
-        },
+        preserveScroll: true,
         onError: () => {
           toast.error('Erreur lors de la modification du statut')
         },
@@ -73,9 +62,7 @@ export default function AdminServiceShow({ service }: Props) {
       `/admin/services/${service.id}/duplicate`,
       {},
       {
-        onSuccess: () => {
-          toast.success('Service dupliqué avec succès')
-        },
+        preserveScroll: true,
         onError: () => {
           toast.error('Erreur lors de la duplication du service')
         },
@@ -204,7 +191,7 @@ export default function AdminServiceShow({ service }: Props) {
             {/* Main Content */}
             <div className="lg:col-span-2 space-y-6">
               {/* Service Image */}
-              {service.image && (
+              {service.publicUrl && (
                 <Card className="p-4 sm:p-6 border-0 shadow-lg">
                   <div className="flex items-center gap-3 mb-4">
                     <div className="p-2 bg-purple-100 rounded-lg">
@@ -215,7 +202,7 @@ export default function AdminServiceShow({ service }: Props) {
 
                   <div className="relative">
                     <img
-                      src={service.image}
+                      src={service.publicUrl}
                       alt={service.title}
                       className="w-full h-64 sm:h-80 object-cover rounded-xl border-2 border-gray-200"
                     />
@@ -335,9 +322,7 @@ export default function AdminServiceShow({ service }: Props) {
                       {service.isActive ? 'Service actif' : 'Service inactif'}
                     </h3>
                     <p className="text-sm text-gray-600">
-                      {service.isActive
-                        ? 'Visible par les visiteurs'
-                        : 'Masqué du site public'}
+                      {service.isActive ? 'Visible par les visiteurs' : 'Masqué du site public'}
                     </p>
                   </div>
                 </div>
@@ -396,7 +381,7 @@ export default function AdminServiceShow({ service }: Props) {
                       {service.isActive ? 'Actif' : 'Inactif'}
                     </Badge>
                   </div>
-                  
+
                   <div className="pt-2 border-t border-gray-200">
                     <Button
                       variant="outline"

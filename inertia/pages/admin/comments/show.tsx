@@ -257,63 +257,133 @@ export default function ShowComment({ commentaire, reactions }: Props) {
 
                   {/* Picker d'emojis */}
                   {showReactionPicker && (
-                    <div className="absolute right-0 top-full mt-2 p-4 bg-white border border-gray-200 rounded-lg shadow-lg z-10 w-72">
-                      <div className="space-y-4">
-                        <div>
-                          <p className="text-sm font-medium text-gray-700 mb-2">
-                            Réactions positives
-                          </p>
-                          <div className="flex flex-wrap gap-2">
-                            {reactions.positive.map((emoji) => (
-                              <button
-                                key={emoji}
-                                onClick={() => handleReactionClick(emoji)}
-                                className="p-2 hover:bg-gray-100 rounded text-xl transition-colors"
-                                title={`Réagir avec ${emoji}`}
-                              >
-                                {emoji}
-                              </button>
-                            ))}
+                    <>
+                      {/* Version mobile */}
+                      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 sm:hidden">
+                        <div className="bg-white border border-gray-200 rounded-lg shadow-lg w-full max-w-sm max-h-[80vh] overflow-y-auto emoji-picker">
+                          <div className="sticky top-0 bg-white border-b border-gray-200 p-3 flex items-center justify-between">
+                            <h3 className="font-semibold text-gray-900">Choisir une réaction</h3>
+                            <button
+                              onClick={() => setShowReactionPicker(false)}
+                              className="p-1 hover:bg-gray-100 rounded"
+                            >
+                              <X className="h-5 w-5" />
+                            </button>
                           </div>
-                        </div>
+                          <div className="p-4 space-y-4">
+                            <div>
+                              <p className="text-sm font-medium text-gray-700 mb-2">
+                                Réactions positives
+                              </p>
+                              <div className="flex flex-wrap gap-2">
+                                {reactions.positive.map((emoji) => (
+                                  <button
+                                    key={emoji}
+                                    onClick={() => handleReactionClick(emoji)}
+                                    className="p-2 hover:bg-gray-100 rounded text-2xl transition-colors"
+                                  >
+                                    {emoji}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
 
-                        <div>
-                          <p className="text-sm font-medium text-gray-700 mb-2">
-                            Réactions neutres
-                          </p>
-                          <div className="flex flex-wrap gap-2">
-                            {reactions.neutral.map((emoji) => (
-                              <button
-                                key={emoji}
-                                onClick={() => handleReactionClick(emoji)}
-                                className="p-2 hover:bg-gray-100 rounded text-xl transition-colors"
-                                title={`Réagir avec ${emoji}`}
-                              >
-                                {emoji}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
+                            <div>
+                              <p className="text-sm font-medium text-gray-700 mb-2">
+                                Réactions neutres
+                              </p>
+                              <div className="flex flex-wrap gap-2">
+                                {reactions.neutral.map((emoji) => (
+                                  <button
+                                    key={emoji}
+                                    onClick={() => handleReactionClick(emoji)}
+                                    className="p-2 hover:bg-gray-100 rounded text-2xl transition-colors"
+                                  >
+                                    {emoji}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
 
-                        <div>
-                          <p className="text-sm font-medium text-gray-700 mb-2">
-                            Réactions négatives
-                          </p>
-                          <div className="flex flex-wrap gap-2">
-                            {reactions.negative.map((emoji) => (
-                              <button
-                                key={emoji}
-                                onClick={() => handleReactionClick(emoji)}
-                                className="p-2 hover:bg-gray-100 rounded text-xl transition-colors"
-                                title={`Réagir avec ${emoji}`}
-                              >
-                                {emoji}
-                              </button>
-                            ))}
+                            <div>
+                              <p className="text-sm font-medium text-gray-700 mb-2">
+                                Réactions négatives
+                              </p>
+                              <div className="flex flex-wrap gap-2">
+                                {reactions.negative.map((emoji) => (
+                                  <button
+                                    key={emoji}
+                                    onClick={() => handleReactionClick(emoji)}
+                                    className="p-2 hover:bg-gray-100 rounded text-2xl transition-colors"
+                                  >
+                                    {emoji}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
+
+                      {/* Version desktop (dropdown) */}
+                      <div className="hidden sm:block absolute right-0 top-full mt-2 p-4 bg-white border border-gray-200 rounded-lg shadow-lg z-10 w-72 emoji-picker">
+                        <div className="space-y-4">
+                          <div>
+                            <p className="text-sm font-medium text-gray-700 mb-2">
+                              Réactions positives
+                            </p>
+                            <div className="flex flex-wrap gap-2">
+                              {reactions.positive.map((emoji) => (
+                                <button
+                                  key={emoji}
+                                  onClick={() => handleReactionClick(emoji)}
+                                  className="p-2 hover:bg-gray-100 rounded text-xl transition-colors"
+                                  title={`Réagir avec ${emoji}`}
+                                >
+                                  {emoji}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+
+                          <div>
+                            <p className="text-sm font-medium text-gray-700 mb-2">
+                              Réactions neutres
+                            </p>
+                            <div className="flex flex-wrap gap-2">
+                              {reactions.neutral.map((emoji) => (
+                                <button
+                                  key={emoji}
+                                  onClick={() => handleReactionClick(emoji)}
+                                  className="p-2 hover:bg-gray-100 rounded text-xl transition-colors"
+                                  title={`Réagir avec ${emoji}`}
+                                >
+                                  {emoji}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+
+                          <div>
+                            <p className="text-sm font-medium text-gray-700 mb-2">
+                              Réactions négatives
+                            </p>
+                            <div className="flex flex-wrap gap-2">
+                              {reactions.negative.map((emoji) => (
+                                <button
+                                  key={emoji}
+                                  onClick={() => handleReactionClick(emoji)}
+                                  className="p-2 hover:bg-gray-100 rounded text-xl transition-colors"
+                                  title={`Réagir avec ${emoji}`}
+                                >
+                                  {emoji}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </>
                   )}
                 </div>
 
