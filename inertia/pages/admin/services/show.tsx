@@ -24,7 +24,9 @@ import { toast } from 'sonner'
 import AdminLayout from '~/layout/AdminLayout'
 import { router } from '@inertiajs/react'
 import { ServiceType } from '~/types/services'
-import DeleteConfirmationModal from '~/components/DeleteConfirmationModal'
+import ConfirmationModal from '~/components/ConfirmationModal'
+import SafeHTML from '~/components/safeHTML'
+import { formatLocalDate } from '~/utils/utils_string'
 
 interface Props {
   service: ServiceType
@@ -33,6 +35,7 @@ interface Props {
 export default function AdminServiceShow({ service }: Props) {
   const [isclient, setIsClient] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [showStatusModal, setShowStatusModal] = useState(false)
 
   const { delete: deleteService, processing: isDeleting } = useForm()
 
@@ -44,15 +47,12 @@ export default function AdminServiceShow({ service }: Props) {
     deleteService(`/admin/services/${service.id}`)
   }
 
-  const toggleStatus = () => {
+  const handleToggleStatus = () => {
     router.patch(
       `/admin/services/${service.id}/toggle-status`,
       {},
       {
         preserveScroll: true,
-        onError: () => {
-          toast.error('Erreur lors de la modification du statut')
-        },
       }
     )
   }
@@ -76,17 +76,6 @@ export default function AdminServiceShow({ service }: Props) {
       style: 'currency',
       currency: 'EUR',
     }).format(price)
-  }
-
-  const formatDate = (date: string) => {
-    if (!isclient) return '...'
-    return new Date(date).toLocaleString('fr-FR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    })
   }
 
   const getStatusColor = (isActive: boolean) => {
@@ -147,6 +136,15 @@ export default function AdminServiceShow({ service }: Props) {
                 <Copy className="h-4 w-4" />
               </Button>
 
+              <Link href={`/services/${service.slug}`} target="_blank">
+                <Button
+                  variant="outline"
+                  className="border-gray-300 hover:border-gray-400 hover:bg-gray-50"
+                >
+                  <Eye className="h-4 w-4" />
+                </Button>
+              </Link>
+
               <Link href={`/admin/services/${service.id}/edit`}>
                 <Button className="bg-blue-600 hover:bg-blue-700 text-white">
                   <Edit3 className="h-4 w-4 mr-2" />
@@ -158,7 +156,7 @@ export default function AdminServiceShow({ service }: Props) {
               <Button
                 type="button"
                 variant="outline"
-                onClick={toggleStatus}
+                onClick={() => setShowStatusModal(true)}
                 className={`${
                   service.isActive
                     ? 'border-orange-300 hover:border-orange-400 hover:text-orange-600 hover:bg-orange-50'
@@ -174,15 +172,6 @@ export default function AdminServiceShow({ service }: Props) {
                     <Globe className="h-4 w-4" />
                   </>
                 )}
-              </Button>
-
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setShowDeleteModal(true)}
-                className="border-red-300 hover:border-red-400 hover:text-red-600 hover:bg-red-50"
-              >
-                <Trash2 className="h-4 w-4" />
               </Button>
             </div>
           </div>
@@ -225,16 +214,10 @@ export default function AdminServiceShow({ service }: Props) {
                 </div>
 
                 <div className="prose max-w-none">
-                  <p className="text-gray-700 leading-relaxed text-base whitespace-pre-wrap">
-                    {service.description}
-                  </p>
-                </div>
-
-                <div className="mt-4 pt-4 border-t border-gray-200">
-                  <p className="text-sm text-gray-500">
-                    {service.description.length} caractère
-                    {service.description.length > 1 ? 's' : ''}
-                  </p>
+                  <SafeHTML
+                    html={service.description}
+                    className="text-gray-700 leading-relaxed text-base line-clamp-12"
+                  />
                 </div>
               </Card>
 
@@ -254,7 +237,7 @@ export default function AdminServiceShow({ service }: Props) {
 
                   <Button
                     variant="outline"
-                    onClick={toggleStatus}
+                    onClick={() => setShowStatusModal(true)}
                     className={`w-full justify-start ${
                       service.isActive
                         ? 'border-orange-200 hover:border-orange-300 hover:bg-orange-50'
@@ -297,48 +280,6 @@ export default function AdminServiceShow({ service }: Props) {
 
             {/* Sidebar */}
             <div className="space-y-6">
-              {/* Service Status */}
-              <Card
-                className={`p-4 border-0 shadow-lg ${
-                  service.isActive
-                    ? 'bg-gradient-to-br from-green-50 to-emerald-50'
-                    : 'bg-gradient-to-br from-gray-50 to-slate-50'
-                }`}
-              >
-                <div className="flex items-center gap-3 mb-4">
-                  <div
-                    className={`p-2 rounded-lg ${
-                      service.isActive ? 'bg-green-100' : 'bg-gray-100'
-                    }`}
-                  >
-                    {service.isActive ? (
-                      <Globe className="h-5 w-5 text-green-600" />
-                    ) : (
-                      <EyeOff className="h-5 w-5 text-gray-600" />
-                    )}
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-gray-900">
-                      {service.isActive ? 'Service actif' : 'Service inactif'}
-                    </h3>
-                    <p className="text-sm text-gray-600">
-                      {service.isActive ? 'Visible par les visiteurs' : 'Masqué du site public'}
-                    </p>
-                  </div>
-                </div>
-
-                <Button
-                  onClick={toggleStatus}
-                  className={`w-full ${
-                    service.isActive
-                      ? 'bg-orange-600 hover:bg-orange-700 text-white'
-                      : 'bg-green-600 hover:bg-green-700 text-white'
-                  }`}
-                >
-                  {service.isActive ? 'Désactiver' : 'Activer'}
-                </Button>
-              </Card>
-
               {/* Pricing Information */}
               <Card className="p-4 border-0 shadow-lg">
                 <div className="flex items-center gap-3 mb-4">
@@ -418,7 +359,7 @@ export default function AdminServiceShow({ service }: Props) {
                       <span>Créé le :</span>
                     </div>
                     <p className="text-xs text-gray-800 bg-gray-50 p-2 rounded">
-                      {formatDate(service.createdAt)}
+                      {isclient ? formatLocalDate(service.createdAt) : '...'}
                     </p>
                   </div>
 
@@ -428,7 +369,7 @@ export default function AdminServiceShow({ service }: Props) {
                       <span>Modifié le :</span>
                     </div>
                     <p className="text-xs text-gray-800 bg-gray-50 p-2 rounded">
-                      {formatDate(service.updatedAt)}
+                      {isclient ? formatLocalDate(service.updatedAt) : '...'}
                     </p>
                   </div>
 
@@ -470,7 +411,7 @@ export default function AdminServiceShow({ service }: Props) {
         </div>
       </div>
 
-      <DeleteConfirmationModal
+      <ConfirmationModal
         isOpen={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
         onConfirm={handleDelete}
@@ -478,6 +419,16 @@ export default function AdminServiceShow({ service }: Props) {
         message="Êtes-vous sûr de vouloir supprimer ce service ? Cette action est irréversible."
         itemName={service.title}
         isLoading={isDeleting}
+      />
+
+      <ConfirmationModal
+        isOpen={showStatusModal}
+        onClose={() => setShowStatusModal(false)}
+        onConfirm={handleToggleStatus}
+        title={service.isActive ? 'Désactiver le service' : 'Activer le service'}
+        message={`Êtes-vous sûr de vouloir ${service.isActive ? 'désactiver' : 'activer'} ce service ?`}
+        itemName={service.title}
+        actionType={service.isActive ? 'deactivate' : 'activate'}
       />
     </>
   )

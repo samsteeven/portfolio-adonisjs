@@ -1,7 +1,7 @@
 import { Head, Link, router } from '@inertiajs/react'
 import React, { useEffect, useState } from 'react'
 import AdminLayout from '~/layout/AdminLayout'
-import DeleteConfirmationModal from '~/components/DeleteConfirmationModal'
+import ConfirmationModal from '~/components/ConfirmationModal'
 import {
   ArrowLeft,
   Edit,
@@ -25,6 +25,7 @@ import {
 import { ProjectShowProps } from '~/types/projets'
 import { toast } from 'sonner'
 import SafeHTML from '~/components/safeHTML'
+import { formatLocalDate } from '~/utils/utils_string'
 
 export default function ShowProject({ project }: ProjectShowProps) {
   const [isClient, setIsClient] = useState(false)
@@ -33,8 +34,13 @@ export default function ShowProject({ project }: ProjectShowProps) {
   const [reorderedImages, setReorderedImages] = useState<Array<any>>([])
   const [primaryImageId, setPrimaryImageId] = useState<number | null>(null)
 
-  // État pour le modal de suppression
   const [deleteModal, setDeleteModal] = useState({
+    isOpen: false,
+    isLoading: false,
+  })
+
+  // Add state for status change confirmation modal
+  const [statusChangeModal, setStatusChangeModal] = useState({
     isOpen: false,
     isLoading: false,
   })
@@ -53,12 +59,6 @@ export default function ShowProject({ project }: ProjectShowProps) {
       }
     }
   }, [project])
-
-  // Fonction pour formater les dates
-  const formatDate = (dateString: string, options?: Intl.DateTimeFormatOptions) => {
-    if (!isClient) return '...'
-    return new Date(dateString).toLocaleDateString('fr-FR', options)
-  }
 
   // Fonction pour obtenir toutes les images du projet
   const getAllImages = (): Array<{ url: string; isPrimary: boolean; id?: number }> => {
@@ -90,14 +90,49 @@ export default function ShowProject({ project }: ProjectShowProps) {
     })
   }
 
+  // Add function to open status change modal
+  const handleStatusChangeClick = () => {
+    setStatusChangeModal({
+      isOpen: true,
+      isLoading: false,
+    })
+  }
+
+  // Add function to confirm status change
+  const handleStatusChangeConfirm = () => {
+    setStatusChangeModal((prev) => ({ ...prev, isLoading: true }))
+
+    router.patch(
+      `/admin/projects/${project.id}/toggle-status`,
+      {},
+      {
+        onSuccess: () => {
+          setStatusChangeModal({
+            isOpen: false,
+            isLoading: false,
+          })
+        },
+        onError: () => {
+          setStatusChangeModal((prev) => ({ ...prev, isLoading: false }))
+          toast.error('Erreur lors de la modification du statut')
+        },
+      }
+    )
+  }
+
+  // Add function to cancel status change
+  const handleStatusChangeCancel = () => {
+    setStatusChangeModal({
+      isOpen: false,
+      isLoading: false,
+    })
+  }
+
   const handleDeleteConfirm = async () => {
     setDeleteModal((prev) => ({ ...prev, isLoading: true }))
 
     try {
       router.delete(`/admin/projects/${project.id}`, {
-        onSuccess: () => {
-          router.visit('/admin/projects')
-        },
         onError: () => {
           setDeleteModal((prev) => ({ ...prev, isLoading: false }))
         },
@@ -114,16 +149,9 @@ export default function ShowProject({ project }: ProjectShowProps) {
     })
   }
 
+  // Update toggleStatus function to use the modal
   const toggleStatus = () => {
-    router.patch(
-      `/admin/projects/${project.id}/toggle-status`,
-      {},
-      {
-        onError: () => {
-          toast.error('Erreur lors de la modification du statut')
-        },
-      }
-    )
+    handleStatusChangeClick()
   }
 
   const nextImage = () => {
@@ -523,13 +551,7 @@ export default function ShowProject({ project }: ProjectShowProps) {
                     <div>
                       <p className="text-sm text-gray-500">Création</p>
                       <p className="font-medium text-sm sm:text-base">
-                        {formatDate(project.createdAt.toString(), {
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}
+                        {isClient ? formatLocalDate(project.createdAt.toString()) : '...'}
                       </p>
                     </div>
                   </div>
@@ -539,13 +561,7 @@ export default function ShowProject({ project }: ProjectShowProps) {
                       <div>
                         <p className="text-sm text-gray-500">Dernière mise à jour</p>
                         <p className="font-medium text-sm sm:text-base">
-                          {formatDate(project.updatedAt.toString(), {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })}
+                          {isClient ? formatLocalDate(project.updatedAt.toString()) : '...'}
                         </p>
                       </div>
                     </div>
@@ -618,13 +634,27 @@ export default function ShowProject({ project }: ProjectShowProps) {
           </div>
         </div>
 
-        <DeleteConfirmationModal
+        <ConfirmationModal
           isOpen={deleteModal.isOpen}
           isLoading={deleteModal.isLoading}
           onConfirm={handleDeleteConfirm}
           onClose={handleDeleteCancel}
           title="Supprimer le projet"
           message={`Êtes-vous sûr de vouloir supprimer définitivement le projet "${project.title}" ? Cette action est irréversible.`}
+        />
+
+        <ConfirmationModal
+          isOpen={statusChangeModal.isOpen}
+          isLoading={statusChangeModal.isLoading}
+          onConfirm={handleStatusChangeConfirm}
+          onClose={handleStatusChangeCancel}
+          title={project.isActive ? 'Désactiver le projet' : 'Activer le projet'}
+          message={
+            project.isActive
+              ? `Êtes-vous sûr de vouloir désactiver le projet "${project.title}" ?`
+              : `Êtes-vous sûr de vouloir activer le projet "${project.title}" ?`
+          }
+          actionType={project.isActive ? 'deactivate' : 'activate'}
         />
       </div>
     </>

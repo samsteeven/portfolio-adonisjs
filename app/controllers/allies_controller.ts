@@ -8,7 +8,6 @@ export default class AlliesController {
     try {
       return ally.use(params.provider).redirect()
     } catch (error) {
-      // Gérer les erreurs de redirection
       session.flash('error', 'Erreur de redirection, reesayer')
       return response.redirect('/guestbook')
     }
@@ -34,7 +33,6 @@ export default class AlliesController {
 
       const oauthUser = await oauth.user()
 
-      // Validation des données utilisateur
       if (!oauthUser.email) {
         session.flash('error', 'Email requis pour la connexion')
         return response.redirect('/guestbook')

@@ -4,7 +4,7 @@ import AdminLayout from '~/layout/AdminLayout'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card } from '@/components/ui/card'
-import DeleteConfirmationModal from '~/components/DeleteConfirmationModal'
+import ConfirmationModal from '~/components/ConfirmationModal'
 import SafeHTML from '~/components/safeHTML'
 import {
   Plus,
@@ -859,7 +859,7 @@ export default function ProjectsIndex({ projects, technologies, years = [] }: Pr
       </div>
 
       {/* Modal de confirmation de suppression */}
-      <DeleteConfirmationModal
+      <ConfirmationModal
         isOpen={deleteModal.isOpen}
         onClose={handleDeleteCancel}
         onConfirm={handleDeleteConfirm}

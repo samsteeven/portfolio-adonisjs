@@ -4,8 +4,9 @@ import AdminLayout from '~/layout/AdminLayout'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card } from '@/components/ui/card'
-import DeleteConfirmationModal from '~/components/DeleteConfirmationModal'
+import ConfirmationModal from '~/components/ConfirmationModal'
 import { Mail, Search, Trash2, UserCheck, UserX, Calendar, Users, Filter, X } from 'lucide-react'
+import { formatLocalDate } from '~/utils/utils_string'
 
 interface Subscriber {
   id: number
@@ -51,6 +52,13 @@ export default function NewsletterAdmin({ subscribers }: NewsletterAdminProps) {
   })
   const [bulkDeleteModal, setBulkDeleteModal] = useState({
     isOpen: false,
+    isLoading: false,
+  })
+  const [statusChangeModal, setStatusChangeModal] = useState({
+    isOpen: false,
+    subscriberId: null as number | null,
+    subscriberEmail: '',
+    currentStatus: false,
     isLoading: false,
   })
   const [isclient, setIsClient] = useState(false)
@@ -104,17 +112,6 @@ export default function NewsletterAdmin({ subscribers }: NewsletterAdminProps) {
     }
   }, [subscribers.data])
 
-  const formatDate = (dateString: string) => {
-    if (!isclient) return '...'
-    return new Date(dateString).toLocaleDateString('fr-FR', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    })
-  }
-
   const resetFilters = () => {
     setSearch('')
     setStatus('')
@@ -149,6 +146,7 @@ export default function NewsletterAdmin({ subscribers }: NewsletterAdminProps) {
     setDeleteModal((prev) => ({ ...prev, isLoading: true }))
 
     router.delete(`/admin/newsletter/${deleteModal.subscriberId}`, {
+      preserveScroll: true,
       onSuccess: () => {
         setDeleteModal({
           isOpen: false,
@@ -172,6 +170,7 @@ export default function NewsletterAdmin({ subscribers }: NewsletterAdminProps) {
 
     router.delete('/admin/newsletter/bulk', {
       data: { ids: selectedEmails },
+      preserveScroll: true,
       onSuccess: () => {
         setSelectedEmails([])
         setBulkDeleteModal({ isOpen: false, isLoading: false })
@@ -182,14 +181,40 @@ export default function NewsletterAdmin({ subscribers }: NewsletterAdminProps) {
     })
   }
 
-  const toggleSubscriberStatus = (id: number, currentStatus: boolean) => {
+  const toggleSubscriberStatus = (id: number, email: string, currentStatus: boolean) => {
+    setStatusChangeModal({
+      isOpen: true,
+      subscriberId: id,
+      subscriberEmail: email,
+      currentStatus: currentStatus,
+      isLoading: false,
+    })
+  }
+
+  const confirmStatusChange = () => {
+    if (!statusChangeModal.subscriberId) return
+
+    setStatusChangeModal((prev) => ({ ...prev, isLoading: true }))
+
     router.patch(
-      `/admin/newsletter/${id}`,
+      `/admin/newsletter/${statusChangeModal.subscriberId}`,
       {
-        isActive: !currentStatus,
+        isActive: !statusChangeModal.currentStatus,
       },
       {
         preserveScroll: true,
+        onSuccess: () => {
+          setStatusChangeModal({
+            isOpen: false,
+            subscriberId: null,
+            subscriberEmail: '',
+            currentStatus: false,
+            isLoading: false,
+          })
+        },
+        onError: () => {
+          setStatusChangeModal((prev) => ({ ...prev, isLoading: false }))
+        },
       }
     )
   }
@@ -436,14 +461,14 @@ export default function NewsletterAdmin({ subscribers }: NewsletterAdminProps) {
                       <td className="px-6 py-4 text-sm text-gray-500">
                         <div className="flex items-center">
                           <Calendar className="w-4 h-4 mr-1" />
-                          {formatDate(subscriber.subscribedAt)}
+                          {isclient ? formatLocalDate(subscriber.subscribedAt) : '...'}
                         </div>
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-500">
                         {subscriber.confirmedAt ? (
                           <div className="flex items-center">
                             <Calendar className="w-4 h-4 mr-1" />
-                            {formatDate(subscriber.confirmedAt)}
+                            {isclient ? formatLocalDate(subscriber.confirmedAt) : '...'}
                           </div>
                         ) : (
                           <span className="text-gray-400">Non confirmé</span>
@@ -453,7 +478,11 @@ export default function NewsletterAdmin({ subscribers }: NewsletterAdminProps) {
                         <div className="flex items-center justify-end gap-2">
                           <button
                             onClick={() =>
-                              toggleSubscriberStatus(subscriber.id, subscriber.isActive)
+                              toggleSubscriberStatus(
+                                subscriber.id,
+                                subscriber.email,
+                                subscriber.isActive
+                              )
                             }
                             className={`p-2 rounded-lg transition-colors ${
                               subscriber.isActive
@@ -517,7 +546,7 @@ export default function NewsletterAdmin({ subscribers }: NewsletterAdminProps) {
       </div>
 
       {/* Delete Modals */}
-      <DeleteConfirmationModal
+      <ConfirmationModal
         isOpen={deleteModal.isOpen}
         onClose={() => setDeleteModal((prev) => ({ ...prev, isOpen: false }))}
         onConfirm={confirmDelete}
@@ -525,9 +554,10 @@ export default function NewsletterAdmin({ subscribers }: NewsletterAdminProps) {
         message="Cette action est irréversible. L'abonné sera définitivement supprimé de votre liste."
         itemName={deleteModal.subscriberEmail}
         isLoading={deleteModal.isLoading}
+        actionType="delete"
       />
 
-      <DeleteConfirmationModal
+      <ConfirmationModal
         isOpen={bulkDeleteModal.isOpen}
         onClose={() => setBulkDeleteModal((prev) => ({ ...prev, isOpen: false }))}
         onConfirm={confirmBulkDelete}
@@ -535,6 +565,22 @@ export default function NewsletterAdmin({ subscribers }: NewsletterAdminProps) {
         message={`Cette action est irréversible. ${selectedEmails.length} abonné(s) sera/seront définitivement supprimé(s).`}
         itemName={`${selectedEmails.length} abonné(s)`}
         isLoading={bulkDeleteModal.isLoading}
+        actionType="delete"
+      />
+
+      <ConfirmationModal
+        isOpen={statusChangeModal.isOpen}
+        onClose={() => setStatusChangeModal((prev) => ({ ...prev, isOpen: false }))}
+        onConfirm={confirmStatusChange}
+        title={statusChangeModal.currentStatus ? "Désactiver l'abonnement" : "Activer l'abonnement"}
+        message={
+          statusChangeModal.currentStatus
+            ? "Voulez-vous vraiment annuler l'abonnement de cet abonné ?"
+            : "Voulez-vous vraiment réactiver l'abonnement de cet abonné ?"
+        }
+        itemName={statusChangeModal.subscriberEmail}
+        isLoading={statusChangeModal.isLoading}
+        actionType={statusChangeModal.currentStatus ? 'deactivate' : 'activate'}
       />
     </>
   )

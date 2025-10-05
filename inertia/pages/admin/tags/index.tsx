@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card } from '@/components/ui/card'
-import DeleteConfirmationModal from '~/components/DeleteConfirmationModal'
+import ConfirmationModal from '~/components/ConfirmationModal'
 import {
   Plus,
   Tag as TagIcon,
@@ -367,7 +367,7 @@ export default function TagsAdmin({ tags }: TagsAdminProps) {
       </div>
 
       {/* Delete Confirmation Modal */}
-      <DeleteConfirmationModal
+      <ConfirmationModal
         isOpen={deleteModal.isOpen}
         onClose={() => setDeleteModal((prev) => ({ ...prev, isOpen: false }))}
         onConfirm={confirmDelete}

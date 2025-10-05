@@ -28,7 +28,7 @@ export const createBlogPostValidator = vine.compile(
     featuredImage: vine
       .file({
         size: '5mb',
-        extnames: ['jpg', 'png', 'jpeg', 'webp'],
+        extnames: ['jpg', 'png', 'jpeg', 'webp', 'PNG'],
       })
       .nullable(),
     featuredImageUrl: vine.string().url().optional(),
@@ -47,7 +47,7 @@ export const updateBlogPostValidator = vine.compile(
     featuredImage: vine
       .file({
         size: '5mb',
-        extnames: ['jpg', 'png', 'jpeg', 'webp'],
+        extnames: ['jpg', 'png', 'jpeg', 'webp', 'PNG'],
       })
       .nullable()
       .optional(),

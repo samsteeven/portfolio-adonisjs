@@ -4,6 +4,7 @@ import { JSX } from 'react'
 interface SafeHTMLProps {
   html: string
   className?: string
+  searchTerm?: string
   as?: keyof JSX.IntrinsicElements
   allowedTags?: string[]
   allowedAttributes?: string[]
@@ -12,12 +13,14 @@ interface SafeHTMLProps {
 export default function SafeHTML({
   html,
   className = '',
+  searchTerm = '',
   as: Component = 'div',
   allowedTags,
   allowedAttributes,
 }: SafeHTMLProps) {
   if (!html) return null
 
+  let processedHTML = html
   // Configuration correcte pour DOMPurify
   const config = {
     ALLOWED_TAGS: allowedTags || [
@@ -66,7 +69,19 @@ export default function SafeHTML({
   }
 
   // Nettoyer le HTML
-  const cleanHTML = DOMPurify.sanitize(html, config)
+  processedHTML = DOMPurify.sanitize(processedHTML, config)
 
-  return <Component className={className} dangerouslySetInnerHTML={{ __html: cleanHTML }} />
+  // 2. Ensuite, ajouter le highlighting si terme de recherche
+  if (searchTerm.trim()) {
+    const regex = new RegExp(`(${searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi')
+
+    processedHTML = processedHTML.replace(/(<[^>]+>)|([^<]+)/g, (_match, tag, text) => {
+      if (tag) return tag
+      return text.replace(
+        regex,
+        '<mark class="bg-pink-500/30 text-pink-200 px-1 rounded">$1</mark>'
+      )
+    })
+  }
+  return <Component className={className} dangerouslySetInnerHTML={{ __html: processedHTML }} />
 }

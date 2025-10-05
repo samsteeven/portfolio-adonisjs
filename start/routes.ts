@@ -1,7 +1,6 @@
 import router from '@adonisjs/core/services/router'
 import { middleware } from '#start/kernel'
 import { loginLimiter, failedLoginLimiter } from '#start/limiter'
-import { HttpContext } from '@adonisjs/core/http'
 const FaqController = () => import('#controllers/admin/admin_faq_controller')
 const AdminNewsletterController = () => import('#controllers/admin/admin_newsletters_controller')
 const ContactRequestsController = () => import('#controllers/contact_requests_controller')
@@ -21,17 +20,6 @@ const AlliesController = () => import('#controllers/allies_controller')
 
 // Routes publiques avec silent_auth pour avoir accès à l'utilisateur connecté
 router.get('/', [DashboardController, 'portfolio']).as('home')
-router.get('/whoami', async ({ request, response }: HttpContext) => {
-  const ip = request.qs().ip
-  const countryRes = await fetch(`http://ip-api.com/json/${ip}`)
-  const countryData = (await countryRes.json()) as {
-    countryCode: string
-  }
-
-  return response.json({
-    countryCode: countryData.countryCode,
-  })
-})
 router.get('/projects/:slug', [DashboardController, 'projectShow'])
 
 // Routes pour la guestbook
@@ -71,11 +59,11 @@ router.get('/blog/:slug', '#controllers/blog_controller.show').where('slug', /^[
 router.post('/newsletter/subscribe', [NewsletterController, 'subscribe']).use(loginLimiter)
 router
   .get('/newsletter/unsubscribe/:token', [NewsletterController, 'unsubscribe'])
-  .use(loginLimiter)
+  .use(failedLoginLimiter)
+  .where('token', /^[A-Za-z0-9\-]+$/)
 
 router.get('/services', [ServicesController, 'publicIndex'])
-// // Page détail d'un service (par slug)
-// router.get('/services/:slug', [ServicesController, 'show'])
+router.get('/services/:slug', [ServicesController, 'publicShow'])
 
 // Page du formulaire de contact
 router.get('/contact', [ContactRequestController, 'showForm'])
@@ -112,7 +100,7 @@ router
     router.get('/settings/profile', [DashboardController, 'profile']).as('admin.profile')
 
     // ===== UTILISATEURS =====
-    router.resource('users', UserController)
+    router.resource('users', UserController).except(['show'])
     router
       .patch('users/:id/toggle-status', [UserController, 'toggleStatus'])
       .middleware(middleware.authorizeUser('toggleStatus'))

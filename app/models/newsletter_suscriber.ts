@@ -23,8 +23,13 @@ export default class NewsletterSubscriber extends BaseModel {
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare confirmedAt: DateTime | null
 
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime
   @beforeCreate()
   static assignToken(subscriber: NewsletterSubscriber) {
-    subscriber.token = string.generateRandom(32)
+    subscriber.token = string.generateRandom(32).toLowerCase().replace(/[^a-z0-9]/g, '')
   }
 }

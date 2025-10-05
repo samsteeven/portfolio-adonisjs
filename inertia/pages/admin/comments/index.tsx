@@ -4,7 +4,7 @@ import AdminLayout from '~/layout/AdminLayout'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card } from '@/components/ui/card'
-import DeleteConfirmationModal from '~/components/DeleteConfirmationModal'
+import ConfirmationModal from '~/components/ConfirmationModal'
 import {
   Search,
   Filter,
@@ -29,6 +29,7 @@ import {
   SortDesc,
 } from 'lucide-react'
 import { CommentaireType } from '~/types/commentaire'
+import { formatLocalDate } from '~/utils/utils_string'
 
 interface Props {
   commentaires: {
@@ -153,19 +154,6 @@ export default function CommentsIndex({ commentaires, reactions, filters = {}, s
     sortBy,
     sortOrder,
   ])
-
-  // Fonction pour formater les dates
-  const formatDate = (dateString: string, short: boolean = false) => {
-    if (!isClient) return '...'
-    const date = new Date(dateString)
-    return date.toLocaleDateString('fr-FR', {
-      day: short ? 'numeric' : '2-digit',
-      month: short ? 'short' : '2-digit',
-      year: short ? undefined : 'numeric',
-      hour: short ? undefined : '2-digit',
-      minute: short ? undefined : '2-digit',
-    })
-  }
 
   // Fonction de reset des filtres
   const handleReset = () => {
@@ -671,7 +659,7 @@ export default function CommentsIndex({ commentaires, reactions, filters = {}, s
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           <div className="flex items-center gap-1">
                             <Calendar className="h-4 w-4" />
-                            {formatDate(commentaire.createdAt, true)}
+                            {isClient ? formatLocalDate(commentaire.createdAt) : '...'}
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -914,7 +902,7 @@ export default function CommentsIndex({ commentaires, reactions, filters = {}, s
                     <div className="flex items-center justify-between text-xs text-gray-500 mb-4">
                       <div className="flex items-center gap-1">
                         <Calendar className="h-3 w-3" />
-                        {formatDate(commentaire.createdAt, true)}
+                        {isClient ? formatLocalDate(commentaire.createdAt) : '...'}
                       </div>
                       <span className="text-gray-300">•</span>
                       <span>ID: #{commentaire.id}</span>
@@ -1099,7 +1087,7 @@ export default function CommentsIndex({ commentaires, reactions, filters = {}, s
       </div>
 
       {/* Modal de confirmation de suppression */}
-      <DeleteConfirmationModal
+      <ConfirmationModal
         isOpen={deleteModal.isOpen}
         onClose={handleDeleteCancel}
         onConfirm={handleDeleteConfirm}

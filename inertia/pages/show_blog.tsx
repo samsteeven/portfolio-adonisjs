@@ -3,6 +3,7 @@ import { Clock, User, Share2, Eye, Heart, ChevronLeft } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import Newsletter_signup from '~/pages/components/newsletter_signup'
 import SafeHTML from '~/components/safeHTML'
+import { formatLocalDate, readingTime } from '~/utils/utils_string'
 
 interface Blog extends BlogPost {
   _count?: {
@@ -21,20 +22,7 @@ export default function BlogShow({ post, relatedPosts = [] }: BlogShowProps) {
   useEffect(() => {
     setIsclient(true)
   }, [])
-  const formatDate = (dateString: string) => {
-    if (!isClient) return '...'
-    return new Date(dateString).toLocaleDateString('fr-FR', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    })
-  }
 
-  const readingTime = (text: string) => {
-    const wordsPerMinute = 200
-    const words = text.split(' ').length
-    return Math.ceil(words / wordsPerMinute)
-  }
   const handleShare = async () => {
     if (navigator.share) {
       await navigator.share({
@@ -66,16 +54,17 @@ export default function BlogShow({ post, relatedPosts = [] }: BlogShowProps) {
           {/* Article Header */}
           <header className="mb-8 sm:mb-12">
             <div className="text-sm text-gray-500">
-              {formatDate(post.publishedAt || post.createdAt)}
+              {isClient ? formatLocalDate(post.publishedAt || post.createdAt) : '...'}
             </div>
 
             <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold leading-tight mb-6 sm:mb-8 text-white">
               {post.title}
             </h1>
 
-            <p className="text-base sm:text-lg md:text-xl text-gray-300 leading-relaxed mb-6 sm:mb-8">
-              {post.excerpt}
-            </p>
+            <SafeHTML
+              html={post.excerpt}
+              className="text-base sm:text-lg md:text-xl text-gray-300 leading-relaxed mb-6 sm:mb-8"
+            />
 
             {/* Meta information - Responsive stack */}
             <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-4 sm:gap-6 text-sm text-gray-400 mb-6 sm:mb-8">
@@ -85,7 +74,7 @@ export default function BlogShow({ post, relatedPosts = [] }: BlogShowProps) {
               </div>
               <div className="flex items-center gap-2">
                 <Clock className="w-4 h-4 flex-shrink-0" />
-                <span>{readingTime(post.content)} min de lecture</span>
+                <span>{readingTime(post.content)} de lecture</span>
               </div>
               {post._count?.views && (
                 <div className="flex items-center gap-2">
@@ -130,8 +119,8 @@ export default function BlogShow({ post, relatedPosts = [] }: BlogShowProps) {
 
           {/* Article Content - Typography responsive */}
           <article className="prose prose-sm sm:prose-base lg:prose-lg prose-invert max-w-none">
-            <SafeHTML 
-              html={post.content} 
+            <SafeHTML
+              html={post.content}
               className="text-gray-300 leading-relaxed text-sm sm:text-base lg:text-lg"
             />
           </article>
@@ -185,7 +174,7 @@ export default function BlogShow({ post, relatedPosts = [] }: BlogShowProps) {
 
                     <div className="p-4 sm:p-5">
                       <div className="text-xs text-gray-500 mb-2">
-                        {formatDate(relatedPost.publishedAt)}
+                        {isClient ? formatLocalDate(relatedPost.publishedAt) : '...'}
                       </div>
 
                       <h4 className="font-semibold text-white mb-2 line-clamp-2 group-hover:text-pink-400 transition-colors text-sm sm:text-base">

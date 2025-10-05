@@ -17,6 +17,8 @@ import AdminLayout from '~/layout/AdminLayout'
 import React, { useEffect, useState } from 'react'
 import { getProjectMainImage } from '~/utils/others'
 import SafeHTML from '~/components/safeHTML'
+import { formatLocalDate } from '~/utils/utils_string'
+import ConfirmationModal from '~/components/ConfirmationModal'
 
 export default function TechnologiesShow({ technology }: { technology: Technology }) {
   const [isClient, setIsClient] = useState(false)
@@ -25,15 +27,43 @@ export default function TechnologiesShow({ technology }: { technology: Technolog
     setIsClient(true)
   }, [])
 
-  // Fonction pour formater les dates
-  const formatDate = (dateString: string, options?: Intl.DateTimeFormatOptions) => {
-    if (!isClient) return '...'
-    return new Date(dateString).toLocaleDateString('fr-FR', options)
+  // Add state for delete confirmation modal
+  const [deleteModal, setDeleteModal] = useState({
+    isOpen: false,
+    isLoading: false,
+  })
+
+  // Add function to open delete modal
+  const handleDeleteClick = () => {
+    setDeleteModal({
+      isOpen: true,
+      isLoading: false,
+    })
   }
-  const handleDelete = () => {
-    if (confirm(`Êtes-vous sûr de vouloir supprimer la technologie "${technology.name}" ?`)) {
-      router.delete(`/admin/technologies/${technology.id}`)
-    }
+
+  // Add function to confirm deletion
+  const handleDeleteConfirm = () => {
+    setDeleteModal((prev) => ({ ...prev, isLoading: true }))
+
+    router.delete(`/admin/technologies/${technology.id}`, {
+      onSuccess: () => {
+        setDeleteModal({
+          isOpen: false,
+          isLoading: false,
+        })
+      },
+      onError: () => {
+        setDeleteModal((prev) => ({ ...prev, isLoading: false }))
+      },
+    })
+  }
+
+  // Add function to cancel deletion
+  const handleDeleteCancel = () => {
+    setDeleteModal({
+      isOpen: false,
+      isLoading: false,
+    })
   }
 
   return (
@@ -67,7 +97,7 @@ export default function TechnologiesShow({ technology }: { technology: Technolog
                   Modifier
                 </Link>
                 <button
-                  onClick={handleDelete}
+                  onClick={handleDeleteClick}
                   className="flex items-center gap-2 px-4 py-2 text-red-700 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -149,12 +179,18 @@ export default function TechnologiesShow({ technology }: { technology: Technolog
                       <div className="grid grid-cols-2 gap-4">
                         <div className="flex items-center gap-2 text-sm text-gray-600">
                           <Calendar className="w-4 h-4" />
-                          <span>Ajoutée le {formatDate(technology.createdAt.toString())}</span>
+                          <span>
+                            Ajoutée le{' '}
+                            {isClient ? formatLocalDate(technology.createdAt.toString()) : '...'}
+                          </span>
                         </div>
                         {technology.updatedAt && (
                           <div className="flex items-center gap-2 text-sm text-gray-600">
                             <Calendar className="w-4 h-4" />
-                            <span>Modifié le {formatDate(technology.updatedAt.toString())}</span>
+                            <span>
+                              Modifié le{' '}
+                              {isClient ? formatLocalDate(technology.updatedAt.toString()) : '...'}
+                            </span>
                           </div>
                         )}
                       </div>
@@ -285,82 +321,12 @@ export default function TechnologiesShow({ technology }: { technology: Technolog
                     <hr className="my-2" />
 
                     <button
-                      onClick={handleDelete}
+                      onClick={handleDeleteClick}
                       className="w-full flex items-center gap-2 px-3 py-2 text-left text-red-600 hover:bg-red-50 rounded transition-colors"
                     >
                       <Trash2 className="w-4 h-4" />
                       Supprimer cette technologie
                     </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Informations techniques */}
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-                <div className="p-4">
-                  <h3 className="font-medium text-gray-900 mb-4">Informations techniques</h3>
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center text-sm">
-                      <span className="text-gray-600">ID :</span>
-                      <span className="font-mono bg-gray-100 px-2 py-1 rounded">
-                        {technology.id}
-                      </span>
-                    </div>
-
-                    <div className="flex justify-between items-center text-sm">
-                      <span className="text-gray-600">Catégorie :</span>
-                      <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-medium">
-                        {technology.category}
-                      </span>
-                    </div>
-
-                    <div className="flex justify-between items-center text-sm">
-                      <span className="text-gray-600">Image :</span>
-                      <span
-                        className={`px-2 py-1 rounded text-xs font-medium ${
-                          technology.imgPath
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-gray-100 text-gray-600'
-                        }`}
-                      >
-                        {technology.imgPath ? 'Définie' : 'Aucune'}
-                      </span>
-                    </div>
-
-                    <div className="flex justify-between items-center text-sm">
-                      <span className="text-gray-600">Lien origine :</span>
-                      <span
-                        className={`px-2 py-1 rounded text-xs font-medium ${
-                          technology.lienOrigin
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-gray-100 text-gray-600'
-                        }`}
-                      >
-                        {technology.lienOrigin ? 'Défini' : 'Aucun'}
-                      </span>
-                    </div>
-
-                    <div className="flex justify-between items-center text-sm">
-                      <span className="text-gray-600">Description :</span>
-                      <span
-                        className={`px-2 py-1 rounded text-xs font-medium ${
-                          technology.description
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-gray-100 text-gray-600'
-                        }`}
-                      >
-                        {technology.description ? 'Définie' : 'Aucune'}
-                      </span>
-                    </div>
-
-                    <hr />
-
-                    <div className="text-xs text-gray-500 space-y-1">
-                      <div>Ajoutée : {formatDate(technology.createdAt.toString())}</div>
-                      {technology.updatedAt && (
-                        <div>Modifié : {formatDate(technology.updatedAt.toString())}</div>
-                      )}
-                    </div>
                   </div>
                 </div>
               </div>
@@ -381,39 +347,22 @@ export default function TechnologiesShow({ technology }: { technology: Technolog
                   </div>
                 </div>
               )}
-
-              {/* Aperçu public */}
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-                <div className="p-4">
-                  <h3 className="font-medium text-gray-900 mb-4">Aperçu public</h3>
-                  <div className="bg-gray-50 rounded-lg p-3">
-                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-                      {/* Mini preview comme dans le portfolio */}
-                      <div className="aspect-square bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center relative">
-                        {technology.imgPathPublicUrl ? (
-                          <img
-                            src={technology.imgPathPublicUrl}
-                            alt={technology.name}
-                            className="w-12 h-12 object-contain"
-                          />
-                        ) : (
-                          <Code2 className="w-8 h-8 text-gray-400" />
-                        )}
-                      </div>
-                      <div className="p-2">
-                        <h4 className="font-medium text-gray-900 text-sm">{technology.name}</h4>
-                      </div>
-                    </div>
-                  </div>
-                  <p className="text-xs text-gray-500 mt-2">
-                    Aperçu de l'affichage dans votre portfolio
-                  </p>
-                </div>
-              </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Modal de confirmation de suppression */}
+      <ConfirmationModal
+        isOpen={deleteModal.isOpen}
+        onClose={handleDeleteCancel}
+        onConfirm={handleDeleteConfirm}
+        title="Supprimer la technologie"
+        message="Êtes-vous sûr de vouloir supprimer cette technologie ? Cette action est irréversible."
+        itemName={technology.name}
+        isLoading={deleteModal.isLoading}
+        actionType="delete"
+      />
     </>
   )
 }

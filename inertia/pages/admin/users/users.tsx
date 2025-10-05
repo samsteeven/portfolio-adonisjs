@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react'
-import { Link } from '@inertiajs/react'
+import { Link, usePage } from '@inertiajs/react'
 import AdminLayout from '~/layout/AdminLayout'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -16,11 +16,11 @@ import {
   List,
   SortAsc,
   SortDesc,
-  X
+  X,
 } from 'lucide-react'
 import UserActions from '~/components/UserActions'
 import { UserRole, USER_ROLE_LABELS, USER_ROLE_COLORS } from '~/enums/user_role'
-import { AuthenticatedUser } from '~/types'
+import { AuthenticatedUser, InertiaProps } from '~/types'
 import { formatMemberSince } from '~/utils/utils_string'
 
 interface AdminUsersProps {
@@ -35,12 +35,13 @@ export default function AdminUsers({ users }: AdminUsersProps) {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
   const [isClient, setIsClient] = useState(false)
   const [showFilters, setShowFilters] = useState(false)
+  const { auth } = usePage<InertiaProps>().props
+  const currentUser = auth!.user
 
   useEffect(() => {
     setIsClient(true)
   }, [])
 
-  // Filtrage et tri des utilisateurs
   const filteredAndSortedUsers = useMemo(() => {
     if (!users) return []
 
@@ -55,7 +56,6 @@ export default function AdminUsers({ users }: AdminUsersProps) {
       return matchesSearch && matchesRole
     })
 
-    // Tri
     filtered.sort((a, b) => {
       let aValue: string | Date
       let bValue: string | Date
@@ -97,7 +97,6 @@ export default function AdminUsers({ users }: AdminUsersProps) {
     setSortOrder('desc')
   }
 
-  // Active filters count
   const activeFiltersCount = [searchTerm, selectedRole !== 'all' ? selectedRole : ''].filter(
     Boolean
   ).length
@@ -107,11 +106,22 @@ export default function AdminUsers({ users }: AdminUsersProps) {
       {filteredAndSortedUsers.map((user) => (
         <Card
           key={user.id}
-          className="overflow-hidden hover:shadow-lg transition-all duration-300 bg-white border border-gray-200 rounded-xl"
+          className={`overflow-hidden hover:shadow-lg transition-all duration-300 border rounded-xl ${
+            user.id === currentUser.id
+              ? 'bg-blue-50 border-blue-300 ring-2 ring-blue-200'
+              : 'bg-white border-gray-200'
+          }`}
         >
           <div className="p-4">
+            {user.id === currentUser.id && (
+              <div className="mb-3 flex justify-center">
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-blue-600 text-white shadow-sm">
+                  C'est vous
+                </span>
+              </div>
+            )}
+
             <div className="flex flex-col items-center text-center">
-              {/* Avatar */}
               <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
                 {user.subInfo?.photoPathPublicUrl ? (
                   <img
@@ -126,11 +136,9 @@ export default function AdminUsers({ users }: AdminUsersProps) {
                 )}
               </div>
 
-              {/* User Info */}
               <h3 className="font-semibold text-gray-900 mb-1 truncate w-full">{user.username}</h3>
               <p className="text-sm text-gray-500 mb-3 truncate w-full">{user.email}</p>
 
-              {/* Role Badge */}
               <span
                 className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium mb-3 ${USER_ROLE_COLORS[user.role as UserRole]}`}
               >
@@ -138,7 +146,6 @@ export default function AdminUsers({ users }: AdminUsersProps) {
                 {USER_ROLE_LABELS[user.role as UserRole]}
               </span>
 
-              {/* Status */}
               <div className="flex items-center justify-center gap-2 mb-4">
                 {user.isActive ? (
                   <CheckCircle className="w-4 h-4 text-green-500" />
@@ -150,13 +157,13 @@ export default function AdminUsers({ users }: AdminUsersProps) {
                 </span>
               </div>
 
-              {/* Date */}
               <div className="flex items-center justify-center text-xs text-gray-500 mb-4">
                 <Calendar className="w-3 h-3 mr-1" />
-                <span>{isClient ? formatMemberSince(user.createdAt.toString()) : 'Chargement...'}</span>
+                <span>
+                  {isClient ? formatMemberSince(user.createdAt.toString()) : 'Chargement...'}
+                </span>
               </div>
 
-              {/* Actions */}
               <div className="mt-2">
                 <UserActions user={user} />
               </div>
@@ -195,7 +202,11 @@ export default function AdminUsers({ users }: AdminUsersProps) {
               <tr
                 key={user.id}
                 className={`hover:bg-gray-50 transition-colors ${
-                  index % 2 === 0 ? 'bg-white' : 'bg-gray-50/30'
+                  user.id === currentUser.id
+                    ? 'bg-blue-50 border-l-4 border-blue-500'
+                    : index % 2 === 0
+                      ? 'bg-white'
+                      : 'bg-gray-50/30'
                 }`}
               >
                 <td className="px-4 py-4">
@@ -214,7 +225,14 @@ export default function AdminUsers({ users }: AdminUsersProps) {
                       )}
                     </div>
                     <div className="ml-4">
-                      <div className="text-sm font-medium text-gray-900">{user.username}</div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium text-gray-900">{user.username}</span>
+                        {user.id === currentUser.id && (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-blue-600 text-white">
+                            Vous
+                          </span>
+                        )}
+                      </div>
                       <div className="text-sm text-gray-500">{user.email}</div>
                     </div>
                   </div>
@@ -246,7 +264,9 @@ export default function AdminUsers({ users }: AdminUsersProps) {
                 <td className="px-4 py-4">
                   <div className="flex items-center text-sm text-gray-500">
                     <Calendar className="w-4 h-4 mr-1" />
-                    <span>{isClient ? formatMemberSince(user.createdAt.toString()) : 'Chargement...'}</span>
+                    <span>
+                      {isClient ? formatMemberSince(user.createdAt.toString()) : 'Chargement...'}
+                    </span>
                   </div>
                 </td>
                 <td className="px-4 py-4 text-right">
@@ -264,15 +284,15 @@ export default function AdminUsers({ users }: AdminUsersProps) {
     <>
       <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
         <div className="max-w-7xl mx-auto">
-          {/* Header */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Utilisateurs</h1>
-              <p className="mt-1 text-gray-600">Gérez les comptes utilisateurs et leurs permissions</p>
+              <p className="mt-1 text-gray-600">
+                Gérez les comptes utilisateurs et leurs permissions
+              </p>
               <div className="mt-1 text-sm text-gray-500">
                 {filteredAndSortedUsers.length} utilisateur
-                {filteredAndSortedUsers.length > 1 ? 's' : ''} sur {users.length} au
-                total
+                {filteredAndSortedUsers.length > 1 ? 's' : ''} sur {users.length} au total
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-3">
@@ -298,12 +318,10 @@ export default function AdminUsers({ users }: AdminUsersProps) {
             </div>
           </div>
 
-          {/* Filtres et contrôles */}
           <Card
             className={`mb-6 p-4 sm:p-6 bg-white transition-all duration-300 ${showFilters ? 'block' : 'hidden md:block'}`}
           >
             <div className="space-y-4">
-              {/* Mobile filter header */}
               <div className="flex md:hidden items-center justify-between">
                 <h3 className="text-lg font-medium text-gray-900">Filtres</h3>
                 <Button
@@ -316,9 +334,7 @@ export default function AdminUsers({ users }: AdminUsersProps) {
                 </Button>
               </div>
 
-              {/* Ligne 1: Recherche et filtres */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                {/* Recherche */}
                 <div className="lg:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-1">Rechercher</label>
                   <div className="relative">
@@ -333,7 +349,6 @@ export default function AdminUsers({ users }: AdminUsersProps) {
                   </div>
                 </div>
 
-                {/* Rôle */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Rôle</label>
                   <select
@@ -351,9 +366,7 @@ export default function AdminUsers({ users }: AdminUsersProps) {
                 </div>
               </div>
 
-              {/* Ligne 2: Tri et actions */}
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
-                {/* Tri */}
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-1">Tri</label>
                   <div className="flex gap-2">
@@ -380,7 +393,6 @@ export default function AdminUsers({ users }: AdminUsersProps) {
                   </div>
                 </div>
 
-                {/* Actions de filtres */}
                 <div className="flex items-end">
                   <Button
                     variant="ghost"
@@ -393,7 +405,6 @@ export default function AdminUsers({ users }: AdminUsersProps) {
                   </Button>
                 </div>
 
-                {/* Mode d'affichage */}
                 <div className="flex items-end">
                   <div className="flex w-full bg-gray-100 rounded-lg p-1">
                     <button
@@ -426,11 +437,8 @@ export default function AdminUsers({ users }: AdminUsersProps) {
             </div>
           </Card>
 
-          {/* Contenu */}
           {filteredAndSortedUsers.length > 0 ? (
-            <>
-              {viewMode === 'grid' ? <GridView /> : <ListView />}
-            </>
+            <>{viewMode === 'grid' ? <GridView /> : <ListView />}</>
           ) : (
             <div className="text-center py-12">
               <div className="mx-auto h-16 w-16 bg-gray-100 rounded-full flex items-center justify-center">

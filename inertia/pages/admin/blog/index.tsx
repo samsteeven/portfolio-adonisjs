@@ -4,7 +4,6 @@ import AdminLayout from '~/layout/AdminLayout'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card } from '@/components/ui/card'
-import DeleteConfirmationModal from '~/components/DeleteConfirmationModal'
 import {
   Plus,
   Search,
@@ -28,6 +27,8 @@ import {
   AlertCircle,
   ExternalLink,
 } from 'lucide-react'
+import SafeHTML from '~/components/safeHTML'
+import ConfirmationModal from '~/components/ConfirmationModal'
 
 interface PostBlog extends BlogPost {
   _count?: {
@@ -62,13 +63,19 @@ export default function BlogPostsIndex({ posts, filters }: BlogPostsIndexProps) 
     postTitle: '',
     isLoading: false,
   })
+  const [statusModal, setStatusModal] = useState({
+    isOpen: false,
+    postId: null as number | null,
+    postTitle: '',
+    isPublished: false,
+    isLoading: false,
+  })
   const [isclient, setIsClient] = useState(false)
 
   useEffect(() => {
     setIsClient(true)
   }, [])
 
-  // Filtrage côté client
   const filteredPosts = useMemo(() => {
     let filtered = [...posts.data]
 
@@ -161,6 +168,7 @@ export default function BlogPostsIndex({ posts, filters }: BlogPostsIndexProps) 
     setDeleteModal((prev) => ({ ...prev, isLoading: true }))
 
     router.delete(`/admin/blog/${deleteModal.postId}`, {
+      preserveScroll: true,
       onSuccess: () => {
         setDeleteModal({
           isOpen: false,
@@ -173,6 +181,42 @@ export default function BlogPostsIndex({ posts, filters }: BlogPostsIndexProps) 
         setDeleteModal((prev) => ({ ...prev, isLoading: false }))
       },
     })
+  }
+
+  const handleToggleStatus = (id: number, title: string, isPublished: boolean) => {
+    setStatusModal({
+      isOpen: true,
+      postId: id,
+      postTitle: title,
+      isPublished,
+      isLoading: false,
+    })
+  }
+
+  const confirmToggleStatus = async () => {
+    if (!statusModal.postId) return
+
+    setStatusModal((prev) => ({ ...prev, isLoading: true }))
+
+    router.patch(
+      `/admin/blog/${statusModal.postId}/toggle-status`,
+      {},
+      {
+        preserveScroll: true,
+        onSuccess: () => {
+          setStatusModal({
+            isOpen: false,
+            postId: null,
+            postTitle: '',
+            isPublished: false,
+            isLoading: false,
+          })
+        },
+        onError: () => {
+          setStatusModal((prev) => ({ ...prev, isLoading: false }))
+        },
+      }
+    )
   }
 
   const stats = useMemo(
@@ -426,8 +470,11 @@ export default function BlogPostsIndex({ posts, filters }: BlogPostsIndexProps) 
                         <Link href={`/admin/blog/${post.id}`}>{post.title}</Link>
                       </h3>
 
-                      {/* Excerpt */}
-                      <p className="text-sm text-gray-600 mb-3 line-clamp-2">{post.excerpt}</p>
+                      {/* Content */}
+                      <SafeHTML
+                        html={post.content}
+                        className="text-sm text-gray-600 mb-3 line-clamp-2"
+                      />
 
                       {/* Meta */}
                       <div className="flex items-center gap-4 text-xs text-gray-500 mb-3">
@@ -488,11 +535,8 @@ export default function BlogPostsIndex({ posts, filters }: BlogPostsIndexProps) 
                         </div>
 
                         <div className="flex items-center gap-1">
-                          <Link
-                            as="button"
-                            method="patch"
-                            href={`/admin/blog/${post.id}/toggle-status`}
-                            preserveScroll
+                          <button
+                            onClick={() => handleToggleStatus(post.id, post.title, post.published)}
                             className={`p-1.5 rounded transition-colors ${
                               post.published
                                 ? 'text-gray-400 hover:text-orange-600 hover:bg-orange-50'
@@ -505,7 +549,7 @@ export default function BlogPostsIndex({ posts, filters }: BlogPostsIndexProps) 
                             ) : (
                               <Globe className="w-4 h-4" />
                             )}
-                          </Link>
+                          </button>
                           <button
                             onClick={() => handleDelete(post.id, post.title)}
                             className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
@@ -566,11 +610,10 @@ export default function BlogPostsIndex({ posts, filters }: BlogPostsIndexProps) 
                             >
                               <Edit className="w-4 h-4" />
                             </Link>
-                            <Link
-                              as="button"
-                              method="patch"
-                              href={`/admin/blog/${post.id}/toggle-status`}
-                              preserveScroll
+                            <button
+                              onClick={() =>
+                                handleToggleStatus(post.id, post.title, post.published)
+                              }
                               className={`p-2 rounded transition-colors ${
                                 post.published
                                   ? 'text-gray-400 hover:text-orange-600 hover:bg-orange-50'
@@ -582,7 +625,7 @@ export default function BlogPostsIndex({ posts, filters }: BlogPostsIndexProps) 
                               ) : (
                                 <Globe className="w-4 h-4" />
                               )}
-                            </Link>
+                            </button>
                             <button
                               onClick={() => handleDelete(post.id, post.title)}
                               className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
@@ -592,7 +635,10 @@ export default function BlogPostsIndex({ posts, filters }: BlogPostsIndexProps) 
                           </div>
                         </div>
 
-                        <p className="text-sm text-gray-600 mb-3 line-clamp-2">{post.excerpt}</p>
+                        <SafeHTML
+                          html={post.content}
+                          className="text-sm text-gray-600 mb-3 line-clamp-2"
+                        />
 
                         <div className="flex flex-wrap items-center gap-4 text-xs text-gray-500 mb-2">
                           <div className="flex items-center gap-1">
@@ -687,7 +733,7 @@ export default function BlogPostsIndex({ posts, filters }: BlogPostsIndexProps) 
       </div>
 
       {/* Delete Modal */}
-      <DeleteConfirmationModal
+      <ConfirmationModal
         isOpen={deleteModal.isOpen}
         onClose={() => setDeleteModal((prev) => ({ ...prev, isOpen: false }))}
         onConfirm={confirmDelete}
@@ -695,6 +741,22 @@ export default function BlogPostsIndex({ posts, filters }: BlogPostsIndexProps) 
         message="Cette action est irréversible. L'article et tous ses commentaires seront définitivement supprimés."
         itemName={deleteModal.postTitle}
         isLoading={deleteModal.isLoading}
+      />
+
+      {/* Status Change Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={statusModal.isOpen}
+        onClose={() => setStatusModal((prev) => ({ ...prev, isOpen: false }))}
+        onConfirm={confirmToggleStatus}
+        title={statusModal.isPublished ? "Dépublier l'article" : "Publier l'article"}
+        message={
+          statusModal.isPublished
+            ? 'Êtes-vous sûr de vouloir dépublier cet article ? Il ne sera plus visible publiquement.'
+            : 'Êtes-vous sûr de vouloir publier cet article ? Il sera visible publiquement.'
+        }
+        actionType={statusModal.isPublished ? 'deactivate' : 'activate'}
+        itemName={statusModal.postTitle}
+        isLoading={statusModal.isLoading}
       />
     </>
   )

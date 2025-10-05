@@ -3,7 +3,7 @@ import { Head, Link, router } from '@inertiajs/react'
 import AdminLayout from '~/layout/AdminLayout'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
-import DeleteConfirmationModal from '~/components/DeleteConfirmationModal'
+import ConfirmationModal from '~/components/ConfirmationModal'
 import {
   ArrowLeft,
   Edit,
@@ -19,10 +19,10 @@ import {
   CheckCircle2,
   TimerReset as Schedule,
   ExternalLink,
-  Copy,
   Trash2,
   Globe,
 } from 'lucide-react'
+import SafeHTML from '~/components/safeHTML'
 
 interface BlogShowAdminProps {
   post: BlogPost
@@ -31,6 +31,10 @@ interface BlogShowAdminProps {
 export default function BlogShowAdmin({ post }: BlogShowAdminProps) {
   const [isclient, setIsClient] = useState(false)
   const [deleteModal, setDeleteModal] = useState({
+    isOpen: false,
+    isLoading: false,
+  })
+  const [statusModal, setStatusModal] = useState({
     isOpen: false,
     isLoading: false,
   })
@@ -90,14 +94,6 @@ export default function BlogShowAdmin({ post }: BlogShowAdminProps) {
     }
   }
 
-  const copyToClipboard = async (text: string) => {
-    try {
-      await navigator.clipboard.writeText(text)
-    } catch (err) {
-      console.error('Failed to copy: ', err)
-    }
-  }
-
   const handleDelete = () => {
     setDeleteModal({
       isOpen: true,
@@ -109,13 +105,56 @@ export default function BlogShowAdmin({ post }: BlogShowAdminProps) {
     setDeleteModal((prev) => ({ ...prev, isLoading: true }))
 
     router.delete(`/admin/blog/${post.id}`, {
-      onSuccess: () => {
-        router.visit('/admin/blog')
-      },
       onError: () => {
         setDeleteModal((prev) => ({ ...prev, isLoading: false }))
       },
     })
+  }
+
+  const handleToggleStatus = () => {
+    setStatusModal({
+      isOpen: true,
+      isLoading: false,
+    })
+  }
+
+  const confirmToggleStatus = async () => {
+    setStatusModal((prev) => ({ ...prev, isLoading: true }))
+
+    router.patch(
+      `/admin/blog/${post.id}/toggle-status`,
+      {},
+      {
+        preserveScroll: true,
+        onSuccess: () => {
+          setStatusModal((prev) => ({ ...prev, isOpen: false, isLoading: false }))
+        },
+        onError: () => {
+          setStatusModal((prev) => ({ ...prev, isLoading: false }))
+        },
+      }
+    )
+  }
+
+  const handleShare = async () => {
+    const url = `${window.location.origin}/blog/${post.slug}`
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: post.title,
+          url: url,
+        })
+      } catch (err) {
+        console.error('Error sharing:', err)
+      }
+    } else {
+      // Fallback for browsers that don't support Web Share API
+      try {
+        await navigator.clipboard.writeText(url)
+      } catch (err) {
+        console.error('Failed to copy: ', err)
+      }
+    }
   }
 
   const statusInfo = getStatusInfo(post.published, post.publishedAt)
@@ -148,7 +187,6 @@ export default function BlogShowAdmin({ post }: BlogShowAdminProps) {
                   <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-1 break-words">
                     {post.title}
                   </h1>
-                  <p className="text-gray-600 text-sm sm:text-base break-words">{post.excerpt}</p>
                 </div>
               </div>
 
@@ -200,16 +238,9 @@ export default function BlogShowAdmin({ post }: BlogShowAdminProps) {
                   </div>
 
                   <div className="prose prose-sm sm:prose-base lg:prose-lg max-w-none">
-                    <div
-                      className="leading-relaxed text-gray-800 break-words"
-                      style={{
-                        wordBreak: 'break-word',
-                        overflowWrap: 'break-word',
-                        hyphens: 'auto',
-                      }}
-                      dangerouslySetInnerHTML={{
-                        __html: post.content.replace(/\n/g, '<br />'),
-                      }}
+                    <SafeHTML
+                      html={post.content}
+                      className="text-gray-600 text-sm sm:text-base line-clamp-10"
                     />
                   </div>
                 </div>
@@ -303,29 +334,24 @@ export default function BlogShowAdmin({ post }: BlogShowAdminProps) {
                 <div className="p-4 sm:p-6">
                   <div className="flex items-center gap-2 mb-4">
                     <Share2 className="w-4 h-4 text-gray-600" />
-                    <h3 className="font-semibold text-gray-900">URL</h3>
+                    <h3 className="font-semibold text-gray-900">Partager</h3>
                   </div>
 
                   <div className="space-y-3">
-                    <div>
-                      <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                        Slug
-                      </label>
-                      <div className="flex flex-col sm:flex-row gap-2 mt-1">
-                        <code className="flex-1 text-sm bg-gray-50 px-3 py-2 rounded-md font-mono text-gray-800 break-all">
-                          /blog/{post.slug}
-                        </code>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => copyToClipboard(`/blog/${post.slug}`)}
-                          className="text-gray-400 hover:text-gray-600 w-full sm:w-auto justify-center sm:justify-start"
-                        >
-                          <Copy className="w-4 h-4 mr-2 sm:mr-0" />
-                          <span className="sm:hidden">Copier</span>
-                        </Button>
+                    {post.published ? (
+                      <Button
+                        onClick={handleShare}
+                        className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                        disabled={!isclient}
+                      >
+                        <Share2 className="w-4 h-4 mr-2" />
+                        Partager l'article
+                      </Button>
+                    ) : (
+                      <div className="text-sm text-gray-500 text-center py-3">
+                        L'article doit être publié pour être partagé
                       </div>
-                    </div>
+                    )}
                   </div>
                 </div>
               </Card>
@@ -338,11 +364,7 @@ export default function BlogShowAdmin({ post }: BlogShowAdminProps) {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() =>
-                        router.patch(`/admin/blog/${post.id}/toggle-status`, {
-                          preserveScroll: true,
-                        })
-                      }
+                      onClick={handleToggleStatus}
                       className="w-full justify-start text-gray-600 hover:text-gray-900 hover:bg-gray-50"
                     >
                       {post.published ? (
@@ -370,7 +392,7 @@ export default function BlogShowAdmin({ post }: BlogShowAdminProps) {
       </div>
 
       {/* Delete Confirmation Modal */}
-      <DeleteConfirmationModal
+      <ConfirmationModal
         isOpen={deleteModal.isOpen}
         onClose={() => setDeleteModal((prev) => ({ ...prev, isOpen: false }))}
         onConfirm={confirmDelete}
@@ -378,6 +400,22 @@ export default function BlogShowAdmin({ post }: BlogShowAdminProps) {
         message="Cette action est irréversible. L'article et tous ses commentaires seront définitivement supprimés."
         itemName={post.title}
         isLoading={deleteModal.isLoading}
+      />
+
+      {/* Status Change Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={statusModal.isOpen}
+        onClose={() => setStatusModal((prev) => ({ ...prev, isOpen: false }))}
+        onConfirm={confirmToggleStatus}
+        title={post.published ? "Dépublier l'article" : "Publier l'article"}
+        message={
+          post.published
+            ? 'Êtes-vous sûr de vouloir dépublier cet article ? Il ne sera plus visible publiquement.'
+            : 'Êtes-vous sûr de vouloir publier cet article ? Il sera visible publiquement.'
+        }
+        actionType={post.published ? 'deactivate' : 'activate'}
+        itemName={post.title}
+        isLoading={statusModal.isLoading}
       />
     </>
   )

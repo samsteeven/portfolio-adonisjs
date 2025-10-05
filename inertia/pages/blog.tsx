@@ -12,6 +12,8 @@ import {
   TrendingUp,
 } from 'lucide-react'
 import { useEffect, useState, useMemo } from 'react'
+import SafeHTML from '~/components/safeHTML'
+import { formatLocalDate, readingTime } from '~/utils/utils_string'
 
 interface BlogIndexProps {
   posts: {
@@ -57,26 +59,6 @@ export default function BlogIndex({ posts, currentTag }: BlogIndexProps) {
       return titleMatch || excerptMatch || tagsMatch || authorMatch
     })
   }, [posts.data, searchTerm])
-
-  const formatDateShort = (dateString: string) => {
-    if (!isclient) return '...'
-    return new Date(dateString).toLocaleDateString('fr-FR', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-    })
-  }
-
-  const readingTime = (text: string) => {
-    const wordsPerMinute = 200
-    const words = text.split(' ').length
-    return Math.ceil(words / wordsPerMinute)
-  }
-
-  // const truncateText = (text: string, maxLength: number = 120) => {
-  //   if (text.length <= maxLength) return text
-  //   return text.substr(0, maxLength) + '...'
-  // }
 
   const clearSearch = () => {
     setSearchTerm('')
@@ -229,12 +211,12 @@ export default function BlogIndex({ posts, currentTag }: BlogIndexProps) {
                             <div className="flex items-center gap-2">
                               <Calendar className="w-4 h-4" />
                               <time dateTime={post.publishedAt}>
-                                {formatDateShort(post.publishedAt)}
+                                {isclient ? formatLocalDate(post.publishedAt) : '...'}
                               </time>
                             </div>
                             <div className="flex items-center gap-2">
                               <Clock className="w-4 h-4" />
-                              <span>{readingTime(post.excerpt)} min de lecture</span>
+                              <span>{readingTime(post.content)} de lecture</span>
                             </div>
                           </div>
                         </div>
@@ -258,10 +240,12 @@ export default function BlogIndex({ posts, currentTag }: BlogIndexProps) {
                             </Link>
                           </h2>
 
-                          {/* Excerpt */}
-                          <p className="text-gray-300 text-lg leading-relaxed">
-                            {highlightSearchTerm(post.excerpt, searchTerm)}
-                          </p>
+                          <SafeHTML
+                            html={post.excerpt}
+                            searchTerm={searchTerm}
+                            className="text-gray-300 text-lg leading-relaxed"
+                            as="div"
+                          />
 
                           {/* Tags */}
                           {post.tags.length > 0 && (

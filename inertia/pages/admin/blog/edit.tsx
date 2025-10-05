@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react'
+import React from 'react'
 import { Head, useForm, Link } from '@inertiajs/react'
 import AdminLayout from '~/layout/AdminLayout'
 import { Button } from '@/components/ui/button'
@@ -18,6 +18,8 @@ import {
 } from 'lucide-react'
 import { formatDateTimeLocal, generateSlug } from '~/utils/utils_string'
 import TinyMCEEditor from '~/components/TinyMCEEditor'
+import { useImageUpload } from '~/utils/hooks/use_image_upload'
+import { toast } from 'sonner'
 
 interface EditProps {
   post: BlogPost
@@ -30,53 +32,60 @@ export default function EditBlogPost({ post, tags }: EditProps) {
     slug: post.slug,
     excerpt: post.excerpt,
     content: post.content,
-    featuredImage: null as File | null, // Fichier uploadé
-    featuredImageUrl: post.photoPathPublicUrl === post.featuredImage ? post.featuredImage : null, // URL externe ou existante
+    featuredImage: null as File | null,
+    featuredImageUrl: post.photoPathPublicUrl === post.featuredImage ? post.featuredImage : null,
     published: post.published,
     publishedAt: post.publishedAt || '',
     tags: post.tags.map((tag) => tag.id),
   })
 
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  const [imagePreview, setImagePreview] = useState(post.photoPathPublicUrl || '')
-  const [imageSource, setImageSource] = useState<'file' | 'url'>('url') // Track source type
+  // Utilisation du hook useImageUpload avec l'image existante
+  const {
+    preview: imagePreview,
+    dragActive,
+    fileInputRef,
+    handleDrop,
+    handleDrag,
+    handleInputChange,
+    removeImage: removeImagePreview,
+    handleContainerClick,
+  } = useImageUpload({
+    maxSize: 5,
+    allowedTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'],
+    initialPreview: post.photoPathPublicUrl || null, // Image existante
+    onImageChange: (file) => {
+      setData((prevData) => ({
+        ...prevData,
+        featuredImage: file,
+        featuredImageUrl: file ? '' : prevData.featuredImageUrl,
+      }))
+    },
+    onError: (error) => toast.error(error),
+  })
 
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (file) {
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        const result = e.target?.result as string
-        setImagePreview(result)
-        setImageSource('file')
-        setData({
-          ...data,
-          featuredImage: file, // Fichier pour upload
-          featuredImageUrl: '', // Vider l'URL quand on upload un fichier
-        })
-      }
-      reader.readAsDataURL(file)
-    }
+  const handleTitleChange = (title: string) => {
+    setData((prevData) => ({
+      ...prevData,
+      title,
+      slug: generateSlug(title),
+    }))
   }
 
-  const handleUrlChange = (url: string) => {
-    setImagePreview(url)
-    setImageSource('url')
-    setData({
-      ...data,
-      featuredImage: null, // Pas de fichier quand on utilise une URL
+  const handleImageUrlChange = (url: string) => {
+    setData((prevData) => ({
+      ...prevData,
       featuredImageUrl: url,
-    })
+      featuredImage: null,
+    }))
   }
 
-  const clearImage = () => {
-    setImagePreview('')
-    setImageSource('url')
-    setData({
-      ...data,
+  const removeImage = () => {
+    removeImagePreview()
+    setData((prevData) => ({
+      ...prevData,
       featuredImage: null,
       featuredImageUrl: '',
-    })
+    }))
   }
 
   const toggleTag = (tagId: number) => {
@@ -87,23 +96,9 @@ export default function EditBlogPost({ post, tags }: EditProps) {
 
     setData('tags', newTags)
   }
-  const handleTitleChange = (title: string) => {
-    setData((prevData) => ({
-      ...prevData,
-      title,
-      slug: generateSlug(title),
-    }))
-  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-
-    // Ajouter le bon champ selon le type d'image
-    if (imageSource === 'file' && data.featuredImage) {
-      setData((previousData) => ({ ...previousData, featuredImage: data.featuredImage }))
-    } else if (imageSource === 'url' && data.featuredImageUrl) {
-      setData((previousData) => ({ ...previousData, featuredImageUrl: data.featuredImageUrl }))
-    }
 
     transform((formData) => ({
       ...formData,
@@ -112,8 +107,14 @@ export default function EditBlogPost({ post, tags }: EditProps) {
         : null,
     }))
 
-    patch(`/admin/blog/${post.id}`)
+    patch(`/admin/blog/${post.id}`, {
+      preserveScroll: true,
+    })
   }
+
+  // Détermine la source et l'aperçu de l'image
+  const imageSource = data.featuredImage ? 'file' : data.featuredImageUrl ? 'url' : null
+  const displayPreview = imagePreview || data.featuredImageUrl || post.photoPathPublicUrl
 
   return (
     <>
@@ -203,15 +204,11 @@ export default function EditBlogPost({ post, tags }: EditProps) {
                   <Label htmlFor="excerpt" className="text-sm font-medium">
                     Extrait *
                   </Label>
-                  <textarea
-                    id="excerpt"
+                  <TinyMCEEditor
                     value={data.excerpt}
-                    onChange={(e) => setData('excerpt', e.target.value)}
+                    onEditorChange={(excerpt) => setData('excerpt', excerpt)}
                     placeholder="Résumé court qui apparaîtra sur la page d'accueil du blog..."
-                    rows={3}
-                    className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                    required
-                    disabled={processing}
+                    height={150}
                   />
                   <div className="flex justify-between items-center mt-2">
                     <span className="text-xs text-gray-500">
@@ -296,66 +293,92 @@ export default function EditBlogPost({ post, tags }: EditProps) {
                   </h3>
 
                   <div className="space-y-4">
-                    {imagePreview ? (
+                    {displayPreview ? (
                       <div className="relative">
                         <img
-                          src={imagePreview}
+                          src={displayPreview}
                           alt="Aperçu"
                           className="w-full h-32 object-cover rounded-lg"
                         />
                         <button
                           type="button"
-                          onClick={clearImage}
-                          className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
+                          onClick={removeImage}
+                          className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
                           disabled={processing}
                         >
                           <X className="w-4 h-4" />
                         </button>
-                        <div className="absolute bottom-2 left-2 px-2 py-1 bg-black/50 text-white text-xs rounded">
-                          {imageSource === 'file' ? 'Fichier uploadé' : 'URL externe'}
+                        <div className="absolute bottom-2 left-2 px-2 py-1 bg-black/60 text-white text-xs rounded">
+                          {imageSource === 'file'
+                            ? 'Nouveau fichier'
+                            : imageSource === 'url'
+                              ? 'URL externe'
+                              : 'Image actuelle'}
                         </div>
                       </div>
                     ) : (
-                      <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                      <div
+                        className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors ${
+                          dragActive
+                            ? 'border-blue-500 bg-blue-50'
+                            : 'border-gray-300 hover:border-gray-400'
+                        }`}
+                        onDrop={handleDrop}
+                        onDragOver={handleDrag}
+                        onDragEnter={handleDrag}
+                        onDragLeave={handleDrag}
+                        onClick={handleContainerClick}
+                      >
                         <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                        <p className="text-sm text-gray-500">Aucune image sélectionnée</p>
+                        <p className="text-sm text-gray-500">
+                          Glissez une image ou cliquez pour sélectionner
+                        </p>
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          accept="image/*"
+                          onChange={handleInputChange}
+                          className="hidden"
+                          disabled={processing}
+                        />
                       </div>
                     )}
 
                     <div>
-                      <Label htmlFor="image-upload" className="cursor-pointer">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="w-full"
-                          type="button"
-                          disabled={processing}
-                          onClick={() => fileInputRef.current?.click()}
-                        >
-                          <Upload className="w-4 h-4 mr-2" />
-                          {imagePreview ? "Changer l'image" : 'Ajouter une image'}
-                        </Button>
-                      </Label>
-                      <input
-                        ref={fileInputRef}
-                        id="image-upload"
-                        type="file"
-                        accept="image/*"
-                        onChange={handleImageUpload}
-                        className="hidden"
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full"
+                        type="button"
                         disabled={processing}
-                      />
+                        onClick={() => fileInputRef.current?.click()}
+                      >
+                        <Upload className="w-4 h-4 mr-2" />
+                        {displayPreview ? "Changer l'image" : 'Ajouter une image'}
+                      </Button>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Formats supportés: JPG, PNG, GIF, WebP (max 5MB)
+                      </p>
+                    </div>
+
+                    <div className="relative">
+                      <div className="absolute inset-0 flex items-center">
+                        <span className="w-full border-t" />
+                      </div>
+                      <div className="relative flex justify-center text-xs uppercase">
+                        <span className="bg-white px-2 text-gray-500">Ou</span>
+                      </div>
                     </div>
 
                     <div>
                       <Label htmlFor="featuredImageUrl" className="text-sm">
-                        Ou URL de l'image
+                        URL de l'image
                       </Label>
                       <Input
                         id="featuredImageUrl"
                         type="url"
                         value={data.featuredImageUrl || ''}
-                        onChange={(e) => handleUrlChange(e.target.value)}
+                        onChange={(e) => handleImageUrlChange(e.target.value)}
                         placeholder="https://example.com/image.jpg"
                         className="mt-1"
                         disabled={processing}

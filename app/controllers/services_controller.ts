@@ -22,24 +22,28 @@ export default class ServicesController {
       .apply((scopes) => scopes.ordered())
       .exec()
 
-    return inertia.render('services', {
-      services: services.map((service) => service.serialize()),
+    return inertia.render('services/index', {
+      services: services.map((service) =>
+        service.serialize({
+          fields: ['id', 'title', 'description', 'price', 'publicUrl', 'slug'],
+        })
+      ),
     })
   }
 
   /**
    * Afficher un service spécifique (page détail service)
    */
-  // async show({ params, inertia }: HttpContext) {
-  //   const service = await Service.query()
-  //     .where('slug', params.slug)
-  //     .apply((scopes) => scopes.active())
-  //     .firstOrFail()
-  //
-  //   return inertia.render('services/show', {
-  //     service: service.serialize(),
-  //   })
-  // }
+  async publicShow({ params, inertia }: HttpContext) {
+    const service = await Service.query()
+      .where('slug', params.slug)
+      .apply((scopes) => scopes.active())
+      .firstOrFail()
+
+    return inertia.render('services/show', {
+      service: service.serialize(),
+    })
+  }
 
   /**
    * Afficher la liste des services côté admin avec filtres et pagination

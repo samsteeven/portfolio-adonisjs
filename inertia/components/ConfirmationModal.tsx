@@ -1,7 +1,7 @@
-import { X, Trash2 } from 'lucide-react'
+import { X, Trash2, UserCheck, UserX } from 'lucide-react'
 import { AnimatePresence, motion } from 'framer-motion'
 
-interface DeleteConfirmationModalProps {
+interface ConfirmationModalProps {
   isOpen: boolean
   onClose: () => void
   onConfirm: () => void
@@ -9,9 +9,10 @@ interface DeleteConfirmationModalProps {
   message: string
   itemName?: string
   isLoading?: boolean
+  actionType?: 'delete' | 'activate' | 'deactivate' | 'default'
 }
 
-export default function DeleteConfirmationModal({
+export default function ConfirmationModal({
   isOpen,
   onClose,
   onConfirm,
@@ -19,7 +20,60 @@ export default function DeleteConfirmationModal({
   message,
   itemName,
   isLoading = false,
-}: DeleteConfirmationModalProps) {
+  actionType = 'default',
+}: ConfirmationModalProps) {
+  const getIcon = () => {
+    switch (actionType) {
+      case 'delete':
+        return <Trash2 className="w-6 h-6 sm:w-8 sm:h-8 text-red-600" />
+      case 'activate':
+        return <UserCheck className="w-6 h-6 sm:w-8 sm:h-8 text-green-600" />
+      case 'deactivate':
+        return <UserX className="w-6 h-6 sm:w-8 sm:h-8 text-orange-600" />
+      default:
+        return <Trash2 className="w-6 h-6 sm:w-8 sm:h-8 text-red-600" />
+    }
+  }
+
+  const getBackgroundColor = () => {
+    switch (actionType) {
+      case 'delete':
+        return 'bg-red-100'
+      case 'activate':
+        return 'bg-green-100'
+      case 'deactivate':
+        return 'bg-orange-100'
+      default:
+        return 'bg-red-100'
+    }
+  }
+
+  const getButtonClass = () => {
+    switch (actionType) {
+      case 'delete':
+        return 'bg-red-600 hover:bg-red-700'
+      case 'activate':
+        return 'bg-green-600 hover:bg-green-700'
+      case 'deactivate':
+        return 'bg-orange-600 hover:bg-orange-700'
+      default:
+        return 'bg-red-600 hover:bg-red-700'
+    }
+  }
+
+  const getButtonText = () => {
+    switch (actionType) {
+      case 'delete':
+        return isLoading ? 'Suppression...' : 'Supprimer'
+      case 'activate':
+        return isLoading ? 'Activation...' : 'Activer'
+      case 'deactivate':
+        return isLoading ? 'Désactivation...' : 'Désactiver'
+      default:
+        return isLoading ? 'Suppression...' : 'Supprimer'
+    }
+  }
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -60,12 +114,12 @@ export default function DeleteConfirmationModal({
             <div className="p-4 sm:p-6 text-center">
               {/* Icon */}
               <motion.div
-                className="w-12 h-12 sm:w-16 sm:h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4"
+                className={`w-12 h-12 sm:w-16 sm:h-16 ${getBackgroundColor()} rounded-full flex items-center justify-center mx-auto mb-4`}
                 initial={{ scale: 0, rotate: -90 }}
                 animate={{ scale: 1, rotate: 0 }}
                 transition={{ duration: 0.2, delay: 0.13 }}
               >
-                <Trash2 className="w-6 h-6 sm:w-8 sm:h-8 text-red-600" />
+                {getIcon()}
               </motion.div>
 
               {/* Title */}
@@ -119,15 +173,15 @@ export default function DeleteConfirmationModal({
                 <button
                   onClick={onConfirm}
                   disabled={isLoading}
-                  className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-medium flex items-center justify-center gap-2 transform hover:scale-[1.02] active:scale-[0.98] hover:shadow-lg"
+                  className={`flex-1 px-4 py-2.5 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-medium flex items-center justify-center gap-2 transform hover:scale-[1.02] active:scale-[0.98] hover:shadow-lg ${getButtonClass()}`}
                 >
                   {isLoading ? (
                     <>
                       <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      Suppression...
+                      {getButtonText()}
                     </>
                   ) : (
-                    'Supprimer'
+                    getButtonText()
                   )}
                 </button>
               </motion.div>

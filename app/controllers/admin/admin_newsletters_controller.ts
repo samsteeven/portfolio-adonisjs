@@ -50,7 +50,7 @@ export default class NewsletterController {
     await subscriber.delete()
 
     session.flash('success', 'Abonné supprimé avec succès')
-    return response.redirect('/admin/newsletter')
+    return response.redirect('/admin/newsletter/subscribers')
   }
 
   async bulkDestroy({ request, response, session, bouncer }: HttpContext) {
@@ -63,7 +63,7 @@ export default class NewsletterController {
     await NewsletterSubscriber.query().whereIn('id', ids).delete()
 
     session.flash('success', `${ids.length} abonné(s) supprimé(s) avec succès`)
-    return response.redirect('/admin/newsletter')
+    return response.redirect('/admin/newsletter/subscribers')
   }
 
   async toggleStatus({ params, request, response, bouncer, session }: HttpContext) {

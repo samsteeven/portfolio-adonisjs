@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react'
+import React from 'react'
 import { Head, useForm, Link } from '@inertiajs/react'
 import AdminLayout from '~/layout/AdminLayout'
 import { Button } from '@/components/ui/button'
@@ -16,6 +16,8 @@ import {
 } from 'lucide-react'
 import { generateSlug } from '~/utils/utils_string'
 import TinyMCEEditor from '~/components/TinyMCEEditor'
+import { useImageUpload } from '~/utils/hooks/use_image_upload'
+import { toast } from 'sonner'
 
 interface CreateProps {
   tags: Tag[]
@@ -34,9 +36,26 @@ export default function CreateBlogPost({ tags }: CreateProps) {
     tags: [] as number[],
   })
 
-  const [imagePreview, setImagePreview] = useState('')
-  const [imageSource, setImageSource] = useState<'file' | 'url' | null>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const {
+    preview: imagePreview,
+    dragActive,
+    fileInputRef,
+    handleDrop,
+    handleDrag,
+    handleInputChange,
+    removeImage: removeImagePreview,
+    handleContainerClick,
+  } = useImageUpload({
+    maxSize: 5, // 5MB pour les articles de blog
+    onImageChange: (file) => {
+      setData((prevData) => ({
+        ...prevData,
+        featuredImage: file,
+        featuredImageUrl: file ? '' : prevData.featuredImageUrl, // Reset URL si fichier sélectionné
+      }))
+    },
+    onError: (error) => toast.error(error),
+  })
 
   const handleTitleChange = (title: string) => {
     setData((prevData) => ({
@@ -46,53 +65,21 @@ export default function CreateBlogPost({ tags }: CreateProps) {
     }))
   }
 
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (file) {
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        const result = e.target?.result as string
-        setImagePreview(result)
-        setImageSource('file')
-        setData((prevData) => ({
-          ...prevData,
-          featuredImage: file,
-          featuredImageUrl: '', // Reset URL when file is selected
-        }))
-      }
-      reader.readAsDataURL(file)
-    }
-  }
-
   const handleImageUrlChange = (url: string) => {
     setData((prevData) => ({
       ...prevData,
       featuredImageUrl: url,
-      featuredImage: null, // Reset file when URL is entered
+      featuredImage: null, // Reset file quand URL est entrée
     }))
-
-    if (url) {
-      setImagePreview(url)
-      setImageSource('url')
-    } else {
-      setImagePreview('')
-      setImageSource(null)
-    }
   }
 
   const removeImage = () => {
-    setImagePreview('')
-    setImageSource(null)
+    removeImagePreview()
     setData((prevData) => ({
       ...prevData,
       featuredImage: null,
       featuredImageUrl: '',
     }))
-
-    // Reset file input
-    if (fileInputRef.current) {
-      fileInputRef.current.value = ''
-    }
   }
 
   const toggleTag = (tagId: number) => {
@@ -114,13 +101,17 @@ export default function CreateBlogPost({ tags }: CreateProps) {
         : null,
     }))
     post('/admin/blog', {
+      preserveScroll: true,
       onSuccess: () => {
         reset()
-        setImagePreview('')
-        setImageSource(null)
+        removeImage()
       },
     })
   }
+
+  // Détermine la source de l'image pour l'affichage
+  const imageSource = data.featuredImage ? 'file' : data.featuredImageUrl ? 'url' : null
+  const displayPreview = imagePreview || data.featuredImageUrl
 
   return (
     <>
@@ -192,14 +183,11 @@ export default function CreateBlogPost({ tags }: CreateProps) {
                   <Label htmlFor="excerpt" className="text-sm font-medium">
                     Extrait *
                   </Label>
-                  <textarea
-                    id="excerpt"
+                  <TinyMCEEditor
                     value={data.excerpt}
-                    onChange={(e) => setData('excerpt', e.target.value)}
+                    onEditorChange={(excerpt) => setData('excerpt', excerpt)}
                     placeholder="Résumé court qui apparaîtra sur la page d'accueil du blog..."
-                    rows={3}
-                    className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                    required
+                    height={150}
                   />
                   <div className="flex justify-between items-center mt-2">
                     <span className="text-xs text-gray-500">
@@ -260,6 +248,9 @@ export default function CreateBlogPost({ tags }: CreateProps) {
                           onChange={(e) => setData('publishedAt', e.target.value)}
                           className="mt-1"
                         />
+                        {errors.publishedAt && (
+                          <p className="text-sm text-red-600 mt-2">{errors.publishedAt}</p>
+                        )}
                       </div>
                     )}
                   </div>
@@ -273,10 +264,10 @@ export default function CreateBlogPost({ tags }: CreateProps) {
                   </h3>
 
                   <div className="space-y-4">
-                    {imagePreview ? (
+                    {displayPreview ? (
                       <div className="relative">
                         <img
-                          src={imagePreview}
+                          src={displayPreview}
                           alt="Aperçu"
                           className="w-full h-32 object-cover rounded-lg"
                         />
@@ -292,9 +283,29 @@ export default function CreateBlogPost({ tags }: CreateProps) {
                         </div>
                       </div>
                     ) : (
-                      <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                      <div
+                        className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors ${
+                          dragActive
+                            ? 'border-blue-500 bg-blue-50'
+                            : 'border-gray-300 hover:border-gray-400'
+                        }`}
+                        onDrop={handleDrop}
+                        onDragOver={handleDrag}
+                        onDragEnter={handleDrag}
+                        onDragLeave={handleDrag}
+                        onClick={handleContainerClick}
+                      >
                         <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                        <p className="text-sm text-gray-500">Aucune image sélectionnée</p>
+                        <p className="text-sm text-gray-500">
+                          Glissez une image ou cliquez pour sélectionner
+                        </p>
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          accept="image/*"
+                          onChange={handleInputChange}
+                          className="hidden"
+                        />
                       </div>
                     )}
 
@@ -307,18 +318,10 @@ export default function CreateBlogPost({ tags }: CreateProps) {
                         onClick={() => fileInputRef.current?.click()}
                       >
                         <Upload className="w-4 h-4 mr-2" />
-                        {imagePreview && imageSource === 'file'
+                        {displayPreview && imageSource === 'file'
                           ? 'Changer le fichier'
                           : 'Uploader un fichier'}
                       </Button>
-                      <input
-                        ref={fileInputRef}
-                        id="image-upload"
-                        type="file"
-                        accept="image/*"
-                        onChange={handleImageUpload}
-                        className="hidden"
-                      />
                       <p className="text-xs text-gray-500 mt-1">
                         Formats supportés: JPG, PNG, GIF, WebP (max 5MB)
                       </p>

@@ -21,7 +21,7 @@ export default class ContactRequestsController {
    */
   async showForm({ inertia, request }: HttpContext) {
     let selectedService = null
-    let slug = request.qs().selectedServiceId
+    let slug = request.qs().selectedService
 
     // Si un service est spécifié dans l'URL, le récupérer
     if (slug) {

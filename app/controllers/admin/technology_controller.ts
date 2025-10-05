@@ -214,7 +214,7 @@ export default class TechnologyController {
       await technology.delete()
 
       session.flash('success', 'Technologie supprimée avec succès')
-      return response.redirect().back()
+      return response.redirect('admin/technologies')
     } catch (error) {
       session.flash('error', error.message || 'Erreur lors de la suppression de la technologie')
       return response.redirect().back()

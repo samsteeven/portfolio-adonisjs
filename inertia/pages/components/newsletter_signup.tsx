@@ -93,6 +93,14 @@ export default function Newsletter_signup({ success, className = '' }: Newslette
                 {({ errors, processing }) => (
                   <>
                     <div className="relative group">
+                      <input
+                        type="text"
+                        name="website"
+                        style={{ position: 'absolute', left: '-9999px', opacity: 0 }}
+                        tabIndex={-1}
+                        autoComplete="off"
+                        aria-hidden="true"
+                      />
                       <div className="absolute left-4 top-1/2 transform -translate-y-1/2 z-10">
                         <Mail className="h-5 w-5 text-gray-400 group-focus-within:text-pink-400 transition-colors" />
                       </div>
@@ -101,7 +109,7 @@ export default function Newsletter_signup({ success, className = '' }: Newslette
                         name="email"
                         placeholder="votre@email.com"
                         autoComplete="email"
-                        className={`w-full pl-12 pr-20 py-4 bg-gray-800/50 backdrop-blur-sm border rounded-2xl focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all duration-200 text-white placeholder-gray-400 ${
+                        className={`w-full pl-12 pr-20 py-4 bg-gray-800/50 backdrop-blur-sm border rounded-2xl focus:ring-2 focus:ring-pink-500 focus:border-none transition-all duration-200 text-white placeholder-gray-400 ${
                           errors?.email
                             ? 'border-red-400 focus:ring-red-500'
                             : 'border-gray-600 hover:border-gray-500'
@@ -142,7 +150,7 @@ export default function Newsletter_signup({ success, className = '' }: Newslette
           ) : (
             /* Success State */
             <div className="py-4">
-              <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-green-500/20 to-emerald-500/20 backdrop-blur-sm rounded-2xl mb-6 border border-green-500/20">
+              <div className="inline-flex items-center justify-center w-17 h-17 bg-gradient-to-br from-green-500/20 to-emerald-500/20 backdrop-blur-sm rounded-2xl mb-6 border border-green-500/20">
                 <Check className="w-10 h-10 text-green-400" />
               </div>
 

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { WhenVisible, Head, Link, router, useForm } from '@inertiajs/react'
+import { WhenVisible, Head, Link, router, useForm, usePage } from '@inertiajs/react'
 import {
   Github,
   Loader2,
@@ -17,7 +17,7 @@ import {
 } from 'lucide-react'
 import { CommentaireType } from '~/types/commentaire'
 import { getInitials } from '~/utils/utils_string'
-import { AuthenticatedUser } from '~/types'
+import { AuthenticatedUser, InertiaProps } from '~/types'
 import { UserRole } from '~/enums/user_role'
 import { Fallback } from '@/components/fallback'
 import { PhoneInput } from '@/components/ui/phone-input'
@@ -81,29 +81,31 @@ export default function Guestbook({ comments: deferredComments, reactions, user 
   const [authLoading, setAuthLoading] = useState<'github' | 'google' | null>(null)
   const [formType, setFormType] = useState<'guest' | 'auth'>('auth')
   const [isclient, setIsClient] = useState(false)
-  const [defaultCountry, setDefaultCountry] = useState<CountryCode>('FR')
+  const [defaultCountry, setDefaultCountry] = useState<CountryCode>('CM')
+  const { auth } = usePage<InertiaProps>().props
 
   useEffect(() => {
     setIsClient(true)
-
-    const fetchCountry = async () => {
-      try {
-        const ipRes = await fetch('https://api.ipify.org?format=json')
-        const ipData = await ipRes.json()
-
-        const countryRes = await fetch(`/whoami?ip=${ipData.ip}`)
-        const countryData = await countryRes.json()
-
-        if (countryData && countryData.countryCode) {
-          setDefaultCountry(countryData.countryCode)
-        }
-      } catch (error) {
-        console.error('Erreur:', error)
-      }
-    }
-
-    fetchCountry()
   }, [])
+
+  useEffect(() => {
+    if (!auth?.user) {
+      const fetchCountry = async () => {
+        try {
+          const response = await fetch('https://ipapi.co/json/')
+          const data = await response.json()
+
+          if (data && data.country_code) {
+            setDefaultCountry(data.country_code)
+          }
+        } catch (error) {
+          console.error('Failed to fetch country:', error)
+        }
+      }
+
+      fetchCountry()
+    }
+  }, [auth?.user])
 
   const handleAuthSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -339,7 +341,7 @@ export default function Guestbook({ comments: deferredComments, reactions, user 
                   onChange={(e) => setAuthData('message', e.target.value)}
                   placeholder="Écrivez votre message..."
                   rows={4}
-                  className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent resize-none text-white placeholder-gray-400"
+                  className="w-full px-4 py-3 border focus:border-none bg-gray-800 border-gray-700 rounded-lg focus:ring-2 focus:ring-pink-500  resize-none text-white placeholder-gray-400"
                 />
                 {authErrors.message && <p className="text-red-400 text-sm">{authErrors.message}</p>}
 

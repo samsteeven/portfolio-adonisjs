@@ -80,7 +80,11 @@ export default class UserController {
   /**
    * Affiche le formulaire d'édition d'utilisateur
    */
-  async edit({ inertia, params }: HttpContext) {
+  async edit({ inertia, params, bouncer, response, session }: HttpContext) {
+    const authResult = await this.bouncerUserService.canUpdateUser(bouncer, params.id)
+    if (!authResult.authorized) {
+      return this.bouncerUserService.handleUnauthorized(response, session, authResult.error)
+    }
     const user = await this.userService.getUserById(params.id)
     return inertia.render('admin/users/edit', { user })
   }

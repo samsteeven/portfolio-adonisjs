@@ -70,8 +70,9 @@ export default class Service extends BaseModel {
   })
 
   // Getters
+  @computed()
   get formattedPrice(): string | null {
-    return this.price ? `${this.price.toLocaleString('fr-FR')} €` : null
+    return this.price ? `${this.price.toLocaleString('fr-FR')}` : null
   }
 
   get hasImage(): boolean {

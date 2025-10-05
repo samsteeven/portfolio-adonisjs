@@ -25,8 +25,12 @@ export default function ServicesIndex({ services }: Props) {
   const handleContactClick = (service: ServiceType) => {
     router.visit('/contact', {
       method: 'get',
-      data: { selectedServiceId: service.slug },
+      data: { selectedService: service.slug },
     })
+  }
+
+  const handleServiceClick = (service: ServiceType) => {
+    router.visit(`/services/${service.slug}`)
   }
 
   return (
@@ -116,7 +120,10 @@ export default function ServicesIndex({ services }: Props) {
                       className={`flex flex-col ${isEven ? 'lg:flex-row' : 'lg:flex-row-reverse'} gap-8 lg:gap-16 items-center`}
                     >
                       {/* Service Image */}
-                      <div className="relative flex-1 max-w-lg mx-auto lg:mx-0">
+                      <div
+                        className="relative flex-1 max-w-lg mx-auto lg:mx-0 cursor-pointer"
+                        onClick={() => handleServiceClick(service)}
+                      >
                         <div className="relative aspect-[4/3] rounded-3xl overflow-hidden border border-gray-700/50 group-hover:border-pink-500/50 transition-all duration-500">
                           {service.publicUrl ? (
                             <>
@@ -196,13 +203,16 @@ export default function ServicesIndex({ services }: Props) {
                           </div>
 
                           {/* Title */}
-                          <h3 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white group-hover:text-pink-300 transition-colors duration-300">
+                          <h3
+                            className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white group-hover:text-pink-300 transition-colors duration-300 cursor-pointer"
+                            onClick={() => handleServiceClick(service)}
+                          >
                             {service.title}
                           </h3>
 
                           {/* Description */}
                           <div className="text-lg text-gray-300 leading-relaxed group-hover:text-gray-200 transition-colors duration-300">
-                            <SafeHTML html={service.description} />
+                            <SafeHTML html={service.description} className="line-clamp-6" />
                           </div>
 
                           {/* Features */}

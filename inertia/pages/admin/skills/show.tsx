@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react'
 import AdminLayout from '~/layout/AdminLayout'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
-import DeleteConfirmationModal from '~/components/DeleteConfirmationModal'
+import ConfirmationModal from '~/components/ConfirmationModal'
 import {
   ArrowLeft,
   Edit,
@@ -16,12 +16,11 @@ import {
   XCircle,
   Eye,
   EyeOff,
-  Share2,
   Download,
 } from 'lucide-react'
 import { SkillType } from '~/types/skills'
-import { toast } from 'sonner'
 import SafeHTML from '~/components/safeHTML'
+import { formatLocalDate } from '~/utils/utils_string'
 
 interface Props {
   skill: SkillType
@@ -36,23 +35,57 @@ export default function ShowSkill({ skill }: Props) {
     isLoading: false,
   })
 
+  // Add state for status change confirmation modal
+  const [statusChangeModal, setStatusChangeModal] = useState({
+    isOpen: false,
+    isLoading: false,
+  })
+
   // Résoudre l'hydratation en s'assurant que le rendu côté client soit identique
   useEffect(() => {
     setIsClient(true)
   }, [])
 
-  // Fonction pour formater les dates de manière consistante
-  const formatDate = (dateString: string, option?: Intl.DateTimeFormatOptions) => {
-    if (!isClient) {
-      // Côté serveur, on retourne une chaîne vide ou une valeur par défaut
-      return '...'
-    }
-    return new Date(dateString).toLocaleDateString('fr-FR', option)
-  }
-
   const handleDeleteClick = () => {
     setDeleteModal({
       isOpen: true,
+      isLoading: false,
+    })
+  }
+
+  // Add function to open status change modal
+  const handleStatusChangeClick = () => {
+    setStatusChangeModal({
+      isOpen: true,
+      isLoading: false,
+    })
+  }
+
+  // Add function to confirm status change
+  const handleStatusChangeConfirm = () => {
+    setStatusChangeModal((prev) => ({ ...prev, isLoading: true }))
+
+    router.patch(
+      `/admin/skills/${skill.id}/toggle-status`,
+      {},
+      {
+        onSuccess: () => {
+          setStatusChangeModal({
+            isOpen: false,
+            isLoading: false,
+          })
+        },
+        onError: () => {
+          setStatusChangeModal((prev) => ({ ...prev, isLoading: false }))
+        },
+      }
+    )
+  }
+
+  // Add function to cancel status change
+  const handleStatusChangeCancel = () => {
+    setStatusChangeModal({
+      isOpen: false,
       isLoading: false,
     })
   }
@@ -84,13 +117,9 @@ export default function ShowSkill({ skill }: Props) {
     })
   }
 
+  // Update toggleStatus function to use the modal
   const toggleStatus = () => {
-    router.patch(`/admin/skills/${skill.id}/toggle-status`)
-  }
-
-  const copyToClipboard = async (text: string) => {
-    await navigator.clipboard.writeText(text)
-    toast.success('Copié dans le presse-papier')
+    handleStatusChangeClick()
   }
 
   return (
@@ -142,19 +171,11 @@ export default function ShowSkill({ skill }: Props) {
 
                 <p className="text-gray-600">
                   Compétence créée le{' '}
-                  {formatDate(skill.createdAt.toString(), {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                  })}
+                  {isClient ? formatLocalDate(skill.createdAt.toString()) : '...'}
                   {skill.updatedAt && (
                     <span>
                       {' • Modifiée le '}
-                      {formatDate(skill.updatedAt.toString(), {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                      })}
+                      {isClient ? formatLocalDate(skill.updatedAt.toString()) : '...'}
                     </span>
                   )}
                 </p>
@@ -325,25 +346,6 @@ export default function ShowSkill({ skill }: Props) {
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      ID de la compétence
-                    </label>
-                    <div className="flex items-center gap-2">
-                      <code className="px-2 py-1 bg-gray-100 rounded text-sm font-mono">
-                        #{skill.id}
-                      </code>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => copyToClipboard(skill.id.toString())}
-                        className="h-6 w-6 p-0 border-none"
-                      >
-                        <Share2 className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
                       Catégorie
                     </label>
                     <div className="flex items-center gap-2">
@@ -376,13 +378,7 @@ export default function ShowSkill({ skill }: Props) {
                     <div className="flex items-center gap-2">
                       <Calendar className="h-4 w-4 text-gray-400" />
                       <span className="text-gray-600">
-                        {formatDate(skill.createdAt.toString(), {
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}
+                        {isClient ? formatLocalDate(skill.createdAt.toString()) : '...'}
                       </span>
                     </div>
                   </div>
@@ -395,13 +391,7 @@ export default function ShowSkill({ skill }: Props) {
                       <div className="flex items-center gap-2">
                         <Clock className="h-4 w-4 text-gray-400" />
                         <span className="text-gray-600">
-                          {formatDate(skill.updatedAt.toString(), {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })}
+                          {isClient ? formatLocalDate(skill.updatedAt.toString()) : '...'}
                         </span>
                       </div>
                     </div>
@@ -437,15 +427,6 @@ export default function ShowSkill({ skill }: Props) {
                         Activer
                       </>
                     )}
-                  </Button>
-
-                  <Button
-                    onClick={() => copyToClipboard(window.location.href)}
-                    variant="outline"
-                    className="w-full justify-start border-none"
-                  >
-                    <Share2 className="h-4 w-4 mr-2" />
-                    Copier le lien
                   </Button>
 
                   <hr className="my-2 bg-gray-500" />
@@ -515,61 +496,13 @@ export default function ShowSkill({ skill }: Props) {
                   </Button>
                 </div>
               </Card>
-
-              {/* Métadonnées techniques */}
-              <Card className="p-6 bg-white border-none">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Métadonnées</h3>
-
-                <div className="space-y-3 text-sm">
-                  {skill.imagePathPublicUrl && (
-                    <div>
-                      <label className="font-medium text-gray-700">Chemin de l'image:</label>
-                      <div className="mt-1 flex items-center gap-2">
-                        <code className="flex-1 px-2 py-1 bg-gray-100 rounded text-xs font-mono truncate">
-                          {skill.imagePathPublicUrl}
-                        </code>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => copyToClipboard(skill.imagePathPublicUrl!)}
-                          className="h-6 w-6 p-0 flex-shrink-0 border-none"
-                        >
-                          <Share2 className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-
-                  <div>
-                    <label className="font-medium text-gray-700">Longueur description:</label>
-                    <div className="mt-1">
-                      <span className="text-gray-600">
-                        {skill.description ? skill.description.length : 0} caractères
-                      </span>
-                    </div>
-                  </div>
-
-                  {isClient && (
-                    <div>
-                      <label className="font-medium text-gray-700">Dernière activité:</label>
-                      <div className="mt-1">
-                        <span className="text-gray-600">
-                          {skill.updatedAt
-                            ? `Modifiée il y a ${Math.floor((Date.now() - new Date(skill.updatedAt).getTime()) / (1000 * 60 * 60 * 24))} jour(s)`
-                            : `Créée il y a ${Math.floor((Date.now() - new Date(skill.createdAt).getTime()) / (1000 * 60 * 60 * 24))} jour(s)`}
-                        </span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </Card>
             </div>
           </div>
         </div>
       </div>
 
       {/* Modal de confirmation de suppression */}
-      <DeleteConfirmationModal
+      <ConfirmationModal
         isOpen={deleteModal.isOpen}
         onClose={handleDeleteCancel}
         onConfirm={handleDeleteConfirm}
@@ -577,6 +510,22 @@ export default function ShowSkill({ skill }: Props) {
         message="Cette action est irréversible. Êtes-vous sûr de vouloir supprimer cette compétence ?"
         itemName={skill.name}
         isLoading={deleteModal.isLoading}
+      />
+
+      {/* Modal de confirmation de changement de statut */}
+      <ConfirmationModal
+        isOpen={statusChangeModal.isOpen}
+        onClose={handleStatusChangeCancel}
+        onConfirm={handleStatusChangeConfirm}
+        title={skill.isActive ? 'Désactiver la compétence' : 'Activer la compétence'}
+        message={
+          skill.isActive
+            ? 'Êtes-vous sûr de vouloir désactiver cette compétence ?'
+            : 'Êtes-vous sûr de vouloir activer cette compétence ?'
+        }
+        itemName={skill.name}
+        isLoading={statusChangeModal.isLoading}
+        actionType={skill.isActive ? 'deactivate' : 'activate'}
       />
     </>
   )

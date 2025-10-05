@@ -20,9 +20,10 @@ import AdminLayout from '~/layout/AdminLayout'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card } from '@/components/ui/card'
-import DeleteConfirmationModal from '~/components/DeleteConfirmationModal'
+import ConfirmationModal from '~/components/ConfirmationModal'
 import SafeHTML from '~/components/safeHTML'
 import { Technology, TechnologyFilters } from '~/types/technology'
+import { formatLocalDate } from '~/utils/utils_string'
 
 type TechnologyIndex = {
   technologies: {
@@ -60,12 +61,6 @@ export default function TechnologiesIndex({ technologies, categories, filters }:
   useEffect(() => {
     setIsClient(true)
   }, [])
-
-  // Fonction pour formater les dates
-  const formatDate = (dateString: string) => {
-    if (!isClient) return '...'
-    return new Date(dateString).toLocaleDateString('fr-FR')
-  }
 
   // Filtrage côté client
   const filteredTechnologies = useMemo(() => {
@@ -388,7 +383,7 @@ export default function TechnologiesIndex({ technologies, categories, filters }:
                     {/* Meta info */}
                     <div className="flex items-center text-xs text-gray-500 mb-3 pt-2 border-t border-gray-100">
                       <Calendar className="h-3 w-3 mr-1" />
-                      {formatDate(technology.createdAt.toString())}
+                      {isClient ? formatLocalDate(technology.createdAt.toString()) : '...'}
                     </div>
 
                     {/* Actions */}
@@ -470,7 +465,8 @@ export default function TechnologiesIndex({ technologies, categories, filters }:
                       <div className="flex items-center justify-between text-xs text-gray-500 mb-3">
                         <div className="flex items-center gap-1">
                           <Calendar className="h-3 w-3" />
-                          Créé le {formatDate(technology.createdAt.toString())}
+                          Créé le{' '}
+                          {isClient ? formatLocalDate(technology.createdAt.toString()) : '..'}
                         </div>
                       </div>
 
@@ -553,7 +549,10 @@ export default function TechnologiesIndex({ technologies, categories, filters }:
 
                               <div className="flex items-center gap-1 text-sm text-gray-500">
                                 <Calendar className="h-4 w-4" />
-                                Créé le {formatDate(technology.createdAt.toString())}
+                                Créé le{' '}
+                                {isClient
+                                  ? formatLocalDate(technology.createdAt.toString())
+                                  : '...'}
                               </div>
                             </div>
 
@@ -676,7 +675,7 @@ export default function TechnologiesIndex({ technologies, categories, filters }:
       </div>
 
       {/* Modal de confirmation de suppression */}
-      <DeleteConfirmationModal
+      <ConfirmationModal
         title="Supprimer la technologie"
         message="Cette action est irréversible. Êtes-vous sûr de vouloir supprimer cette technologie ?"
         isOpen={showDeleteModal}

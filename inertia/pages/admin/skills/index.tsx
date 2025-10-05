@@ -4,7 +4,7 @@ import AdminLayout from '~/layout/AdminLayout'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card } from '@/components/ui/card'
-import DeleteConfirmationModal from '~/components/DeleteConfirmationModal'
+import ConfirmationModal from '~/components/ConfirmationModal'
 import SafeHTML from '~/components/safeHTML'
 import {
   Plus,
@@ -24,6 +24,7 @@ import {
   X,
 } from 'lucide-react'
 import { SkillIndexProps } from '~/types/skills'
+import { formatLocalDate } from '~/utils/utils_string'
 
 export default function SkillsIndex({ skills, categories }: SkillIndexProps) {
   const [searchTerm, setSearchTerm] = useState('')
@@ -47,12 +48,6 @@ export default function SkillsIndex({ skills, categories }: SkillIndexProps) {
   useEffect(() => {
     setIsClient(true)
   }, [])
-
-  // Fonction pour formater les dates
-  const formatDate = (dateString: string) => {
-    if (!isClient) return '...'
-    return new Date(dateString).toLocaleDateString('fr-FR')
-  }
 
   // Filtrage et tri des skills côté client
   const filteredAndSortedSkills = useMemo(() => {
@@ -398,7 +393,7 @@ export default function SkillsIndex({ skills, categories }: SkillIndexProps) {
                     <div className="flex items-center justify-between text-xs text-gray-500 mb-4">
                       <div className="flex items-center gap-1">
                         <Calendar className="h-3 w-3" />
-                        {formatDate(skill.createdAt.toString())}
+                        {isClient ? formatLocalDate(skill.createdAt.toString()) : '..'}
                       </div>
                     </div>
 
@@ -488,7 +483,7 @@ export default function SkillsIndex({ skills, categories }: SkillIndexProps) {
                       <div className="flex items-center justify-between text-xs text-gray-500 mb-3">
                         <div className="flex items-center gap-1">
                           <Calendar className="h-3 w-3" />
-                          Créé le {formatDate(skill.createdAt.toString())}
+                          Créé le {isClient ? formatLocalDate(skill.createdAt.toString()) : '...'}
                         </div>
                       </div>
 
@@ -567,7 +562,8 @@ export default function SkillsIndex({ skills, categories }: SkillIndexProps) {
 
                               <div className="flex items-center gap-1 text-sm text-gray-500">
                                 <Calendar className="h-4 w-4" />
-                                Créé le {formatDate(skill.createdAt.toString())}
+                                Créé le{' '}
+                                {isClient ? formatLocalDate(skill.createdAt.toString()) : '...'}
                               </div>
                             </div>
 
@@ -639,7 +635,7 @@ export default function SkillsIndex({ skills, categories }: SkillIndexProps) {
       </div>
 
       {/* Modal de confirmation de suppression */}
-      <DeleteConfirmationModal
+      <ConfirmationModal
         title="Supprimer le skill"
         message="Êtes-vous sûr de vouloir supprimer cette compétence ?"
         isOpen={deleteModal.isOpen}

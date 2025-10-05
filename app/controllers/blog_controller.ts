@@ -5,7 +5,6 @@ import { DateTime } from 'luxon'
 export default class BlogController {
   async index({ request, inertia }: HttpContext) {
     const page = request.input('page', 1)
-    const search = request.input('search', '')
     const tagSlug = request.input('tag', '')
 
     let query = BlogPost.query()
@@ -17,12 +16,6 @@ export default class BlogController {
       .preload('tags')
       .orderBy('updated_at', 'desc')
 
-    if (search) {
-      query = query.where((builder) => {
-        builder.where('title', 'like', `%${search}%`).orWhere('content', 'like', `%${search}%`)
-      })
-    }
-
     if (tagSlug) {
       query = query.whereHas('tags', (tagQuery) => {
         tagQuery.where('slug', tagSlug)
@@ -32,7 +25,11 @@ export default class BlogController {
     const posts = await query.paginate(page, 10)
 
     return inertia.render('blog', {
-      posts: posts.serialize(),
+      posts: posts.serialize({
+        fields: {
+          pick: ['id', 'title', 'slug', 'excerpt', 'content', 'photoPathPublicUrl', 'publishedAt'],
+        },
+      }),
       currentTag: tagSlug,
     })
   }

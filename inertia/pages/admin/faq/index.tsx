@@ -5,11 +5,11 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card } from '@/components/ui/card'
-import DeleteConfirmationModal from '~/components/DeleteConfirmationModal'
 import SafeHTML from '~/components/safeHTML'
-import { Plus, HelpCircle, Edit, Trash2, MessageSquare, Search, ExternalLink } from 'lucide-react'
+import { Plus, HelpCircle, Edit, Trash2, Search, ExternalLink } from 'lucide-react'
 import { truncateText } from '~/utils/utils_string'
 import TinyMCEEditor from '~/components/TinyMCEEditor'
+import ConfirmationModal from '~/components/ConfirmationModal'
 
 interface Faq {
   id: number
@@ -34,7 +34,7 @@ export default function FaqAdmin({ faqs }: FaqAdminProps) {
     isLoading: false,
   })
 
-  const { data, setData, post, patch, processing, errors, reset } = useForm({
+  const { data, setData, post, patch, processing, errors, reset, isDirty } = useForm({
     question: '',
     answer: '',
     isVisible: true,
@@ -51,6 +51,7 @@ export default function FaqAdmin({ faqs }: FaqAdminProps) {
 
     if (editingFaq) {
       patch(`/admin/faqs/${editingFaq.id}`, {
+        preserveScroll: true,
         onSuccess: () => {
           reset()
           setEditingFaq(null)
@@ -59,6 +60,7 @@ export default function FaqAdmin({ faqs }: FaqAdminProps) {
       })
     } else {
       post('/admin/faqs', {
+        preserveScroll: true,
         onSuccess: () => {
           reset()
           setShowCreateForm(false)
@@ -91,6 +93,7 @@ export default function FaqAdmin({ faqs }: FaqAdminProps) {
     setDeleteModal((prev) => ({ ...prev, isLoading: true }))
 
     router.delete(`/admin/faqs/${deleteModal.faqId}`, {
+      preserveScroll: true,
       onSuccess: () => {
         setDeleteModal({
           isOpen: false,
@@ -149,20 +152,6 @@ export default function FaqAdmin({ faqs }: FaqAdminProps) {
                   <div className="ml-3">
                     <p className="text-sm font-medium text-gray-500">Total FAQ</p>
                     <p className="text-xl font-semibold">{faqs.length}</p>
-                  </div>
-                </div>
-              </Card>
-
-              <Card className="p-4">
-                <div className="flex items-center">
-                  <div className="p-2 bg-purple-100 rounded-lg">
-                    <MessageSquare className="w-5 h-5 text-purple-600" />
-                  </div>
-                  <div className="ml-3">
-                    <p className="text-sm font-medium text-gray-500">Mots totaux</p>
-                    <p className="text-xl font-semibold">
-                      {faqs.reduce((sum, faq) => sum + faq.answer.split(' ').length, 0)}
-                    </p>
                   </div>
                 </div>
               </Card>
@@ -233,7 +222,7 @@ export default function FaqAdmin({ faqs }: FaqAdminProps) {
                   <Button type="button" variant="outline" onClick={cancelForm}>
                     Annuler
                   </Button>
-                  <Button type="submit" disabled={processing}>
+                  <Button type="submit" disabled={processing || !isDirty}>
                     {processing
                       ? 'Enregistrement...'
                       : editingFaq
@@ -312,7 +301,7 @@ export default function FaqAdmin({ faqs }: FaqAdminProps) {
       </div>
 
       {/* Delete Confirmation Modal */}
-      <DeleteConfirmationModal
+      <ConfirmationModal
         isOpen={deleteModal.isOpen}
         onClose={() => setDeleteModal((prev) => ({ ...prev, isOpen: false }))}
         onConfirm={confirmDelete}

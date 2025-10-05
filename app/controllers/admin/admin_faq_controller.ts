@@ -51,7 +51,7 @@ export default class AdminFaqController {
     )
     faq.merge(data)
     await faq.save()
-    session.flash('success', 'Le tag a bien modifier')
+    session.flash('success', 'Le tag a bien ete modifier')
     return response.redirect().back()
   }
 

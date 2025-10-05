@@ -4,14 +4,13 @@ import AdminLayout from '~/layout/AdminLayout'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card } from '@/components/ui/card'
-import DeleteConfirmationModal from '~/components/DeleteConfirmationModal'
+import ConfirmationModal from '~/components/ConfirmationModal'
 import {
   Search,
   Plus,
   Edit,
   Trash2,
   Eye,
-  EyeOff,
   Copy,
   Image as ImageIcon,
   ExternalLink,
@@ -173,16 +172,6 @@ export default function AdminServicesIndex({ services, stats }: Props) {
     setCurrentPage(1)
   }
 
-  const handleToggleStatus = (serviceId: number) => {
-    router.patch(
-      `/admin/services/${serviceId}/toggle-status`,
-      {},
-      {
-        preserveScroll: true,
-      }
-    )
-  }
-
   const handleDuplicate = (serviceId: number) => {
     router.post(
       `/admin/services/${serviceId}/duplicate`,
@@ -252,6 +241,7 @@ export default function AdminServicesIndex({ services, stats }: Props) {
       '/admin/reorder/services',
       { services: servicesToSave },
       {
+        preserveScroll: true,
         onSuccess: () => {
           setIsReordering(false)
           setReorderedServices([])
@@ -322,23 +312,6 @@ export default function AdminServicesIndex({ services, stats }: Props) {
             />
             {service.isActive ? 'Actif' : 'Inactif'}
           </span>
-        </div>
-
-        {/* Quick Actions */}
-        <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex gap-1">
-          {!isReordering && (
-            <button
-              onClick={() => handleToggleStatus(service.id)}
-              className="p-2 bg-white hover:bg-gray-50 rounded-lg shadow-md transition-colors"
-              title={service.isActive ? 'Désactiver' : 'Activer'}
-            >
-              {service.isActive ? (
-                <EyeOff className="h-4 w-4 text-gray-700" />
-              ) : (
-                <Eye className="h-4 w-4 text-gray-700" />
-              )}
-            </button>
-          )}
         </div>
 
         {/* Order Badge */}
@@ -533,18 +506,6 @@ export default function AdminServicesIndex({ services, stats }: Props) {
             </div>
           ) : (
             <>
-              <button
-                onClick={() => handleToggleStatus(service.id)}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                title={service.isActive ? 'Désactiver' : 'Activer'}
-              >
-                {service.isActive ? (
-                  <EyeOff className="h-4 w-4 text-gray-600" />
-                ) : (
-                  <Eye className="h-4 w-4 text-gray-600" />
-                )}
-              </button>
-
               <Link href={`/admin/services/${service.id}`}>
                 <Button variant="outline" size="sm" className="border-gray-300">
                   <Eye className="h-4 w-4" />
@@ -901,7 +862,7 @@ export default function AdminServicesIndex({ services, stats }: Props) {
         </div>
       </div>
 
-      <DeleteConfirmationModal
+      <ConfirmationModal
         isOpen={deleteModal.isOpen}
         onClose={handleDeleteCancel}
         onConfirm={handleDeleteConfirm}

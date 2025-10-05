@@ -12,16 +12,9 @@ export default class BlogPostsController {
   constructor(private blogPostAuthorization: BlogPostAthorizationService) {}
   async index({ request, inertia }: HttpContext) {
     const page = request.input('page', 1)
-    const search = request.input('search', '')
     const status = request.input('status', '')
 
     let query = BlogPost.query().preload('author').preload('tags').orderBy('created_at', 'desc')
-
-    if (search) {
-      query = query.where((builder) => {
-        builder.where('title', 'like', `%${search}%`).orWhere('content', 'like', `%${search}%`)
-      })
-    }
 
     if (status === 'published') {
       query = query.where('published', true)
@@ -33,7 +26,7 @@ export default class BlogPostsController {
 
     return inertia.render('admin/blog/index', {
       posts: posts.serialize(),
-      filters: { search, status },
+      filters: { status },
     })
   }
 
@@ -89,7 +82,6 @@ export default class BlogPostsController {
     if (!autorize) {
       return this.blogPostAuthorization.handleUnauthorized(response, session)
     }
-    // Validation des données
     const data = await request.validateUsing(createBlogPostValidator)
 
     // Gestion de l'image uploadée
@@ -110,7 +102,6 @@ export default class BlogPostsController {
     }
 
     try {
-      // Créer l'article
       const post = await BlogPost.create({
         title: data.title,
         slug: data.slug,
@@ -177,7 +168,6 @@ export default class BlogPostsController {
 
     const data = await request.validateUsing(updateBlogPostValidator, { meta: { slug: post.slug } })
 
-    // Gestion de l'image
     let featuredImagePath = post.featuredImage // Garder l'image actuelle par défaut
 
     // Si un fichier a été uploadé
@@ -282,7 +272,7 @@ export default class BlogPostsController {
       await post.delete()
 
       session.flash('success', 'Article supprimé avec succès')
-      return response.redirect().back()
+      return response.redirect('/admin/blog')
     } catch (error) {
       logger.error("Erreur lors de la suppression de l'article:", error)
       session.flash('error', "Erreur lors de la suppression de l'article")

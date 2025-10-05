@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Head, useForm, router } from '@inertiajs/react'
+import { Head, useForm, router, usePage } from '@inertiajs/react'
 import {
   Mail,
   Phone,
@@ -22,6 +22,8 @@ import { PhoneInput } from '@/components/ui/phone-input'
 import type { CountryCode } from 'libphonenumber-js'
 import { isValidPhoneNumber } from 'react-phone-number-input'
 import { toast } from 'sonner'
+import SafeHTML from '~/components/safeHTML'
+import { InertiaProps } from '~/types'
 
 interface Props {
   selectedService?: ServiceType | null
@@ -44,27 +46,14 @@ export default function ContactIndex({ selectedService, services = [], success, 
   const [contextualService, setContextualService] = useState<ServiceType | null>(
     selectedService || null
   )
-  const [defaultCountry, setDefaultCountry] = useState<CountryCode>('FR')
-
+  const [currentCountry, setCurrentCountry] = useState<CountryCode>('CM')
+  const { auth } = usePage<InertiaProps>().props
+  // Sync contextualService with selectedService prop changes
   useEffect(() => {
-    const fetchCountry = async () => {
-      try {
-        const ipRes = await fetch('https://api.ipify.org?format=json')
-        const ipData = await ipRes.json()
-
-        const countryRes = await fetch(`/whoami?ip=${ipData.ip}`)
-        const countryData = await countryRes.json()
-
-        if (countryData && countryData.countryCode) {
-          setDefaultCountry(countryData.countryCode)
-        }
-      } catch (error) {
-        console.error('Erreur:', error)
-      }
+    if (selectedService) {
+      setContextualService(selectedService)
     }
-
-    fetchCountry()
-  }, [])
+  }, [selectedService])
 
   const { data, setData, post, processing, errors, reset } = useForm<FormData>({
     firstName: '',
@@ -76,26 +65,75 @@ export default function ContactIndex({ selectedService, services = [], success, 
     website: '', // Honeypot field
   })
 
+  // Update serviceId when contextualService changes
+  useEffect(() => {
+    setData('serviceId', contextualService?.id)
+  }, [contextualService])
+
+  // Fetch country based on IP address
+  useEffect(() => {
+    if (!auth?.user) {
+      const fetchCountry = async () => {
+        try {
+          const response = await fetch('https://ipapi.co/json/')
+          const data = await response.json()
+
+          if (data && data.country_code) {
+            setCurrentCountry(data.country_code)
+          }
+        } catch (error) {
+          console.error('Failed to fetch country:', error)
+        }
+      }
+
+      fetchCountry()
+    }
+  }, [auth?.user])
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
-    // Validate phone number if provided
-    if (data.phone && !isValidPhoneNumber(data.phone, defaultCountry)) {
+    // Validate phone number with currentCountry instead of defaultCountry
+    if (data.phone && !isValidPhoneNumber(data.phone)) {
       toast.error('Numéro de téléphone invalide')
       return
     }
 
+    // Use preserveScroll to maintain scroll position after success
     post('/contact', {
+      preserveScroll: true,
       onSuccess: () => {
         reset()
-        setContextualService(null)
+        // Only remove service parameter if no service is selected
+        if (!contextualService) {
+          const newUrl = new URL(window.location.href)
+          newUrl.searchParams.delete('selectedService')
+          window.history.replaceState({}, '', newUrl.toString())
+        }
       },
     })
   }
 
+  // Use history.replaceState instead of router.visit for better UX
   const handleRemoveService = () => {
     setContextualService(null)
     setData('serviceId', undefined)
+
+    // Update URL without full page reload
+    const newUrl = new URL(window.location.href)
+    newUrl.searchParams.delete('selectedService')
+    window.history.replaceState({}, '', newUrl.toString())
+  }
+
+  // handler for service selection
+  const handleSelectService = (service: ServiceType) => {
+    setContextualService(service)
+    setData('serviceId', service.id)
+
+    // Update URL without full page reload
+    const newUrl = new URL(window.location.href)
+    newUrl.searchParams.set('selectedService', service.slug)
+    window.history.replaceState({}, '', newUrl.toString())
   }
 
   const getFieldError = (field: keyof FormData) => errors[field]
@@ -106,7 +144,7 @@ export default function ContactIndex({ selectedService, services = [], success, 
 
       <div className="min-h-screen pt-7 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white">
         {/* Background Effects */}
-        <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute -top-40 -right-40 w-80 h-80 bg-pink-500/10 rounded-full blur-3xl animate-pulse"></div>
           <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
         </div>
@@ -149,9 +187,9 @@ export default function ContactIndex({ selectedService, services = [], success, 
             </p>
           </div>
 
-          {/* Message de succès */}
+          {/* Success message with animation */}
           {success && (
-            <div className="mb-8 p-6 bg-green-500/10 border border-green-500/30 rounded-2xl flex items-center gap-4 text-green-300 backdrop-blur-sm">
+            <div className="mb-8 p-6 bg-green-500/10 border border-green-500/30 rounded-2xl flex items-center gap-4 text-green-300 backdrop-blur-sm animate-in fade-in slide-in-from-top-4 duration-500">
               <div className="p-2 bg-green-500/20 rounded-full">
                 <CheckCircle className="h-5 w-5" />
               </div>
@@ -171,22 +209,26 @@ export default function ContactIndex({ selectedService, services = [], success, 
                     onClick={handleRemoveService}
                     className="absolute top-4 right-4 p-2 text-pink-300 hover:text-white hover:bg-pink-500/20 rounded-xl transition-all duration-200 z-10"
                     title="Supprimer le service sélectionné"
+                    type="button"
                   >
                     <X className="h-5 w-5" />
                   </button>
 
                   <div className="pr-12">
                     <div className="flex items-start gap-4">
-                      {contextualService.image && (
+                      {contextualService.publicUrl && (
                         <img
-                          src={contextualService.image}
+                          src={contextualService.publicUrl}
                           alt={contextualService.title}
                           className="w-20 h-20 object-cover rounded-2xl flex-shrink-0 border border-pink-500/20"
                         />
                       )}
 
                       <div className="flex-1">
-                        <h3 className="text-xl font-bold text-white mb-3">
+                        <h3
+                          className="text-xl font-bold text-white mb-3 hover:cursor-pointer hover:text-gray-300 transition-colors"
+                          onClick={() => router.visit(`/services/${contextualService.slug}`)}
+                        >
                           {contextualService.title}
                         </h3>
 
@@ -201,24 +243,25 @@ export default function ContactIndex({ selectedService, services = [], success, 
                           </div>
                         )}
 
-                        <p className="text-gray-300 leading-relaxed">
-                          {contextualService.description}
-                        </p>
+                        <SafeHTML
+                          html={contextualService.description}
+                          className="text-gray-300 leading-relaxed line-clamp-4"
+                        />
                       </div>
                     </div>
                   </div>
 
                   {/* Decorative glow */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-pink-500/5 via-purple-500/5 to-pink-500/5 rounded-3xl"></div>
+                  <div className="absolute inset-0 bg-gradient-to-r from-pink-500/5 via-purple-500/5 to-pink-500/5 rounded-3xl pointer-events-none"></div>
                 </div>
               )}
 
               {/* Formulaire */}
               <div className="relative bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-sm border border-gray-700/50 rounded-3xl p-8 space-y-6 overflow-hidden">
                 {/* Background glow */}
-                <div className="absolute inset-0 bg-gradient-to-r from-pink-500/5 via-transparent to-purple-500/5 rounded-3xl"></div>
+                <div className="absolute inset-0 bg-gradient-to-r from-pink-500/5 via-transparent to-purple-500/5 rounded-3xl pointer-events-none"></div>
 
-                {/* Honeypot field - Hidden */}
+                {/* Honeypot field with aria-hidden */}
                 <input
                   type="text"
                   name="website"
@@ -227,6 +270,7 @@ export default function ContactIndex({ selectedService, services = [], success, 
                   style={{ position: 'absolute', left: '-9999px', opacity: 0 }}
                   tabIndex={-1}
                   autoComplete="off"
+                  aria-hidden="true"
                 />
 
                 {/* Nom et Prénom */}
@@ -236,12 +280,12 @@ export default function ContactIndex({ selectedService, services = [], success, 
                       Prénom *
                     </label>
                     <div className="relative group">
-                      <User className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-pink-400 transition-colors" />
+                      <User className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-pink-400 transition-colors pointer-events-none" />
                       <input
                         type="text"
                         value={data.firstName}
                         onChange={(e) => setData('firstName', e.target.value)}
-                        className={`w-full pl-12 pr-4 py-4 bg-gray-800/50 backdrop-blur-sm border rounded-2xl focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all duration-200 text-white placeholder-gray-400 ${
+                        className={`w-full pl-12 pr-4 py-4 bg-gray-800/50 backdrop-blur-sm border rounded-2xl focus:ring-2 focus:ring-pink-500 focus:outline-none transition-all duration-200 text-white placeholder-gray-400 ${
                           getFieldError('firstName')
                             ? 'border-red-400'
                             : 'border-gray-600 hover:border-gray-500'
@@ -258,12 +302,12 @@ export default function ContactIndex({ selectedService, services = [], success, 
                   <div className="relative">
                     <label className="block text-sm font-semibold text-gray-200 mb-3">Nom *</label>
                     <div className="relative group">
-                      <User className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-pink-400 transition-colors" />
+                      <User className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-pink-400 transition-colors pointer-events-none" />
                       <input
                         type="text"
                         value={data.lastName}
                         onChange={(e) => setData('lastName', e.target.value)}
-                        className={`w-full pl-12 pr-4 py-4 bg-gray-800/50 backdrop-blur-sm border rounded-2xl focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all duration-200 text-white placeholder-gray-400 ${
+                        className={`w-full pl-12 pr-4 py-4 bg-gray-800/50 backdrop-blur-sm border rounded-2xl focus:ring-2 focus:ring-pink-500 focus:outline-none transition-all duration-200 text-white placeholder-gray-400 ${
                           getFieldError('lastName')
                             ? 'border-red-400'
                             : 'border-gray-600 hover:border-gray-500'
@@ -282,12 +326,12 @@ export default function ContactIndex({ selectedService, services = [], success, 
                 <div className="relative">
                   <label className="block text-sm font-semibold text-gray-200 mb-3">Email *</label>
                   <div className="relative group">
-                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-pink-400 transition-colors" />
+                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-pink-400 transition-colors pointer-events-none" />
                     <input
                       type="email"
                       value={data.email}
                       onChange={(e) => setData('email', e.target.value)}
-                      className={`w-full pl-12 pr-4 py-4 bg-gray-800/50 backdrop-blur-sm border rounded-2xl focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all duration-200 text-white placeholder-gray-400 ${
+                      className={`w-full pl-12 pr-4 py-4 bg-gray-800/50 backdrop-blur-sm border rounded-2xl focus:ring-2 focus:ring-pink-500 focus:outline-none transition-all duration-200 text-white placeholder-gray-400 ${
                         getFieldError('email')
                           ? 'border-red-400'
                           : 'border-gray-600 hover:border-gray-500'
@@ -309,10 +353,11 @@ export default function ContactIndex({ selectedService, services = [], success, 
                   <PhoneInput
                     value={data.phone}
                     onChange={(value) => setData('phone', value || '')}
+                    onCountryChange={(country) => setCurrentCountry(country as CountryCode)} // ✅ FIX 11: Track country changes
                     placeholder="Entrez votre numéro de téléphone"
-                    defaultCountry={defaultCountry}
+                    defaultCountry={currentCountry}
                     international
-                    className="w-full [&_input]:pl-12 [&_input]:pr-4 [&_input]:py-4 [&_input]:bg-gray-800/50 [&_input]:backdrop-blur-sm [&_input]:border [&_input]:rounded-2xl [&_input]:focus:ring-2 [&_input]:focus:ring-pink-500 [&_input]:focus:border-transparent [&_input]:transition-all [&_input]:duration-200 [&_input]:text-white [&_input]:placeholder-gray-400 [&_button]:hover:bg-gray-700"
+                    className="w-full [&_input]:pl-12 [&_input]:pr-4 [&_input]:py-4 [&_input]:bg-gray-800/50 [&_input]:backdrop-blur-sm [&_input]:border [&_input]:rounded-2xl [&_input]:focus:ring-2 [&_input]:focus:ring-pink-500 [&_input]:focus:outline-none [&_input]:transition-all [&_input]:duration-200 [&_input]:text-white [&_input]:placeholder-gray-400 [&_button]:hover:bg-gray-700"
                   />
                   {getFieldError('phone') && (
                     <p className="mt-2 text-sm text-red-400">{getFieldError('phone')}</p>
@@ -325,12 +370,12 @@ export default function ContactIndex({ selectedService, services = [], success, 
                     Votre projet *
                   </label>
                   <div className="relative group">
-                    <MessageCircle className="absolute left-4 top-4 h-5 w-5 text-gray-400 group-focus-within:text-pink-400 transition-colors" />
+                    <MessageCircle className="absolute left-4 top-4 h-5 w-5 text-gray-400 group-focus-within:text-pink-400 transition-colors pointer-events-none" />
                     <textarea
                       value={data.message}
                       onChange={(e) => setData('message', e.target.value)}
                       rows={6}
-                      className={`w-full pl-12 pr-4 py-4 bg-gray-800/50 backdrop-blur-sm border rounded-2xl focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all duration-200 resize-none text-white placeholder-gray-400 ${
+                      className={`w-full pl-12 pr-4 py-4 bg-gray-800/50 backdrop-blur-sm border rounded-2xl focus:ring-2 focus:ring-pink-500 focus:outline-none transition-all duration-200 resize-none text-white placeholder-gray-400 ${
                         getFieldError('message')
                           ? 'border-red-400'
                           : 'border-gray-600 hover:border-gray-500'
@@ -352,25 +397,26 @@ export default function ContactIndex({ selectedService, services = [], success, 
                 <button
                   onClick={handleSubmit}
                   disabled={processing}
-                  className="group relative w-full overflow-hidden bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 disabled:from-gray-600 disabled:to-gray-600 text-white rounded-xl font-medium transition-all duration-300 hover:shadow-lg hover:shadow-pink-500/25 border border-pink-500/20"
+                  type="button"
+                  className="group relative w-full overflow-hidden bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 disabled:from-gray-600 disabled:to-gray-600 disabled:cursor-not-allowed text-white rounded-xl font-medium transition-all duration-300 hover:shadow-lg hover:shadow-pink-500/25 border border-pink-500/20"
                 >
-                  <div className="relative flex items-center justify-center gap-2 px-6 py-3">
+                  <div className="relative flex items-center justify-center gap-2 px-6 py-4">
                     {processing ? (
                       <>
-                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <Loader2 className="h-5 w-5 animate-spin" />
                         <span>Envoi en cours...</span>
                       </>
                     ) : (
                       <>
-                        <Send className="h-4 w-4" />
+                        <Send className="h-5 w-5" />
                         <span>Envoyer mon message</span>
-                        <ArrowRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform duration-300" />
+                        <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform duration-300" />
                       </>
                     )}
                   </div>
 
                   {!processing && (
-                    <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
+                    <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 pointer-events-none"></div>
                   )}
                 </button>
               </div>
@@ -378,9 +424,50 @@ export default function ContactIndex({ selectedService, services = [], success, 
 
             {/* Sidebar */}
             <div className="space-y-6 lg:space-y-8">
+              {/* Services disponibles */}
+              {!contextualService && services.length > 0 && (
+                <div className="relative bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-sm border border-gray-700/50 rounded-3xl p-6 overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-r from-pink-500/5 via-transparent to-purple-500/5 rounded-3xl pointer-events-none"></div>
+
+                  <h3 className="relative text-xl font-bold text-white mb-6">Mes services</h3>
+
+                  <div className="relative space-y-3">
+                    {services.slice(0, 4).map((service) => (
+                      <button
+                        key={service.id}
+                        onClick={() => handleSelectService(service)} // ✅ FIX 12: Use new handler
+                        type="button"
+                        className="group w-full text-left p-4 hover:bg-gray-800/50 rounded-2xl transition-all duration-200 border border-gray-700/30 hover:border-pink-500/50"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="font-semibold text-white group-hover:text-pink-300 transition-colors">
+                            {service.title}
+                          </span>
+                          {service.price && (
+                            <span className="text-sm text-green-400 font-medium px-2 py-1 bg-green-500/20 rounded-lg">
+                              {service.formattedPrice}
+                            </span>
+                          )}
+                        </div>
+                      </button>
+                    ))}
+
+                    {services.length > 4 && (
+                      <button
+                        onClick={() => router.visit('/services')}
+                        type="button"
+                        className="w-full text-center p-4 text-pink-400 hover:text-pink-300 font-medium transition-colors flex items-center justify-center gap-2"
+                      >
+                        <span>Voir tous les services</span>
+                        <ArrowRight className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
               {/* Informations de contact */}
               <div className="relative bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-sm border border-gray-700/50 rounded-3xl p-6 overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-transparent to-purple-500/5 rounded-3xl"></div>
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-transparent to-purple-500/5 rounded-3xl pointer-events-none"></div>
 
                 <h3 className="relative text-xl font-bold text-white mb-6 flex items-center gap-2">
                   <div className="p-2 bg-blue-500/20 rounded-xl">
@@ -424,7 +511,7 @@ export default function ContactIndex({ selectedService, services = [], success, 
 
               {/* Garanties */}
               <div className="relative bg-gradient-to-br from-green-500/10 to-emerald-500/10 backdrop-blur-sm border border-green-500/30 rounded-3xl p-6 overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-emerald-500/5 rounded-3xl"></div>
+                <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-emerald-500/5 rounded-3xl pointer-events-none"></div>
 
                 <div className="relative">
                   <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
@@ -467,49 +554,6 @@ export default function ContactIndex({ selectedService, services = [], success, 
                   </div>
                 </div>
               </div>
-
-              {/* Services disponibles */}
-              {!contextualService && services.length > 0 && (
-                <div className="relative bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-sm border border-gray-700/50 rounded-3xl p-6 overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-r from-pink-500/5 via-transparent to-purple-500/5 rounded-3xl"></div>
-
-                  <h3 className="relative text-xl font-bold text-white mb-6">Mes services</h3>
-
-                  <div className="relative space-y-3">
-                    {services.slice(0, 4).map((service) => (
-                      <button
-                        key={service.id}
-                        onClick={() => {
-                          setContextualService(service)
-                          setData('serviceId', service.id)
-                        }}
-                        className="group w-full text-left p-4 hover:bg-gray-800/50 rounded-2xl transition-all duration-200 border border-gray-700/30 hover:border-pink-500/50"
-                      >
-                        <div className="flex items-center justify-between">
-                          <span className="font-semibold text-white group-hover:text-pink-300 transition-colors">
-                            {service.title}
-                          </span>
-                          {service.price && (
-                            <span className="text-sm text-green-400 font-medium px-2 py-1 bg-green-500/20 rounded-lg">
-                              {service.formattedPrice}
-                            </span>
-                          )}
-                        </div>
-                      </button>
-                    ))}
-
-                    {services.length > 4 && (
-                      <button
-                        onClick={() => router.visit('/services')}
-                        className="w-full text-center p-4 text-pink-400 hover:text-pink-300 font-medium transition-colors flex items-center justify-center gap-2"
-                      >
-                        <span>Voir tous les services</span>
-                        <ArrowRight className="h-4 w-4" />
-                      </button>
-                    )}
-                  </div>
-                </div>
-              )}
             </div>
           </div>
         </div>

@@ -32,7 +32,7 @@ const shieldConfig = defineConfig({
         'wss:',
         'https://api.github.com/repos/tajmirul/portfolio-2.0', // ✅ Pour l'API GitHub
         'https://api.ipify.org',
-        'http://ip-api.com/json/',
+        'https://ipapi.co/json/',
       ],
     },
     reportOnly: false, // a true, autorise mais affiche les warnings dans la console

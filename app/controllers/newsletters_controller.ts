@@ -7,11 +7,21 @@ import env from '#start/env'
 import { errors as mailErrors } from '@adonisjs/mail'
 import db from '@adonisjs/lucid/services/db'
 export default class NewsletterController {
-  async subscribe({ request, response, session }: HttpContext) {
+  async subscribe({ request, response, session, logger }: HttpContext) {
     const { email } = await request.validateUsing(
       vine.compile(
         vine.object({
           email: vine.string().email().normalizeEmail(),
+          website: vine
+            .string()
+            .optional()
+            .transform((value) => {
+              // Si le champ website est rempli, c'est probablement un bot
+              if (value && value.trim() !== '') {
+                throw new Error('Spam détecté')
+              }
+              return undefined
+            }),
         })
       )
     )
@@ -57,22 +67,32 @@ export default class NewsletterController {
         'error',
         "Erreur lors de l'inscription à la newsletter. Veuillez réessayer plus tard."
       )
+      logger.error(e)
       return response.redirect().back()
     }
   }
 
   async unsubscribe({ params, request, inertia }: HttpContext) {
-    const subscriber = await NewsletterSubscriber.query()
+    let subscriber = await NewsletterSubscriber.query()
       .where('token', params.token)
-      .where('email', request.qs().email || '')
       .where('isActive', true)
       .first()
+
+    // If subscriber not found with just token, check with email as well (for backward compatibility)
+    if (!subscriber && request.qs().email) {
+      subscriber = await NewsletterSubscriber.query()
+        .where('token', params.token)
+        .where('email', request.qs().email)
+        .where('isActive', true)
+        .first()
+    }
 
     if (!subscriber) {
       return inertia.render('unsubscribe_status', { isSubscribed: false })
     }
 
     subscriber.isActive = false
+    subscriber.token = ''
     await subscriber.save()
 
     return inertia.render('unsubscribe_status', { isSubscribed: true })

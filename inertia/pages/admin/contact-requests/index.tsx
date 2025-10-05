@@ -29,6 +29,7 @@ import { toast } from 'sonner'
 import { ServiceType } from '~/types/services'
 import ContactRequestReplyModal from '~/components/ContactRequestReplyModal'
 import { IsRestricted } from '~/components/IsRestricted'
+import ConfirmationModal from '~/components/ConfirmationModal'
 
 interface Props {
   contactRequests: {
@@ -84,6 +85,9 @@ export default function AdminContactRequestsIndex({
   const [selectedRequests, setSelectedRequests] = useState<number[]>([])
   const [showBulkActions, setShowBulkActions] = useState(false)
   const [replyModalOpen, setReplyModalOpen] = useState(false)
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false)
+  const [requestToDelete, setRequestToDelete] = useState<ContactRequestType | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
   const [selectedContactRequest, setSelectedContactRequest] = useState<ContactRequestType | null>(
     null
   )
@@ -222,6 +226,7 @@ export default function AdminContactRequestsIndex({
         ids: selectedRequests,
       },
       {
+        preserveScroll: true,
         onSuccess: () => {
           setSelectedRequests([])
           setShowBulkActions(false)
@@ -249,6 +254,30 @@ export default function AdminContactRequestsIndex({
   const handleReplyClick = (contactRequest: ContactRequestType) => {
     setSelectedContactRequest(contactRequest)
     setReplyModalOpen(true)
+  }
+
+  const handleDeleteClick = (contactRequest: ContactRequestType) => {
+    setRequestToDelete(contactRequest)
+    setDeleteModalOpen(true)
+  }
+
+  const handleDeleteConfirm = () => {
+    if (!requestToDelete) return
+
+    setIsDeleting(true)
+    router.delete(`/admin/contact-requests/${requestToDelete.id}`, {
+      preserveScroll: true,
+      onSuccess: () => {
+        setDeleteModalOpen(false)
+        setRequestToDelete(null)
+        setIsDeleting(false)
+        toast.success('Demande supprimée avec succès')
+      },
+      onError: () => {
+        setIsDeleting(false)
+        toast.error('Erreur lors de la suppression de la demande')
+      },
+    })
   }
 
   const handleReplySuccess = () => {
@@ -672,15 +701,15 @@ export default function AdminContactRequestsIndex({
 
                         {/* Panneau d'actions */}
                         <div className="flex sm:flex-col lg:flex-row items-center gap-2">
-                          <Link href={`/admin/contact-requests/${request.id}`}>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="border-gray-300 hover:border-blue-400 hover:bg-blue-50 hover:text-blue-700"
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                          </Link>
+                          {/*<Link href={`/admin/contact-requests/${request.id}`}>*/}
+                          {/*  <Button*/}
+                          {/*    variant="outline"*/}
+                          {/*    size="sm"*/}
+                          {/*    className="border-gray-300 hover:border-blue-400 hover:bg-blue-50 hover:text-blue-700"*/}
+                          {/*  >*/}
+                          {/*    <Eye className="h-4 w-4" />*/}
+                          {/*  </Button>*/}
+                          {/*</Link>*/}
 
                           <Button
                             variant="outline"
@@ -695,11 +724,7 @@ export default function AdminContactRequestsIndex({
                             variant="outline"
                             size="sm"
                             className="border-gray-300 hover:border-red-400 hover:bg-red-50 hover:text-red-700"
-                            onClick={() => {
-                              if (confirm('Êtes-vous sûr de vouloir supprimer cette demande ?')) {
-                                router.delete(`/admin/contact-requests/${request.id}`)
-                              }
-                            }}
+                            onClick={() => handleDeleteClick(request)}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -817,6 +842,22 @@ export default function AdminContactRequestsIndex({
             setSelectedContactRequest(null)
           }}
           onSuccess={handleReplySuccess}
+        />
+      )}
+
+      {/* Modal de suppression */}
+      {requestToDelete && (
+        <ConfirmationModal
+          isOpen={deleteModalOpen}
+          onClose={() => {
+            setDeleteModalOpen(false)
+            setRequestToDelete(null)
+          }}
+          onConfirm={handleDeleteConfirm}
+          title="Supprimer la demande de contact"
+          message="Êtes-vous sûr de vouloir supprimer cette demande de contact ? Cette action est irréversible."
+          itemName={requestToDelete.fullName}
+          isLoading={isDeleting}
         />
       )}
     </>
