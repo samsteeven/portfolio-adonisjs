@@ -136,14 +136,16 @@ export default function AdminServiceShow({ service }: Props) {
                 <Copy className="h-4 w-4" />
               </Button>
 
-              <Link href={`/services/${service.slug}`} target="_blank">
-                <Button
-                  variant="outline"
-                  className="border-gray-300 hover:border-gray-400 hover:bg-gray-50"
-                >
-                  <Eye className="h-4 w-4" />
-                </Button>
-              </Link>
+              {Boolean(service.isActive) && (
+                <Link href={`/services/${service.slug}`} target="_blank">
+                  <Button
+                    variant="outline"
+                    className="border-gray-300 hover:border-gray-400 hover:bg-gray-50"
+                  >
+                    <Eye className="h-4 w-4" />
+                  </Button>
+                </Link>
+              )}
 
               <Link href={`/admin/services/${service.id}/edit`}>
                 <Button className="bg-blue-600 hover:bg-blue-700 text-white">

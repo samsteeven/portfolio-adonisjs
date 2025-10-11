@@ -1,4 +1,3 @@
-import type { HttpContext } from '@adonisjs/core/http'
 import { DateTime } from 'luxon'
 import User from '#models/user'
 import Project from '#models/project'
@@ -6,7 +5,6 @@ import BlogPost from '#models/blog_post'
 import Commentaire from '#models/commentaire'
 import ContactRequest from '#models/contact_request'
 import cache from '@adonisjs/cache/services/main'
-import { UserRole } from '#enums/user_role'
 
 interface DashboardStats {
   totalUsers: number
@@ -46,105 +44,39 @@ interface DashboardStats {
   }>
 }
 
-export default class AdminDashboardController {
+export default class DashboardService {
   private readonly CACHE_KEY = 'admin:dashboard:stats'
   private readonly CACHE_TTL = '5m' // 5 minutes
   private readonly ACTIVITY_CACHE_KEY = 'admin:dashboard:activity'
   private readonly ACTIVITY_CACHE_TTL = '1m' // 1 minute
 
   /**
-   * Display admin dashboard with cached statistics
+   * Get dashboard statistics (from cache or generate new)
    */
-  async index({ inertia, auth }: HttpContext) {
-    // Check if user has admin role
-    const user = auth.user
-    const isAdmin = user && user.role === UserRole.ADMIN
-
-    // If user is not admin, show restricted dashboard
-    if (!isAdmin) {
-      return inertia.render('admin/dashboard', {
-        isRestricted: true,
-      })
+  async getStats(): Promise<DashboardStats> {
+    // Try to get cached data first
+    const cachedStats = await cache.get<DashboardStats>({ key: this.CACHE_KEY })
+    if (cachedStats) {
+      return cachedStats
     }
 
-    try {
-      // Try to get cached data first
-      const cachedStats = await cache.get<DashboardStats>({ key: this.CACHE_KEY })
-      if (cachedStats) {
-        const lastUpdated = await cache.get<string>({ key: `${this.CACHE_KEY}:timestamp` })
-        return inertia.render('admin/dashboard', {
-          stats: cachedStats,
-          lastUpdated,
-          isFromCache: true,
-        })
-      }
-
-      // If no cache, use deferred loading
-      const statsPromise = this.generateStats()
-
-      return inertia.render('admin/dashboard', {
-        stats: await statsPromise,
-        lastUpdated: DateTime.now().toISO(),
-        isFromCache: false,
-      })
-    } catch (error) {
-      console.error('Dashboard error:', error)
-
-      const fallbackStats = await this.getFallbackStats()
-
-      return inertia.render('admin/dashboard', {
-        stats: fallbackStats,
-        error: 'Certaines données peuvent être incomplètes',
-        isFromCache: false,
-      })
-    }
+    // If no cache, generate new stats
+    return await this.generateStats()
   }
 
   /**
-   * API endpoint for real-time dashboard updates
+   * Force refresh dashboard stats (clear cache and generate new)
    */
-  async api({ response }: HttpContext) {
-    try {
-      let stats = await cache.get<DashboardStats>({ key: this.CACHE_KEY })
-
-      if (!stats) {
-        stats = await this.generateStats()
-      }
-
-      const lastUpdated = await cache.get<string>({ key: `${this.CACHE_KEY}:timestamp` })
-
-      return response.json({
-        success: true,
-        data: stats,
-        lastUpdated,
-      })
-    } catch (error) {
-      return response.status(500).json({
-        success: false,
-        error: 'Erreur lors de la récupération des statistiques',
-      })
-    }
+  async refreshStats(): Promise<DashboardStats> {
+    await this.clearCache()
+    return await this.generateStats()
   }
 
   /**
-   * Force refresh dashboard stats (clear cache)
+   * Get last updated timestamp
    */
-  async refresh({ response }: HttpContext) {
-    try {
-      await this.clearCache()
-      const stats = await this.generateStats()
-
-      return response.json({
-        success: true,
-        data: stats,
-        message: 'Statistiques mises à jour',
-      })
-    } catch (error) {
-      return response.status(500).json({
-        success: false,
-        error: 'Erreur lors de la mise à jour',
-      })
-    }
+  async getLastUpdated(): Promise<string | null> {
+    return (await cache.get<string>({ key: `${this.CACHE_KEY}:timestamp` })) || null
   }
 
   /**
@@ -463,7 +395,7 @@ export default class AdminDashboardController {
   /**
    * Fallback stats in case of errors
    */
-  private async getFallbackStats(): Promise<DashboardStats> {
+  async getFallbackStats(): Promise<DashboardStats> {
     const [totalUsers, totalProjects] = await Promise.all([
       User.query().count('* as count').first(),
       Project.query().count('* as count').first(),
@@ -485,38 +417,5 @@ export default class AdminDashboardController {
       recentActivity: [],
       monthlyData: [],
     }
-  }
-  async portfolio({ inertia }: HttpContext) {
-    // Récupérer les 6 articles les plus récents
-    const recentPosts = await BlogPost.query()
-      .where('published', true)
-      .where((builder) => {
-        builder.whereNull('published_at').orWhere('published_at', '<=', DateTime.now().toSQL())
-      })
-      .preload('author')
-      .preload('tags')
-      .orderBy('created_at', 'desc')
-      .limit(5)
-
-    return inertia.render('home', {
-      recentPosts: inertia.defer(() =>
-        recentPosts.map((post) =>
-          post.serialize({
-            relations: {
-              author: { fields: ['username'] },
-              tags: { fields: ['name', 'slug', 'color'] },
-            },
-          })
-        )
-      ),
-    })
-  }
-
-  async projectShow({ params, inertia }: HttpContext) {
-    return inertia.render('ProjectDetails', { slug: params.slug })
-  }
-
-  async profile({ inertia }: HttpContext) {
-    return inertia.render('admin/users/profile')
   }
 }

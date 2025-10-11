@@ -371,13 +371,6 @@ export default function TechnologiesEdit({
                         </div>
                       </div>
                     )}
-                    <div className="flex items-start gap-2">
-                      <Tag className="h-4 w-4 text-gray-400 mt-0.5 flex-shrink-0" />
-                      <div>
-                        <p className="font-medium">ID</p>
-                        <p>{technology.id}</p>
-                      </div>
-                    </div>
                   </div>
                 </Card>
 

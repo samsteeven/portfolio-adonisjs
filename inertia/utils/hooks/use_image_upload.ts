@@ -12,7 +12,7 @@ interface UseImageUploadOptions {
 export function useImageUpload(options: UseImageUploadOptions = {}) {
   const {
     maxSize = 2,
-    allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'],
+    allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/PNG', 'image/jpg'],
     onImageChange,
     onError,
     initialPreview = null,

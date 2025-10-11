@@ -9,7 +9,7 @@ export class UserService {
    * Liste des utilisateurs (avec recherche et filtre par rôle)
    */
   async getUsers() {
-    return User.query().orderBy('created_at', 'desc').preload('subInfo')
+    return User.query().orderBy('created_at', 'desc')
   }
 
   /**

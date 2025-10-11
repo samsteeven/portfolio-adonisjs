@@ -266,7 +266,7 @@ export default class CommentairesController {
       await commentaire.delete()
 
       session.flash('success', 'Commentaire supprimé avec succès')
-      return response.redirect('admin/comments')
+      return response.redirect('/admin/comments')
     } catch (error) {
       session.flash('error', 'Erreur lors de la suppression du commentaire')
       return response.redirect().back()

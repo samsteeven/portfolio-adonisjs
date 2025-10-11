@@ -8,6 +8,8 @@ import {
   Euro,
   Sparkles,
   MessageCircle,
+  Package,
+  Wrench,
 } from 'lucide-react'
 import { ServiceType } from '~/types/services'
 import SafeHTML from '~/components/safeHTML'
@@ -103,159 +105,192 @@ export default function ServicesIndex({ services }: Props) {
               </p>
             </div>
 
-            {/* Services List - Alternating Layout */}
-            <div className="space-y-16 lg:space-y-24">
-              {services.map((service, index) => {
-                const isEven = index % 2 === 0
-                return (
-                  <div
-                    key={service.id}
-                    className="group relative"
-                    style={{
-                      animationDelay: `${index * 200}ms`,
-                      animation: 'fadeInUp 0.8s ease-out forwards',
-                    }}
-                  >
+            {/* Services List - Alternating Layout or Empty State */}
+            {services.length > 0 ? (
+              <div className="space-y-16 lg:space-y-24">
+                {services.map((service, index) => {
+                  const isEven = index % 2 === 0
+                  return (
                     <div
-                      className={`flex flex-col ${isEven ? 'lg:flex-row' : 'lg:flex-row-reverse'} gap-8 lg:gap-16 items-center`}
+                      key={service.id}
+                      className="group relative"
+                      style={{
+                        animationDelay: `${index * 200}ms`,
+                        animation: 'fadeInUp 0.8s ease-out forwards',
+                      }}
                     >
-                      {/* Service Image */}
                       <div
-                        className="relative flex-1 max-w-lg mx-auto lg:mx-0 cursor-pointer"
-                        onClick={() => handleServiceClick(service)}
+                        className={`flex flex-col ${isEven ? 'lg:flex-row' : 'lg:flex-row-reverse'} gap-8 lg:gap-16 items-center`}
                       >
-                        <div className="relative aspect-[4/3] rounded-3xl overflow-hidden border border-gray-700/50 group-hover:border-pink-500/50 transition-all duration-500">
-                          {service.publicUrl ? (
-                            <>
-                              <img
-                                src={service.publicUrl}
-                                alt={service.title}
-                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                              />
-                              <div className="absolute inset-0 bg-gradient-to-t from-gray-900/60 via-transparent to-transparent"></div>
-                            </>
-                          ) : (
-                            <div className="relative w-full h-full bg-gradient-to-br from-pink-500/20 via-purple-500/20 to-blue-500/20 flex items-center justify-center overflow-hidden">
-                              <div className="absolute inset-0 bg-gradient-to-br from-pink-500/10 to-purple-500/10"></div>
-
-                              {/* Geometric patterns */}
-                              <div className="absolute inset-0">
-                                <div className="absolute top-8 left-8 w-16 h-16 bg-white/5 rounded-full"></div>
-                                <div className="absolute top-16 right-12 w-8 h-8 bg-pink-500/20 rounded-full"></div>
-                                <div className="absolute bottom-12 left-16 w-12 h-12 bg-purple-500/20 rounded-full"></div>
-                                <div className="absolute bottom-8 right-8 w-6 h-6 bg-blue-500/20 rounded-full"></div>
-                              </div>
-
-                              <div className="relative text-8xl font-black text-white/30 group-hover:text-white/40 transition-colors duration-500">
-                                {service.title.charAt(0)}
-                              </div>
-
-                              {/* Tech icons floating around */}
-                              <div className="absolute inset-0 overflow-hidden">
-                                <div className="absolute top-6 left-6 text-2xl opacity-20 group-hover:opacity-30 transition-opacity duration-500">
-                                  💻
-                                </div>
-                                <div className="absolute top-12 right-8 text-xl opacity-20 group-hover:opacity-30 transition-opacity duration-500">
-                                  ⚡
-                                </div>
-                                <div className="absolute bottom-8 left-12 text-lg opacity-20 group-hover:opacity-30 transition-opacity duration-500">
-                                  🚀
-                                </div>
-                                <div className="absolute bottom-6 right-6 text-xl opacity-20 group-hover:opacity-30 transition-opacity duration-500">
-                                  ✨
-                                </div>
-                              </div>
-                            </div>
-                          )}
-
-                          {/* Price Badge */}
-                          <div className="absolute top-6 right-6 z-10">
-                            {service.price ? (
-                              <div className="flex items-center gap-1 px-4 py-2 bg-green-500/90 backdrop-blur-sm text-green-100 rounded-full text-sm font-semibold shadow-lg border border-green-400/30">
-                                <Euro className="h-4 w-4" />
-                                {service.formattedPrice}
-                              </div>
+                        {/* Service Image */}
+                        <div
+                          className="relative flex-1 max-w-lg mx-auto lg:mx-0 cursor-pointer"
+                          onClick={() => handleServiceClick(service)}
+                        >
+                          <div className="relative aspect-[4/3] rounded-3xl overflow-hidden border border-gray-700/50 group-hover:border-pink-500/50 transition-all duration-500">
+                            {service.publicUrl ? (
+                              <>
+                                <img
+                                  src={service.publicUrl}
+                                  alt={service.title}
+                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-t from-gray-900/60 via-transparent to-transparent"></div>
+                              </>
                             ) : (
-                              <div className="px-4 py-2 bg-gray-800/90 backdrop-blur-sm text-gray-200 rounded-full text-sm font-medium shadow-lg border border-gray-600/50">
-                                Sur devis
+                              <div className="relative w-full h-full bg-gradient-to-br from-pink-500/20 via-purple-500/20 to-blue-500/20 flex items-center justify-center overflow-hidden">
+                                <div className="absolute inset-0 bg-gradient-to-br from-pink-500/10 to-purple-500/10"></div>
+
+                                {/* Geometric patterns */}
+                                <div className="absolute inset-0">
+                                  <div className="absolute top-8 left-8 w-16 h-16 bg-white/5 rounded-full"></div>
+                                  <div className="absolute top-16 right-12 w-8 h-8 bg-pink-500/20 rounded-full"></div>
+                                  <div className="absolute bottom-12 left-16 w-12 h-12 bg-purple-500/20 rounded-full"></div>
+                                  <div className="absolute bottom-8 right-8 w-6 h-6 bg-blue-500/20 rounded-full"></div>
+                                </div>
+
+                                <div className="relative text-8xl font-black text-white/30 group-hover:text-white/40 transition-colors duration-500">
+                                  {service.title.charAt(0)}
+                                </div>
+
+                                {/* Tech icons floating around */}
+                                <div className="absolute inset-0 overflow-hidden">
+                                  <div className="absolute top-6 left-6 text-2xl opacity-20 group-hover:opacity-30 transition-opacity duration-500">
+                                    💻
+                                  </div>
+                                  <div className="absolute top-12 right-8 text-xl opacity-20 group-hover:opacity-30 transition-opacity duration-500">
+                                    ⚡
+                                  </div>
+                                  <div className="absolute bottom-8 left-12 text-lg opacity-20 group-hover:opacity-30 transition-opacity duration-500">
+                                    🚀
+                                  </div>
+                                  <div className="absolute bottom-6 right-6 text-xl opacity-20 group-hover:opacity-30 transition-opacity duration-500">
+                                    ✨
+                                  </div>
+                                </div>
                               </div>
                             )}
+
+                            {/* Price Badge */}
+                            <div className="absolute top-6 right-6 z-10">
+                              {service.price ? (
+                                <div className="flex items-center gap-1 px-4 py-2 bg-green-500/90 backdrop-blur-sm text-green-100 rounded-full text-sm font-semibold shadow-lg border border-green-400/30">
+                                  <Euro className="h-4 w-4" />
+                                  {service.formattedPrice}
+                                </div>
+                              ) : (
+                                <div className="px-4 py-2 bg-gray-800/90 backdrop-blur-sm text-gray-200 rounded-full text-sm font-medium shadow-lg border border-gray-600/50">
+                                  Sur devis
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Hover glow effect */}
+                            <div className="absolute inset-0 bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-pink-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-3xl"></div>
                           </div>
 
-                          {/* Hover glow effect */}
-                          <div className="absolute inset-0 bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-pink-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-3xl"></div>
+                          {/* Floating decorative elements */}
+                          <div className="absolute -inset-4 -z-10">
+                            <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-pink-500/20 to-purple-500/20 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
+                            <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-purple-500/20 to-blue-500/20 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 delay-150"></div>
+                          </div>
                         </div>
 
-                        {/* Floating decorative elements */}
-                        <div className="absolute -inset-4 -z-10">
-                          <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-pink-500/20 to-purple-500/20 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
-                          <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-purple-500/20 to-blue-500/20 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 delay-150"></div>
+                        {/* Service Content */}
+                        <div className="flex-1 max-w-2xl mx-auto lg:mx-0">
+                          <div className="space-y-6">
+                            {/* Service Category */}
+                            <div className="inline-flex items-center gap-2 px-4 py-2 bg-pink-500/10 backdrop-blur-sm text-pink-300 rounded-full text-sm font-medium border border-pink-500/20">
+                              <Sparkles className="h-4 w-4" />
+                              Service Premium
+                            </div>
+
+                            {/* Title */}
+                            <h3
+                              className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white group-hover:text-pink-300 transition-colors duration-300 cursor-pointer"
+                              onClick={() => handleServiceClick(service)}
+                            >
+                              {service.title}
+                            </h3>
+
+                            {/* Description */}
+                            <div className="text-lg text-gray-300 leading-relaxed group-hover:text-gray-200 transition-colors duration-300">
+                              <SafeHTML html={service.description} className="line-clamp-6" />
+                            </div>
+
+                            {/* Features */}
+                            <div className="flex flex-wrap gap-4">
+                              <div className="flex items-center gap-2 px-3 py-1.5 bg-green-500/10 backdrop-blur-sm text-green-300 rounded-full text-sm border border-green-500/20">
+                                <CheckCircle className="h-4 w-4" />
+                                Réponse sous 24h
+                              </div>
+                              <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-500/10 backdrop-blur-sm text-blue-300 rounded-full text-sm border border-blue-500/20">
+                                <Zap className="h-4 w-4" />
+                                Qualité premium
+                              </div>
+                              <div className="flex items-center gap-2 px-3 py-1.5 bg-purple-500/10 backdrop-blur-sm text-purple-300 rounded-full text-sm border border-purple-500/20">
+                                <Users className="h-4 w-4" />
+                                Support continu
+                              </div>
+                            </div>
+
+                            {/* CTA Button */}
+                            <div className="pt-4">
+                              <button
+                                onClick={() => handleContactClick(service)}
+                                className="group/btn inline-flex items-center gap-2 px-6 py-3 bg-pink-600 hover:bg-pink-500 text-white rounded-xl font-medium transition-all duration-200 hover:shadow-lg hover:shadow-pink-500/25"
+                              >
+                                <MessageCircle className="h-4 w-4" />
+                                <span>Discuter du projet</span>
+                                <ArrowRight className="h-4 w-4 group-hover/btn:translate-x-0.5 transition-transform duration-200" />
+                              </button>
+                            </div>
+                          </div>
                         </div>
                       </div>
 
-                      {/* Service Content */}
-                      <div className="flex-1 max-w-2xl mx-auto lg:mx-0">
-                        <div className="space-y-6">
-                          {/* Service Category */}
-                          <div className="inline-flex items-center gap-2 px-4 py-2 bg-pink-500/10 backdrop-blur-sm text-pink-300 rounded-full text-sm font-medium border border-pink-500/20">
-                            <Sparkles className="h-4 w-4" />
-                            Service Premium
-                          </div>
-
-                          {/* Title */}
-                          <h3
-                            className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white group-hover:text-pink-300 transition-colors duration-300 cursor-pointer"
-                            onClick={() => handleServiceClick(service)}
-                          >
-                            {service.title}
-                          </h3>
-
-                          {/* Description */}
-                          <div className="text-lg text-gray-300 leading-relaxed group-hover:text-gray-200 transition-colors duration-300">
-                            <SafeHTML html={service.description} className="line-clamp-6" />
-                          </div>
-
-                          {/* Features */}
-                          <div className="flex flex-wrap gap-4">
-                            <div className="flex items-center gap-2 px-3 py-1.5 bg-green-500/10 backdrop-blur-sm text-green-300 rounded-full text-sm border border-green-500/20">
-                              <CheckCircle className="h-4 w-4" />
-                              Réponse sous 24h
-                            </div>
-                            <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-500/10 backdrop-blur-sm text-blue-300 rounded-full text-sm border border-blue-500/20">
-                              <Zap className="h-4 w-4" />
-                              Qualité premium
-                            </div>
-                            <div className="flex items-center gap-2 px-3 py-1.5 bg-purple-500/10 backdrop-blur-sm text-purple-300 rounded-full text-sm border border-purple-500/20">
-                              <Users className="h-4 w-4" />
-                              Support continu
-                            </div>
-                          </div>
-
-                          {/* CTA Button */}
-                          <div className="pt-4">
-                            <button
-                              onClick={() => handleContactClick(service)}
-                              className="group/btn inline-flex items-center gap-2 px-6 py-3 bg-pink-600 hover:bg-pink-500 text-white rounded-xl font-medium transition-all duration-200 hover:shadow-lg hover:shadow-pink-500/25"
-                            >
-                              <MessageCircle className="h-4 w-4" />
-                              <span>Discuter du projet</span>
-                              <ArrowRight className="h-4 w-4 group-hover/btn:translate-x-0.5 transition-transform duration-200" />
-                            </button>
-                          </div>
-                        </div>
+                      {/* Background decoration */}
+                      <div className="absolute inset-0 -z-10 overflow-hidden">
+                        <div
+                          className={`absolute ${isEven ? 'top-1/2 left-0' : 'top-1/2 right-0'} w-96 h-96 bg-gradient-to-br from-pink-500/5 to-purple-500/5 rounded-full blur-3xl transform -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-1000`}
+                        ></div>
                       </div>
                     </div>
-
-                    {/* Background decoration */}
-                    <div className="absolute inset-0 -z-10 overflow-hidden">
-                      <div
-                        className={`absolute ${isEven ? 'top-1/2 left-0' : 'top-1/2 right-0'} w-96 h-96 bg-gradient-to-br from-pink-500/5 to-purple-500/5 rounded-full blur-3xl transform -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-1000`}
-                      ></div>
+                  )
+                })}
+              </div>
+            ) : (
+              /* Empty State */
+              <div className="text-center py-16 sm:py-24">
+                <div className="mx-auto max-w-lg">
+                  <div className="flex justify-center mb-6">
+                    <div className="relative">
+                      <Wrench className="h-16 w-16 text-pink-500/30" />
+                      <Package className="h-8 w-8 text-purple-500/50 absolute -bottom-1 -right-1" />
                     </div>
                   </div>
-                )
-              })}
-            </div>
+                  <h3 className="text-2xl font-bold text-white mb-2">Aucun service disponible</h3>
+                  <p className="text-gray-400 mb-8">
+                    Je travaille actuellement sur de nouveaux services qui seront bientôt
+                    disponibles. Revenez bientôt pour découvrir mes offres !
+                  </p>
+                  <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                    <button
+                      onClick={() => router.visit('/contact')}
+                      className="px-6 py-3 bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white rounded-xl font-medium transition-all duration-300 hover:shadow-lg hover:shadow-pink-500/25"
+                    >
+                      Être informé des nouveautés
+                    </button>
+                    <button
+                      onClick={() => router.visit('/')}
+                      className="px-6 py-3 bg-gray-800 hover:bg-gray-700 text-white rounded-xl font-medium transition-all duration-300 border border-gray-700"
+                    >
+                      Retour à l'accueil
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </section>
 

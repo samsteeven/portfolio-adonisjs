@@ -16,7 +16,7 @@ export const createTechnologySchema = vine.compile(
 
     imgPath: vine.file({
       size: '2mb',
-      extnames: ['jpg', 'jpeg', 'png', 'svg', 'webp'],
+      extnames: ['jpg', 'jpeg', 'png', 'svg', 'webp', 'PNG'],
     }),
 
     lienOrigin: vine.string().trim().url().optional().nullable(),
@@ -51,7 +51,7 @@ export const updateTechnologySchema = vine.compile(
     imgPath: vine
       .file({
         size: '2mb',
-        extnames: ['jpg', 'jpeg', 'png', 'svg', 'webp'],
+        extnames: ['jpg', 'jpeg', 'png', 'svg', 'webp', 'PNG'],
       })
       .optional(),
 

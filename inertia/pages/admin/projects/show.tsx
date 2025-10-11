@@ -311,13 +311,15 @@ export default function ShowProject({ project }: ProjectShowProps) {
               </div>
 
               <div className="flex flex-wrap gap-2">
-                <a
-                  href={`/projects/${project.slug}`}
-                  className="inline-flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                >
-                  <Eye className="h-4 w-4" />
-                  <span className="hidden sm:inline">Voir</span>
-                </a>
+                {Boolean(project.isActive) && (
+                  <Link
+                    href={`/projects/${project.slug}`}
+                    className="inline-flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                  >
+                    <Eye className="h-4 w-4" />
+                    <span className="hidden sm:inline">Voir</span>
+                  </Link>
+                )}
                 <Link
                   href={`/admin/projects/${project.id}/edit`}
                   className="inline-flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50 transition-colors"

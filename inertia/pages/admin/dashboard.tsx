@@ -105,10 +105,25 @@ const quickActions = [
     icon: FolderPlus,
     href: '/admin/projects/create',
     color: 'bg-purple-500',
+  }, 
+  { 
+    name: 'Ajouter article', 
+    icon: FilePlus, 
+    href: '/admin/blog/create', 
+    color: 'bg-green-500' 
   },
-  { name: 'Ajouter article', icon: FilePlus, href: '/admin/blog/create', color: 'bg-green-500' },
-  { name: 'Ajouter service', icon: Plus, href: '/admin/services/create', color: 'bg-indigo-500' },
-  { name: 'Voir demandes', icon: MailPlus, href: '/admin/contact-requests', color: 'bg-red-500' },
+  { 
+    name: 'Ajouter service', 
+    icon: Plus, 
+    href: '/admin/services/create', 
+    color: 'bg-indigo-500' 
+  },
+  { 
+    name: 'Voir demandes', 
+    icon: MailPlus, 
+    href: '/admin/contact-requests', 
+    color: 'bg-red-500' 
+  },
   {
     name: 'Voir commentaires',
     icon: MessageCircle,

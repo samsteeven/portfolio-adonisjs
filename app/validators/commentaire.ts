@@ -5,7 +5,7 @@ import vine from '@vinejs/vine'
  */
 export const createAuthenticatedCommentValidator = vine.compile(
   vine.object({
-    message: vine.string().trim().minLength(1).maxLength(1000).escape(),
+    message: vine.string().trim().minLength(3).maxLength(1000),
   })
 )
 
@@ -14,7 +14,7 @@ export const createAuthenticatedCommentValidator = vine.compile(
  */
 export const createGuestCommentValidator = vine.compile(
   vine.object({
-    message: vine.string().trim().minLength(1).maxLength(1000).escape(),
+    message: vine.string().trim().minLength(3).maxLength(1000),
 
     guestName: vine
       .string()

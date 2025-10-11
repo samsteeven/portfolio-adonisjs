@@ -22,6 +22,13 @@ export default class GuestMiddleware {
   ) {
     for (let guard of options.guards || [ctx.auth.defaultGuard]) {
       if (await ctx.auth.use(guard).check()) {
+        if (guard === 'guestbook') {
+          ctx.session.flash({
+            error:
+              "Cette action n'est pas possible, Deconnecter vous de mon guestbook et reesayer.",
+          })
+          return ctx.response.redirect().back()
+        }
         return ctx.response.redirect(this.redirectTo, true)
       }
     }

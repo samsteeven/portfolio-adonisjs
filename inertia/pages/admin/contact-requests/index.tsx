@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react'
-import { Head, Link, router } from '@inertiajs/react'
+import { Head, router } from '@inertiajs/react'
 import AdminLayout from '~/layout/AdminLayout'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -685,17 +685,6 @@ export default function AdminContactRequestsIndex({
                               <option value="replied">Répondu</option>
                               <option value="closed">Fermé</option>
                             </select>
-
-                            <Link href={`mailto:${request.email}`}>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="border-gray-300 hover:border-blue-400 hover:bg-blue-50 hover:text-blue-700"
-                              >
-                                <Mail className="h-4 w-4 mr-2" />
-                                Email
-                              </Button>
-                            </Link>
                           </div>
                         </div>
 

@@ -155,35 +155,38 @@ export default function BlogIndex({ posts, currentTag }: BlogIndexProps) {
             )}
 
             {/* Search Bar */}
-            <div className="max-w-lg mx-auto">
-              <div className="relative group">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <Search className="h-5 w-5 text-gray-400 group-focus-within:text-pink-400 transition-colors" />
+            {posts.data.length > 0 && (
+              <div className="max-w-lg mx-auto">
+                <div className="relative group">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <Search className="h-5 w-5 text-gray-400 group-focus-within:text-pink-400 transition-colors" />
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="Rechercher dans les articles..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="block w-full pl-12 pr-12 py-4 border border-gray-600 hover:border-gray-500 rounded-2xl bg-gray-800/50 backdrop-blur-sm text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all duration-300"
+                  />
+                  {searchTerm && (
+                    <button
+                      onClick={clearSearch}
+                      className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-white transition-colors"
+                    >
+                      <X className="h-5 w-5" />
+                    </button>
+                  )}
                 </div>
-                <input
-                  type="text"
-                  placeholder="Rechercher dans les articles..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="block w-full pl-12 pr-12 py-4 border border-gray-600 hover:border-gray-500 rounded-2xl bg-gray-800/50 backdrop-blur-sm text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all duration-300"
-                />
                 {searchTerm && (
-                  <button
-                    onClick={clearSearch}
-                    className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-white transition-colors"
-                  >
-                    <X className="h-5 w-5" />
-                  </button>
+                  <p className="mt-3 text-sm text-gray-400 text-center">
+                    <span className="font-medium text-pink-400">{filteredPosts.length}</span>{' '}
+                    article
+                    {filteredPosts.length !== 1 ? 's' : ''} trouvé
+                    {filteredPosts.length !== 1 ? 's' : ''} pour "{searchTerm}"
+                  </p>
                 )}
               </div>
-              {searchTerm && (
-                <p className="mt-3 text-sm text-gray-400 text-center">
-                  <span className="font-medium text-pink-400">{filteredPosts.length}</span> article
-                  {filteredPosts.length !== 1 ? 's' : ''} trouvé
-                  {filteredPosts.length !== 1 ? 's' : ''} pour "{searchTerm}"
-                </p>
-              )}
-            </div>
+            )}
           </div>
 
           {/* Articles List */}

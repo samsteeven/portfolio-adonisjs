@@ -2,15 +2,38 @@ import drive from '@adonisjs/drive/services/main'
 import { cuid } from '@adonisjs/core/helpers'
 import { MultipartFile } from '@adonisjs/core/bodyparser'
 import logger from '@adonisjs/core/services/logger'
+import ImageProcessingService from '#services/file_upload/image_processing_service'
 
 export default class FileUploadService {
-  static async uploadProfilePhoto(photo: MultipartFile): Promise<string | undefined> {
-    const fileName = `profiles/${cuid()}.${photo.extname}`
+  /**
+   * Upload une photo de profil (avec redimensionnement automatique)
+   */
+  static async uploadProfilePhoto(photo: MultipartFile): Promise<string> {
+    const fileId = cuid()
+    const fileName = `profiles/${fileId}.${photo.extname}`
 
-    await photo.moveToDisk(fileName)
-    return fileName
+    try {
+      const processedImage = await ImageProcessingService.processImage(photo.tmpPath!, {
+        width: 400,
+        height: 400,
+        fit: 'cover', // Recadre en carré (meilleur pour photos de profil)
+        quality: 90,
+        format: 'webp',
+      })
+
+      // Upload l'image traitée
+      await drive.use().put(fileName, processedImage)
+
+      return fileName
+    } catch (error) {
+      logger.error("Erreur lors de l'upload de la photo:", error)
+      throw new Error(`Impossible d'uploader la photo: ${error.message}`)
+    }
   }
 
+  /**
+   * Supprime un fichier
+   */
   static async deleteFile(fileName: string): Promise<boolean> {
     try {
       const exists = await drive.use().exists(fileName)
@@ -25,25 +48,25 @@ export default class FileUploadService {
     }
   }
 
+  /**
+   * Remplace une photo de profil
+   */
   static async replaceProfilePhoto(
-    newPhoto: any,
+    newPhoto: MultipartFile,
     oldPhotoPath: string | null
-  ): Promise<string | undefined> {
-    let newPhotoUrl: string | undefined
-
+  ): Promise<string> {
     // Upload de la nouvelle photo
-    if (newPhoto?.isValid) {
-      newPhotoUrl = await this.uploadProfilePhoto(newPhoto)
-    }
+    const newPhotoPath = await this.uploadProfilePhoto(newPhoto)
 
-    // Supprimer l'ancienne photo si elle existe et qu'une nouvelle a été uploadée
-    if (newPhotoUrl && oldPhotoPath) {
-      const oldFileName = oldPhotoPath.split('/').pop()
-      if (oldFileName) {
-        await this.deleteFile(oldFileName)
+    // Supprimer l'ancienne photo si elle existe
+    if (oldPhotoPath) {
+      try {
+        await this.deleteFile(oldPhotoPath)
+      } catch (error) {
+        logger.warn("Impossible de supprimer l'ancienne photo:", error)
       }
     }
 
-    return newPhotoUrl
+    return newPhotoPath
   }
 }

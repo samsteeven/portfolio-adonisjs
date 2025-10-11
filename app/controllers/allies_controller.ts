@@ -59,11 +59,14 @@ export default class AlliesController {
         )
       }
 
-      dbUser.role !== UserRole.ADMIN
-        ? await auth.use('guestbook').login(dbUser)
-        : await auth.use('web').login(dbUser)
+      if (dbUser.role !== UserRole.ADMIN) {
+        await auth.use('guestbook').login(dbUser)
+        session.flash('success', `Vous etes connecté sur mon guestbook via ${params.provider}`)
+      } else {
+        await auth.use('web').login(dbUser)
+        session.flash('success', `Bienvenu Admin ${dbUser.username}`)
+      }
 
-      session.flash('success', `Vous etes connecté sur mon guestbook via ${params.provider}`)
       return response.redirect('/guestbook')
     } catch (error) {
       logger.error('Erreur OAuth:', error)

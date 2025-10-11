@@ -34,7 +34,14 @@ export default function TechnologiesCreate({ categories }: { categories: string[
     handleContainerClick,
   } = useImageUpload({
     maxSize: 2,
-    allowedTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/svg+xml', 'image/webp'],
+    allowedTypes: [
+      'image/jpeg',
+      'image/jpg',
+      'image/png',
+      'image/PNG',
+      'image/svg+xml',
+      'image/webp',
+    ],
     onImageChange: (file) => setData('imgPath', file),
     onError: (error) => toast.error(error),
   })

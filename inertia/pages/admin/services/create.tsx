@@ -154,9 +154,6 @@ export default function AdminServiceCreate({ maxDisplayOrder }: Props) {
                       {errors.description && (
                         <p className="text-sm text-red-600 mt-1">{errors.description}</p>
                       )}
-                      <p className="text-sm text-gray-500 mt-1">
-                        {data.description.split(' ').filter((word) => word.length > 0).length} mots
-                      </p>
                     </div>
                   </div>
                 </Card>

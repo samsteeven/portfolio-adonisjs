@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link, useForm, usePage } from '@inertiajs/react'
 import { Edit, Eye, Power, PowerOff, Trash2 } from 'lucide-react'
 import ConfirmationModal from './ConfirmationModal'
-import { AuthenticatedUser, InertiaProps } from '~/types'
+import type { AuthenticatedUser, InertiaProps } from '~/types'
 import UserInfoModal from '~/components/UserInfoModal'
 import { UserRole } from '~/enums/user_role'
 
@@ -128,7 +128,11 @@ export default function UserActions({ user }: UserActionsProps) {
         isLoading={isDeleting}
         actionType="delete"
       />
-      <UserInfoModal isOpen={showInfoModal} onClose={() => setShowInfoModal(false)} user={user} />
+      <UserInfoModal
+        isOpen={showInfoModal}
+        onClose={() => setShowInfoModal(false)}
+        user={user as AuthenticatedUser}
+      />
     </>
   )
 }

@@ -24,7 +24,7 @@ export default class ProjectsController {
 
     const projects = await this.projectService.getProjects({
       page,
-      limit: 12,
+      limit: 10,
     })
 
     const technologies = await this.projectService.getAllTechnologies()

@@ -5,7 +5,7 @@ const FaqController = () => import('#controllers/admin/admin_faq_controller')
 const AdminNewsletterController = () => import('#controllers/admin/admin_newsletters_controller')
 const ContactRequestsController = () => import('#controllers/contact_requests_controller')
 const ServicesController = () => import('#controllers/services_controller')
-const DashboardController = () => import('#controllers/dashboard_controller')
+const DashboardController = () => import('#controllers/admin/dashboard_controller')
 const TagsController = () => import('#controllers/admin/tags_controller')
 const BlogPostsController = () => import('#controllers/admin/blog_posts_controller')
 const CommentaireController = () => import('#controllers/commentaire_controller')
@@ -17,10 +17,11 @@ const AuthController = () => import('#controllers/auth_controller')
 const ContactRequestController = () => import('#controllers/contact_requests_controller')
 const NewsletterController = () => import('#controllers/newsletters_controller')
 const AlliesController = () => import('#controllers/allies_controller')
+const PortfolioController = () => import('#controllers/portfolios_controller')
 
 // Routes publiques avec silent_auth pour avoir accès à l'utilisateur connecté
-router.get('/', [DashboardController, 'portfolio']).as('home')
-router.get('/projects/:slug', [DashboardController, 'projectShow'])
+router.get('/', [PortfolioController, 'index']).as('home')
+router.get('/projects/:slug', [PortfolioController, 'projectShow'])
 
 // Routes pour la guestbook
 router.get('/guestbook', [CommentaireController, 'indexGuestBook'])
@@ -79,7 +80,7 @@ router
     router.get('/auth/login', [AuthController, 'showLogin'])
     router.post('/auth/login', [AuthController, 'login']).use([loginLimiter, failedLoginLimiter])
   })
-  .middleware(middleware.guest())
+  .middleware(middleware.guest({ guards: ['web'] }))
 
 // Routes protégées
 router
@@ -100,7 +101,7 @@ router
     router.get('/settings/profile', [DashboardController, 'profile']).as('admin.profile')
 
     // ===== UTILISATEURS =====
-    router.resource('users', UserController).except(['show'])
+    router.resource('users', UserController)
     router
       .patch('users/:id/toggle-status', [UserController, 'toggleStatus'])
       .middleware(middleware.authorizeUser('toggleStatus'))

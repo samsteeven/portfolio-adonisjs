@@ -9,6 +9,10 @@ export default class UserPolicy extends BasePolicy {
     return user.role === UserRole.ADMIN
   }
 
+  show(user: User, targetUser: User): AuthorizerResponse {
+    return user.id === targetUser.id || user.role === UserRole.ADMIN
+  }
+
   // Modifier un utilisateur (soi-même ou admin)
   update(user: User, targetUser: User): AuthorizerResponse {
     return user.id === targetUser.id || user.role === UserRole.ADMIN

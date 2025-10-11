@@ -191,16 +191,18 @@ export default function BlogShowAdmin({ post }: BlogShowAdminProps) {
               </div>
 
               <div className="flex flex-col sm:flex-row gap-2">
-                <Link href={`/blog/${post.slug}`} target="_blank" className="w-full sm:w-auto">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full border-gray-200 hover:border-blue-300"
-                  >
-                    <ExternalLink className="w-4 h-4 mr-2" />
-                    Voir en ligne
-                  </Button>
-                </Link>
+                {Boolean(post.published) && (
+                  <Link href={`/blog/${post.slug}`} target="_blank" className="w-full sm:w-auto">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full border-gray-200 hover:border-blue-300"
+                    >
+                      <ExternalLink className="w-4 h-4 mr-2" />
+                      Voir en ligne
+                    </Button>
+                  </Link>
+                )}
                 <Link href={`/admin/blog/${post.id}/edit`} className="w-full sm:w-auto">
                   <Button size="sm" className="w-full bg-blue-600 hover:bg-blue-700">
                     <Edit className="w-4 h-4 mr-2" />

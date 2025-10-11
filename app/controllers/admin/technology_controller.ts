@@ -69,10 +69,16 @@ export default class TechnologyController {
     let imgPath: string | undefined
 
     try {
-      // L'upload et la création se font dans le même bloc try/catch pour une meilleure gestion des erreurs.
       imgPath = await FileUploadTechnolyService.uploadTechnologyImage(
-        data.imgPath, // On peut y accéder directement, le validateur garantit sa présence.
-        'technologies'
+        data.imgPath,
+        'technologies',
+        {
+          width: 300,
+          height: 300,
+          fit: 'contain', // Préserve le ratio
+          quality: 90,
+          format: 'png',
+        }
       )
 
       await this.technologyService.createTechnology({ ...data, imgPath })
@@ -158,7 +164,14 @@ export default class TechnologyController {
         newImgPath = await FileUploadTechnolyService.replaceTechnologyImage(
           data.imgPath,
           oldImagePath,
-          'technologies'
+          'technologies',
+          {
+            width: 300,
+            height: 300,
+            fit: 'contain',
+            quality: 90,
+            format: 'webp',
+          }
         )
       }
 
@@ -214,7 +227,7 @@ export default class TechnologyController {
       await technology.delete()
 
       session.flash('success', 'Technologie supprimée avec succès')
-      return response.redirect('admin/technologies')
+      return response.redirect('/admin/technologies')
     } catch (error) {
       session.flash('error', error.message || 'Erreur lors de la suppression de la technologie')
       return response.redirect().back()

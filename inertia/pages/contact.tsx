@@ -328,6 +328,7 @@ export default function ContactIndex({ selectedService, services = [], success, 
                   <div className="relative group">
                     <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-pink-400 transition-colors pointer-events-none" />
                     <input
+                      id="email"
                       type="email"
                       value={data.email}
                       onChange={(e) => setData('email', e.target.value)}

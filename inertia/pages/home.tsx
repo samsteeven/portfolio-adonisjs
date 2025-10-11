@@ -8,8 +8,6 @@ import { HeadLayout } from '~/layout/HeadLayout'
 import '~/css/app.css'
 import Newsletter_signup from '~/pages/components/newsletter_signup'
 import RecentPosts from '~/pages/components/articles_recents'
-import { WhenVisible } from '@inertiajs/react'
-import { Fallback } from '@/components/fallback'
 
 // Ajouter l'interface pour typer les props
 interface HomeProps {
@@ -43,9 +41,7 @@ export default function Home({ recentPosts = [] }: HomeProps) {
         <Skills />
         <Experiences />
         <ProjectList />
-        <WhenVisible data="recentPosts" fallback={<Fallback message="articles recents" />}>
-          <RecentPosts posts={recentPosts} />
-        </WhenVisible>
+        <RecentPosts posts={recentPosts} />
         <Newsletter_signup className="mb-20" />
       </div>
     </>

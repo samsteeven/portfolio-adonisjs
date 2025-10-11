@@ -1,5 +1,6 @@
 import vine from '@vinejs/vine'
 import { UserRole } from '#enums/user_role'
+import { phoneRule } from '#validators/rules/phone'
 
 /**
  * Schéma pour les informations supplémentaires de l'utilisateur
@@ -16,7 +17,7 @@ const subInfoSchema = vine.object({
       extnames: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
     })
     .optional(),
-  phone: vine.string().minLength(9).optional(),
+  phone: vine.string().use(phoneRule({})).optional(),
   bio: vine.string().optional(),
 })
 
@@ -32,7 +33,10 @@ export const createUserSchema = vine.compile(
       .trim()
       .toLowerCase()
       .unique({ table: 'users', column: 'email' }),
-    password: vine.string().minLength(8).regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/),
+    password: vine
+      .string()
+      .minLength(8)
+      .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/),
     username: vine.string().minLength(2).maxLength(50).trim(),
     role: vine.enum(Object.values(UserRole)),
     provider: vine.string().optional(),
@@ -62,7 +66,11 @@ export const updateUserSchema = vine.compile(
         return !user
       })
       .optional(),
-    password: vine.string().minLength(8).regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/).optional(),
+    password: vine
+      .string()
+      .minLength(8)
+      .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/)
+      .optional(),
     username: vine.string().minLength(2).maxLength(50).trim().optional(),
     role: vine.enum(Object.values(UserRole)).optional(),
     isActive: vine.boolean().optional(),

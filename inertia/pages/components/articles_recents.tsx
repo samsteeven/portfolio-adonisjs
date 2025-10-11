@@ -1,6 +1,8 @@
-import { Link } from '@inertiajs/react'
+import { Link, WhenVisible } from '@inertiajs/react'
 import { Calendar, ArrowRight, BookOpen } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import SafeHTML from '~/components/safeHTML'
+import { Fallback } from '@/components/fallback'
 
 interface RecentPostsProps {
   posts: BlogPost[]
@@ -17,7 +19,7 @@ export default function RecentPosts({ posts }: RecentPostsProps) {
     if (!isclient) return '...'
     return new Date(dateString).toLocaleDateString('fr-FR', {
       day: 'numeric',
-      month: 'long',
+      month: 'short',
       year: 'numeric',
     })
   }
@@ -40,49 +42,55 @@ export default function RecentPosts({ posts }: RecentPostsProps) {
 
         {/* Articles list - Design minimaliste */}
         <div className="space-y-4 mb-8">
-          {posts.map((post) => (
-            <article
-              key={post.id}
-              className="group p-6 rounded-xl border border-gray-800 hover:border-gray-600 transition-all duration-300 hover:bg-gray-800/30"
-            >
-              <Link href={`/blog/${post.slug}`} className="block">
-                <div className="flex flex-col gap-4">
-                  {/* Titre */}
-                  <h3 className="text-xl font-semibold text-white group-hover:text-pink-400 transition-colors line-clamp-2">
-                    {post.title}
-                  </h3>
+          <WhenVisible data={'posts'} fallback={<Fallback message={'articles'} />}>
+            {posts.map((post) => (
+              <article
+                key={post.id}
+                className="group p-6 rounded-xl border border-gray-800 hover:border-gray-600 transition-all duration-300 hover:bg-gray-800/30"
+              >
+                <Link href={`/blog/${post.slug}`} className="block">
+                  <div className="flex flex-col gap-4">
+                    {/* Titre */}
+                    <h3 className="text-xl font-semibold text-white group-hover:text-pink-400 transition-colors line-clamp-2">
+                      {post.title}
+                    </h3>
 
-                  {/* Description */}
-                  <p className="text-gray-400 leading-relaxed line-clamp-2">{post.excerpt}</p>
+                    {/* Description */}
 
-                  {/* Meta info */}
-                  <div className="flex flex-col-reverse gap-y-3 sm:flex-row sm:items-center sm:justify-between text-sm text-gray-500">
-                    <div className="flex items-center gap-2">
-                      <Calendar className="w-4 h-4" />
-                      <span>Publié le {formatDate(post.publishedAt)}</span>
-                    </div>
+                    <SafeHTML
+                      html={post.excerpt}
+                      className="text-gray-400 leading-relaxed line-clamp-2"
+                    />
 
-                    {/* Tags seulement */}
-                    <div className="flex items-center gap-1">
-                      {post.tags &&
-                        post.tags.map((tag) => (
-                          <span
-                            key={tag.slug}
-                            className="px-3 py-1 text-xs font-medium rounded-full"
-                            style={{
-                              backgroundColor: tag.color ? `${tag.color}20` : '#ec489820',
-                              color: tag.color || '#ec4899',
-                            }}
-                          >
-                            #{tag.name}
-                          </span>
-                        ))}
+                    {/* Meta info */}
+                    <div className="flex flex-col-reverse gap-y-3 sm:flex-row sm:items-center sm:justify-between text-sm text-gray-500">
+                      <div className="flex items-center gap-2">
+                        <Calendar className="w-4 h-4" />
+                        <span>Publié le {formatDate(post.publishedAt)}</span>
+                      </div>
+
+                      {/* Tags seulement */}
+                      <div className="flex items-center gap-1">
+                        {post.tags &&
+                          post.tags.map((tag) => (
+                            <span
+                              key={tag.slug}
+                              className="px-3 py-1 text-xs font-medium rounded-full"
+                              style={{
+                                backgroundColor: tag.color ? `${tag.color}20` : '#ec489820',
+                                color: tag.color || '#ec4899',
+                              }}
+                            >
+                              #{tag.name}
+                            </span>
+                          ))}
+                      </div>
                     </div>
                   </div>
-                </div>
-              </Link>
-            </article>
-          ))}
+                </Link>
+              </article>
+            ))}
+          </WhenVisible>
         </div>
 
         {/* Lien vers tous les articles */}

@@ -16,8 +16,14 @@ export default class UserController {
    * Affiche la liste des utilisateurs avec pagination et filtres
    */
   async index({ inertia }: HttpContext) {
-    const users = await this.userService.getUsers()
-
+    const data = await this.userService.getUsers()
+    const users = data.map((user) => {
+      return user.serialize({
+        fields: {
+          pick: ['id', 'username', 'role', 'isActive', 'provider', 'createdAt'],
+        },
+      })
+    })
     return inertia.render('admin/users/users', { users })
   }
 
@@ -72,9 +78,13 @@ export default class UserController {
   /**
    * Affiche un utilisateur spécifique
    */
-  async show({ inertia, params }: HttpContext) {
+  async show({ session, bouncer, params, response }: HttpContext) {
+    const authResult = await this.bouncerUserService.canShowUser(bouncer, params.id)
+    if (!authResult.authorized) {
+      return this.bouncerUserService.handleUnauthorized(response, session, authResult.error)
+    }
     const user = await this.userService.getUserById(params.id)
-    return inertia.render('admin/users/show', { user })
+    return response.json(user)
   }
 
   /**

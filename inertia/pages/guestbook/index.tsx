@@ -412,10 +412,12 @@ export default function Guestbook({ comments: deferredComments, reactions, user 
                       Email (optionnel)
                     </label>
                     <input
+                      id="email"
                       type="email"
                       value={guestData.guestEmail}
                       onChange={(e) => setGuestData('guestEmail', e.target.value)}
                       placeholder="votre@email.com"
+                      autoComplete={'email'}
                       className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent text-white placeholder-gray-400"
                     />
                     {guestErrors.guestEmail && (
@@ -490,7 +492,7 @@ export default function Guestbook({ comments: deferredComments, reactions, user 
           )}
 
           {/* Liste des commentaires avec Deferred */}
-          <WhenVisible data="comments" fallback={<Fallback message="messages" />}>
+          <WhenVisible data="comments" fallback={<Fallback message="commentaires" />}>
             {() => {
               const comments = deferredComments as CommentsData
               return (

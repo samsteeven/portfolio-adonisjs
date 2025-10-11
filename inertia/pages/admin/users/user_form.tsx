@@ -18,10 +18,14 @@ import { USER_ROLE_LABELS, UserRole } from '~/enums/user_role'
 import { AuthenticatedUser } from '~/types'
 import { toast } from 'sonner'
 import { useImageUpload } from '~/utils/hooks/use_image_upload'
+import { isValidPhoneNumber } from 'react-phone-number-input'
 
 interface UserFormProps {
   user?: AuthenticatedUser
   isEditing?: boolean
+}
+export interface FormPayload<T> {
+  data: T
 }
 
 export default function UserForm({ user, isEditing = false }: UserFormProps) {
@@ -95,6 +99,16 @@ export default function UserForm({ user, isEditing = false }: UserFormProps) {
           disableWhileProcessing
           resetOnSuccess={!isEditing}
           setDefaultsOnSuccess={!isEditing}
+          onBefore={(payload) => {
+            // @ts-ignore
+            const formData = payload.data as AuthenticatedUser
+            const phone = formData.subInfo?.phone
+
+            if (phone && !isValidPhoneNumber(phone)) {
+              toast.error("Le numéro de téléphone n'est pas valide")
+              return false
+            }
+          }}
           options={{
             preserveScroll: true,
           }}

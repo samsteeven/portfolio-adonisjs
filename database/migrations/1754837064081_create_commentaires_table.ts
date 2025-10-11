@@ -16,10 +16,10 @@ export default class extends BaseSchema {
       table
         .integer('user_id')
         .unsigned()
-        .nullable()
+        .notNullable()
         .references('id')
         .inTable('users')
-        .onDelete('SET NULL')
+        .onDelete('CASCADE')
         .index()
 
       table.timestamp('created_at', { useTz: true }).notNullable().defaultTo(this.now())

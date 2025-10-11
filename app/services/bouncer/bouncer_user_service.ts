@@ -26,6 +26,24 @@ export default class BouncerUserService {
       }
     }
   }
+  async canShowUser(
+    bouncer: HttpContext['bouncer'],
+    userId: string | number
+  ): Promise<AuthorizationResult> {
+    try {
+      const targetUser = await this.userService.getUserById(userId)
+      await bouncer.with('UserPolicy').authorize('show', targetUser)
+
+      return {
+        authorized: true,
+      }
+    } catch (error) {
+      return {
+        authorized: false,
+        error: 'Non autorisé à afficher cet utilisateur',
+      }
+    }
+  }
 
   /**
    * Vérifie l'autorisation pour mettre à jour un utilisateur

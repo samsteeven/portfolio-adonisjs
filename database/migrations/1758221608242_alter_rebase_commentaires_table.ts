@@ -5,6 +5,9 @@ export default class extends BaseSchema {
 
   async up() {
     this.schema.alterTable(this.tableName, (table) => {
+      // 2. Supprimer les colonnes name et email
+      table.dropColumn('name')
+      table.dropColumn('email')
       // Informations pour les visiteurs non connectés
       table.string('guest_name').nullable()
       table.string('guest_email').nullable()

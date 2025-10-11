@@ -20,7 +20,7 @@ import {
 } from 'lucide-react'
 import UserActions from '~/components/UserActions'
 import { UserRole, USER_ROLE_LABELS, USER_ROLE_COLORS } from '~/enums/user_role'
-import { AuthenticatedUser, InertiaProps } from '~/types'
+import type { AuthenticatedUser, InertiaProps } from '~/types'
 import { formatMemberSince } from '~/utils/utils_string'
 
 interface AdminUsersProps {
@@ -31,7 +31,7 @@ export default function AdminUsers({ users }: AdminUsersProps) {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedRole, setSelectedRole] = useState<'all' | UserRole>('all')
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('list')
-  const [sortBy, setSortBy] = useState<'username' | 'email' | 'createdAt'>('createdAt')
+  const [sortBy, setSortBy] = useState<'username' | 'createdAt'>('createdAt')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
   const [isClient, setIsClient] = useState(false)
   const [showFilters, setShowFilters] = useState(false)
@@ -47,9 +47,7 @@ export default function AdminUsers({ users }: AdminUsersProps) {
 
     let filtered = users.filter((user) => {
       const matchesSearch =
-        !searchTerm ||
-        user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.email.toLowerCase().includes(searchTerm.toLowerCase())
+        !searchTerm || user.username.toLowerCase().includes(searchTerm.toLowerCase())
 
       const matchesRole = selectedRole === 'all' || user.role === selectedRole
 
@@ -64,10 +62,6 @@ export default function AdminUsers({ users }: AdminUsersProps) {
         case 'username':
           aValue = a.username.toLowerCase()
           bValue = b.username.toLowerCase()
-          break
-        case 'email':
-          aValue = a.email.toLowerCase()
-          bValue = b.email.toLowerCase()
           break
         case 'createdAt':
           aValue = new Date(a.createdAt)
@@ -96,7 +90,6 @@ export default function AdminUsers({ users }: AdminUsersProps) {
     setSortBy('createdAt')
     setSortOrder('desc')
   }
-
   const activeFiltersCount = [searchTerm, selectedRole !== 'all' ? selectedRole : ''].filter(
     Boolean
   ).length
@@ -137,7 +130,6 @@ export default function AdminUsers({ users }: AdminUsersProps) {
               </div>
 
               <h3 className="font-semibold text-gray-900 mb-1 truncate w-full">{user.username}</h3>
-              <p className="text-sm text-gray-500 mb-3 truncate w-full">{user.email}</p>
 
               <span
                 className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium mb-3 ${USER_ROLE_COLORS[user.role as UserRole]}`}
@@ -233,7 +225,6 @@ export default function AdminUsers({ users }: AdminUsersProps) {
                           </span>
                         )}
                       </div>
-                      <div className="text-sm text-gray-500">{user.email}</div>
                     </div>
                   </div>
                 </td>
@@ -340,7 +331,7 @@ export default function AdminUsers({ users }: AdminUsersProps) {
                   <div className="relative">
                     <Input
                       type="text"
-                      placeholder="Nom d'utilisateur ou email..."
+                      placeholder="Nom d'utilisateur..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       className="pl-10 h-10"
@@ -377,7 +368,6 @@ export default function AdminUsers({ users }: AdminUsersProps) {
                     >
                       <option value="createdAt">Date création</option>
                       <option value="username">Nom d'utilisateur</option>
-                      <option value="email">Email</option>
                     </select>
                     <button
                       type="button"
