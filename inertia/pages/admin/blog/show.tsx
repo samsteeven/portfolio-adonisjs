@@ -54,6 +54,15 @@ export default function BlogShowAdmin({ post }: BlogShowAdminProps) {
     })
   }
 
+  const formatDateWithoutTime = (dateString: string) => {
+    if (!isclient) return '...'
+    return new Date(dateString).toLocaleDateString('fr-FR', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    })
+  }
+
   const readingTime = (text: string) => {
     const wordsPerMinute = 200
     const words = text.split(' ').length
@@ -281,7 +290,7 @@ export default function BlogShowAdmin({ post }: BlogShowAdminProps) {
                         new Date(post.publishedAt) < new Date()
                           ? `Publié le ${formatDate(post.publishedAt)}`
                           : !post.published && post.publishedAt
-                            ? `Sera publié a ${formatDate(post.publishedAt)}`
+                            ? `Sera publié le ${formatDateWithoutTime(post.publishedAt)} à ${new Date(post.publishedAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`
                             : `Créé le ${formatDate(post.createdAt)}`}
                       </span>
                     </div>
@@ -298,6 +307,15 @@ export default function BlogShowAdmin({ post }: BlogShowAdminProps) {
                         <Settings className="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" />
                         <span className="text-gray-600 break-words">
                           Modifié le {formatDate(post.updatedAt)}
+                        </span>
+                      </div>
+                    )}
+                    
+                    {post.notifiedAt && (
+                      <div className="flex items-start gap-3 text-sm">
+                        <Share2 className="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" />
+                        <span className="text-gray-600 break-words">
+                          Notifié aux abonnés le {formatDate(post.notifiedAt)}
                         </span>
                       </div>
                     )}

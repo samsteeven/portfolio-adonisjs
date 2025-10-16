@@ -40,12 +40,3 @@ export type SkillIndexProps = {
   categories: string[]
   filters: SkillFilters
 }
-
-// Pour create/edit
-export type SkillFormData = {
-  name: string
-  category: string
-  description?: string | null
-  imagePath?: string | null
-  isActive: boolean
-}

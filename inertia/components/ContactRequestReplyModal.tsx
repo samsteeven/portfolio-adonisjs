@@ -67,74 +67,83 @@ export default function ContactRequestReplyModal({
             method="post"
             action={`/admin/contact-requests/${contactRequest.id}/reply`}
             disableWhileProcessing
+            options={{
+              preserveScroll: true,
+            }}
             resetOnSuccess
             onSuccess={() => {
               toast.success('Réponse envoyée avec succès')
               if (onSuccess) onSuccess()
               onClose()
             }}
-            onError={() => {
-              toast.error("Erreur lors de l'envoi de la réponse")
-            }}
+            className="inert:opacity-50 inert:pointer-events-none"
           >
-            <div className="space-y-6">
-              <div>
-                <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-2">
-                  Sujet de l'email
-                </label>
-                <Input
-                  id="subject"
-                  name="subject"
-                  defaultValue={`Re: Demande de contact de ${contactRequest.fullName}`}
-                  className="border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-                  placeholder="Sujet de l'email"
-                />
-              </div>
+            {({ errors }) => (
+              <div className="space-y-6">
+                <div>
+                  <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-2">
+                    Sujet de l'email
+                  </label>
+                  <Input
+                    id="subject"
+                    name="subject"
+                    defaultValue={`Re: Demande de contact de ${contactRequest.fullName}`}
+                    className="border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                    placeholder="Sujet de l'email"
+                  />
+                  {errors.subject && <p className="text-red-500 text-sm mt-1">{errors.subject}</p>}
+                </div>
 
-              <div>
-                <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2">
-                  Message de réponse
-                </label>
-                <Textarea
-                  id="message"
-                  name="message"
-                  rows={8}
-                  className="border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-                  placeholder="Écrivez votre réponse ici..."
-                />
-              </div>
+                <div>
+                  <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2">
+                    Message de réponse
+                  </label>
+                  <Textarea
+                    id="message"
+                    name="message"
+                    rows={8}
+                    minLength={10}
+                    className="border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                    placeholder="Écrivez votre réponse ici..."
+                  />
+                  {errors.message && <p className="text-red-500 text-sm mt-1">{errors.message}</p>}
+                </div>
 
-              <div>
-                <label
-                  htmlFor="adminNotes"
-                  className="block text-sm font-medium text-gray-700 mb-2"
-                >
-                  Notes administratives (optionnel)
-                </label>
-                <Textarea
-                  id="adminNotes"
-                  name="adminNotes"
-                  rows={3}
-                  className="border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-                  placeholder="Notes internes pour votre référence..."
-                />
-              </div>
+                <div>
+                  <label
+                    htmlFor="adminNotes"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
+                    Notes administratives (optionnel)
+                  </label>
+                  <Textarea
+                    id="adminNotes"
+                    name="adminNotes"
+                    rows={3}
+                    className="border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                    placeholder="Notes internes pour votre référence..."
+                  />
+                  {errors.adminNotes && (
+                    <p className="text-red-500 text-sm mt-1">{errors.adminNotes}</p>
+                  )}
+                </div>
 
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-200">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={onClose}
-                  className="border-gray-300 hover:border-gray-400"
-                >
-                  Annuler
-                </Button>
-                <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
-                  <Send className="h-4 w-4 mr-2" />
-                  Envoyer la réponse
-                </Button>
+                <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-200">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={onClose}
+                    className="border-gray-300 hover:border-gray-400"
+                  >
+                    Annuler
+                  </Button>
+                  <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
+                    <Send className="h-4 w-4 mr-2" />
+                    Envoyer la réponse
+                  </Button>
+                </div>
               </div>
-            </div>
+            )}
           </Form>
         </div>
       </Card>

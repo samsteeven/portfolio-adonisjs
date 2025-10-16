@@ -36,25 +36,3 @@ export interface CreateContactRequestData {
   serviceId?: number
   website?: string // Honeypot field
 }
-
-export interface UpdateContactRequestStatusData {
-  status: 'pending' | 'read' | 'replied' | 'closed'
-  adminNotes?: string
-}
-
-export interface ContactRequestFilters {
-  search?: string
-  status?: 'pending' | 'read' | 'replied' | 'closed' | ''
-  serviceId?: number
-  hasService?: 'true' | 'false' | ''
-  dateFrom?: string
-  dateTo?: string
-  page?: number
-  limit?: number
-}
-
-export interface ReplyToContactRequestData {
-  subject: string
-  message: string
-  adminNotes?: string
-}

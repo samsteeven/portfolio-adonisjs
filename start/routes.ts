@@ -57,11 +57,8 @@ router.get('/blog', '#controllers/blog_controller.index')
 router.get('/blog/:slug', '#controllers/blog_controller.show').where('slug', /^[a-z0-9\-]+$/)
 
 // Newsletter
-router.post('/newsletter/subscribe', [NewsletterController, 'subscribe']).use(loginLimiter)
-router
-  .get('/newsletter/unsubscribe/:token', [NewsletterController, 'unsubscribe'])
-  .use(failedLoginLimiter)
-  .where('token', /^[A-Za-z0-9\-]+$/)
+router.post('/newsletter/subscribe', [NewsletterController, 'subscribe'])
+router.get('/newsletter/unsubscribe/:token', [NewsletterController, 'unsubscribe'])
 
 router.get('/services', [ServicesController, 'publicIndex'])
 router.get('/services/:slug', [ServicesController, 'publicShow'])
@@ -133,7 +130,7 @@ router
     // ===== Newsletter =====
     router.get('/newsletter/subscribers', [AdminNewsletterController, 'index'])
     router.delete('/newsletter/:id', [AdminNewsletterController, 'destroy'])
-    router.delete('/newsletter/bulk', [AdminNewsletterController, 'bulkDestroy'])
+    router.delete('/newsletter/bulk/delete', [AdminNewsletterController, 'bulkDestroy'])
     router.patch('/newsletter/:id', [AdminNewsletterController, 'toggleStatus'])
 
     // ==== Services ===
@@ -149,7 +146,7 @@ router
     router.patch('/contact-requests/:id/status', [ContactRequestsController, 'updateStatus'])
     router.post('/contact-requests/:id/reply', [ContactRequestsController, 'reply'])
     // Actions en lot
-    router.patch('/contact-requests/bulk-mark-as-read', [
+    router.patch('/contact-requests/bulk-mark-as-read/contacts', [
       ContactRequestsController,
       'bulkMarkAsRead',
     ])

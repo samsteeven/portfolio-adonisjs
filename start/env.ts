@@ -20,6 +20,7 @@ export default await Env.create(new URL('../', import.meta.url), {
   LOG_LEVEL: Env.schema.string(),
   MAIL_FROM_ADDRESS: Env.schema.string({ format: 'email' }),
   MAIL_FROM_NAME: Env.schema.string(),
+  ADMIN_EMAIL: Env.schema.string({ format: 'email' }),
 
   /*
   |----------------------------------------------------------
@@ -79,4 +80,8 @@ export default await Env.create(new URL('../', import.meta.url), {
   QUEUE_REDIS_HOST: Env.schema.string({ format: 'host' }),
   QUEUE_REDIS_PORT: Env.schema.number(),
   QUEUE_REDIS_PASSWORD: Env.schema.string.optional(),
+
+  REDIS_HOST: Env.schema.string({ format: 'host' }),
+  REDIS_PORT: Env.schema.number(),
+  REDIS_PASSWORD: Env.schema.string.optional()
 })

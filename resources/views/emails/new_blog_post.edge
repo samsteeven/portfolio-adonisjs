@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      line-height: 1.6;
+      color: #374151;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #f9fafb;
+    }
+    .container {
+      background: white;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+    .header {
+      background: linear-gradient(135deg, #4F46E5 0%, #4338ca 100%);
+      color: white;
+      padding: 30px 20px;
+      text-align: center;
+    }
+    .header h1 {
+      margin: 0;
+      font-size: 26px;
+      font-weight: 700;
+    }
+    .header-icon {
+      font-size: 40px;
+      margin-bottom: 10px;
+    }
+    .content {
+      padding: 35px;
+    }
+    .article-title {
+      font-size: 24px;
+      font-weight: 700;
+      margin: 0 0 15px 0;
+      color: #111827;
+    }
+    .article-excerpt {
+      font-size: 16px;
+      color: #6b7280;
+      margin-bottom: 25px;
+      line-height: 1.7;
+    }
+    .author-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 30px;
+      padding: 15px;
+      background: #f9fafb;
+      border-radius: 12px;
+    }
+    .author-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: #e5e7eb;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      color: #4b5563;
+    }
+    .author-details {
+      flex: 1;
+    }
+    .author-name {
+      font-weight: 600;
+      color: #111827;
+      margin: 0 0 4px 0;
+    }
+    .publish-date {
+      font-size: 14px;
+      color: #6b7280;
+    }
+    .btn {
+      display: inline-block;
+      background: linear-gradient(135deg, #4F46E5 0%, #4338ca 100%);
+      color: white;
+      padding: 16px 32px;
+      text-decoration: none;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 16px;
+      text-align: center;
+      box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.3);
+      transition: all 0.2s ease;
+      border: none;
+      cursor: pointer;
+      width: 100%;
+      margin: 20px 0;
+    }
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.4);
+    }
+    .footer {
+      text-align: center;
+      margin-top: 30px;
+      padding-top: 25px;
+      border-top: 1px solid #e5e7eb;
+      font-size: 13px;
+      color: #9ca3af;
+    }
+    .unsubscribe {
+      margin-top: 15px;
+    }
+    .unsubscribe a {
+      color: #6b7280;
+      text-decoration: none;
+      font-size: 12px;
+    }
+    .unsubscribe a:hover {
+      text-decoration: underline;
+    }
+    @media (max-width: 600px) {
+      body {
+        padding: 10px;
+      }
+      .content {
+        padding: 25px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="header-icon">📰</div>
+      <h1>Nouvel Article !</h1>
+    </div>
+
+    <div class="content">
+      <h2 class="article-title">{{ post.title }}</h2>
+
+      <div class="leading-relaxed">
+        {{{ safeHTML(post.excerpt) }}}
+      </div>
+
+      <div class="author-info">
+        <div class="author-avatar">{{ post.author.username.charAt(0).toUpperCase() }}</div>
+        <div class="author-details">
+          <h3 class="author-name">{{ post.author.username }}</h3>
+          <p class="publish-date">Publié le {{ formatDate(post.createdAt, 'full') }}</p>
+        </div>
+      </div>
+
+      <a href="{{`/blog/${post.slug}`}}" class="btn">Lire l'article complet</a>
+
+      <div style="text-align: center; color: #6b7280; font-size: 14px; margin-top: 25px;">
+        Posté dans {{ post.tags.length }} catégories
+      </div>
+    </div>
+
+    <div class="footer">
+      <p>
+        Vous recevez cet email car vous êtes abonné à notre newsletter.
+      </p>
+      <div class="unsubscribe">
+        <a href="{{ subscriber.unsubscribeUrl }}">Se désabonner</a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

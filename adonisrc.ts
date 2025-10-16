@@ -31,7 +31,8 @@ export default defineConfig({
     () => import('@adonisjs/bouncer/commands'),
     () => import('@adonisjs/mail/commands'),
     () => import('@rlanz/bull-queue/commands'),
-    () => import('@adonisjs/cache/commands')
+    () => import('@adonisjs/cache/commands'),
+    () => import('adonisjs-scheduler/commands')
   ],
 
   /*
@@ -66,7 +67,12 @@ export default defineConfig({
     () => import('@adonisjs/ally/ally_provider'),
     () => import('@adonisjs/mail/mail_provider'),
     () => import('@rlanz/bull-queue/queue_provider'),
-    () => import('@adonisjs/cache/cache_provider')
+    () => import('@adonisjs/cache/cache_provider'),
+    {
+      file: () => import('adonisjs-scheduler/scheduler_provider'),
+      environment: ['console'],
+    },
+    () => import('@adonisjs/redis/redis_provider')
   ],
 
   /*
@@ -77,7 +83,10 @@ export default defineConfig({
   | List of modules to import before starting the application.
   |
   */
-  preloads: [() => import('#start/routes'), () => import('#start/kernel'), () => import('#start/view')],
+  preloads: [() => import('#start/routes'), () => import('#start/kernel'), () => import('#start/view'), {
+    file: () => import('#start/scheduler'),
+    environment: ['console'],
+  }],
 
   /*
   |--------------------------------------------------------------------------

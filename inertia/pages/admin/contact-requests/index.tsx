@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react'
-import { Head, router } from '@inertiajs/react'
+import { Link, router } from '@inertiajs/react'
 import AdminLayout from '~/layout/AdminLayout'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -204,12 +204,6 @@ export default function AdminContactRequestsIndex({
       { status: newStatus },
       {
         preserveScroll: true,
-        onSuccess: () => {
-          toast.success('Statut mis à jour avec succès')
-        },
-        onError: () => {
-          toast.error('Erreur lors de la mise à jour du statut')
-        },
       }
     )
   }
@@ -221,7 +215,7 @@ export default function AdminContactRequestsIndex({
     }
 
     router.patch(
-      '/admin/contact-requests/bulk-mark-as-read',
+      '/admin/contact-requests/bulk-mark-as-read/contacts',
       {
         ids: selectedRequests,
       },
@@ -230,10 +224,6 @@ export default function AdminContactRequestsIndex({
         onSuccess: () => {
           setSelectedRequests([])
           setShowBulkActions(false)
-          toast.success(`${selectedRequests.length} demande(s) marquée(s) comme lues`)
-        },
-        onError: () => {
-          toast.error('Erreur lors de la mise à jour')
         },
       }
     )
@@ -271,11 +261,9 @@ export default function AdminContactRequestsIndex({
         setDeleteModalOpen(false)
         setRequestToDelete(null)
         setIsDeleting(false)
-        toast.success('Demande supprimée avec succès')
       },
       onError: () => {
         setIsDeleting(false)
-        toast.error('Erreur lors de la suppression de la demande')
       },
     })
   }
@@ -378,8 +366,6 @@ export default function AdminContactRequestsIndex({
 
   return (
     <>
-      <Head title="Demandes de Contact" />
-
       <div className="min-h-screen bg-gray-50 p-3 sm:p-6">
         <div className="max-w-7xl mx-auto space-y-6">
           {/* Header */}
@@ -621,9 +607,13 @@ export default function AdminContactRequestsIndex({
                                 {request.service && (
                                   <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800 border border-blue-200">
                                     <Star className="h-3 w-3 mr-1" />
-                                    <span className="truncate max-w-32">
+                                    <Link
+                                      href={`/admin/services/${request.service.id}`}
+                                      as="span"
+                                      className="truncate max-w-32 hover:cursor-pointer"
+                                    >
                                       {request.service.title}
-                                    </span>
+                                    </Link>
                                   </span>
                                 )}
                               </div>

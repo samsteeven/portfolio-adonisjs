@@ -4,12 +4,13 @@ interface BlogPost {
   slug: string
   excerpt: string
   content: string
-  featuredImage?: string
+  featuredImage: string | null
   photoPathPublicUrl: string | null
   publishedAt: string
   published: boolean
   createdAt: string
   updatedAt: string
+  notifiedAt: string | null
   author: {
     id: number
     username: string

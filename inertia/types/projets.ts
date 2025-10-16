@@ -1,4 +1,3 @@
-// Interface pour le modèle Project
 import { Technology } from '~/types/technology'
 
 export interface ProjectType {

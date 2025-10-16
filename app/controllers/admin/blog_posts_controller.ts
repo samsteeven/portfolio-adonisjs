@@ -6,10 +6,12 @@ import { createBlogPostValidator, updateBlogPostValidator } from '#validators/bl
 import { DateTime } from 'luxon'
 import BlogPostAthorizationService from '#services/bouncer/bouncer_technology_service'
 import { inject } from '@adonisjs/core'
+import BlogSchedulerService from '#services/scheduler/blog_scheduler_service'
 
 @inject()
 export default class BlogPostsController {
   constructor(private blogPostAuthorization: BlogPostAthorizationService) {}
+
   async index({ request, inertia }: HttpContext) {
     const page = request.input('page', 1)
     const status = request.input('status', '')
@@ -25,7 +27,16 @@ export default class BlogPostsController {
     const posts = await query.paginate(page, 10)
 
     return inertia.render('admin/blog/index', {
-      posts: posts.serialize(),
+      posts: posts.serialize({
+        relations: {
+          author: {
+            fields: { pick: ['username'] },
+          },
+          tags: {
+            fields: { pick: ['id', 'name', 'slug', 'color'] },
+          },
+        },
+      }),
       filters: { status },
     })
   }
@@ -37,35 +48,17 @@ export default class BlogPostsController {
       .preload('tags')
       .firstOrFail()
 
-    // Articles similaires (même tags)
-    const relatedPosts =
-      post.tags?.length > 0
-        ? await BlogPost.query()
-            .where('published', true)
-            .where('id', '!=', post.id)
-            .whereHas('tags', (tagQuery) => {
-              tagQuery.whereIn(
-                'tags.id',
-                post.tags.map((tag) => tag.id)
-              )
-            })
-            .preload('author')
-            .preload('tags')
-            .limit(3)
-        : []
-
     return inertia.render('admin/blog/show', {
       post: post.serialize({
         relations: {
           author: {
-            fields: ['id', 'username'],
+            fields: { pick: ['username'] },
           },
           tags: {
-            fields: ['id', 'name', 'slug', 'color'],
+            fields: { pick: ['id', 'name', 'slug', 'color'] },
           },
         },
       }),
-      relatedPosts: relatedPosts.map((p) => p.serialize()),
     })
   }
 
@@ -102,6 +95,9 @@ export default class BlogPostsController {
     }
 
     try {
+      // Déterminer si l'article doit être publié maintenant ou plus tard
+      const shouldSchedule = data.publishedAt !== undefined && data.publishedAt !== null
+
       const post = await BlogPost.create({
         title: data.title,
         slug: data.slug,
@@ -109,21 +105,38 @@ export default class BlogPostsController {
         content: data.content,
         featuredImage: featuredImagePath,
         published: data.published,
-        publishedAt:
-          !data.published && data.publishedAt ? DateTime.fromJSDate(data.publishedAt) : null,
+        publishedAt: data.publishedAt ? DateTime.fromJSDate(data.publishedAt) : null,
         userId: auth.user!.id,
       })
 
       // Attacher les tags
       if (data.tags && Array.isArray(data.tags) && data.tags.length > 0) {
-        // S'assurer que tous les IDs de tags sont des nombres
         const tagIds = data.tags.map((id) => parseInt(id.toString())).filter((id) => !isNaN(id))
         if (tagIds.length > 0) {
           await post.related('tags').attach(tagIds)
         }
       }
 
-      session.flash('success', 'Article créé avec succès')
+      // Si l'article est publié et qu'une date est définie, programmer la publication
+      if (data.published && shouldSchedule) {
+        await BlogSchedulerService.schedulePost(post)
+        const publishDate = DateTime.fromJSDate(data.publishedAt!)
+        session.flash(
+          'success',
+          `Article programmé pour le ${publishDate.toFormat('dd/MM/yyyy à HH:mm')}`
+        )
+      }
+      // Si l'article est publié immédiatement (sans date programmée) et n'a pas encore été notifié
+      else if (data.published && !shouldSchedule) {
+        await BlogSchedulerService.notifySubscribersOfNewPost(post)
+        await post.markAsNotified()
+        session.flash('success', 'Article créé et publié avec succès')
+      }
+      // Sinon c'est un brouillon
+      else {
+        session.flash('success', 'Brouillon créé avec succès')
+      }
+
       return response.redirect().back()
     } catch (error) {
       logger.error("Erreur lors de la création de l'article:", error)
@@ -143,15 +156,22 @@ export default class BlogPostsController {
   }
 
   async edit({ params, inertia }: HttpContext) {
-    const post = await BlogPost.query().where('id', params.id).preload('tags').firstOrFail()
+    const post = await BlogPost.query()
+      .where('id', params.id)
+      .preload('author')
+      .preload('tags')
+      .firstOrFail()
 
     const tags = await Tag.query().orderBy('name', 'asc')
 
     return inertia.render('admin/blog/edit', {
       post: post.serialize({
         relations: {
+          author: {
+            fields: { pick: ['username'] },
+          },
           tags: {
-            fields: ['id', 'name'],
+            fields: { pick: ['id', 'name', 'slug', 'color'] },
           },
         },
       }),
@@ -168,12 +188,10 @@ export default class BlogPostsController {
 
     const data = await request.validateUsing(updateBlogPostValidator, { meta: { slug: post.slug } })
 
-    let featuredImagePath = post.featuredImage // Garder l'image actuelle par défaut
+    let featuredImagePath = post.featuredImage
 
-    // Si un fichier a été uploadé
     if (data.featuredImage) {
       try {
-        // Si il y avait déjà une image locale, la remplacer
         if (post.featuredImage && post.featuredImage.startsWith('blogs/')) {
           featuredImagePath = await FileUploadService.replaceTechnologyImage(
             data.featuredImage,
@@ -181,7 +199,6 @@ export default class BlogPostsController {
             'blogs'
           )
         } else {
-          // Nouvelle image
           featuredImagePath = await FileUploadService.uploadTechnologyImage(
             data.featuredImage,
             'blogs'
@@ -191,23 +208,16 @@ export default class BlogPostsController {
         session.flash('error', "Erreur lors de l'upload de l'image")
         return response.redirect().back()
       }
-    }
-    // Si une URL externe a été fournie
-    else if (data.featuredImageUrl) {
-      // Supprimer l'ancienne image locale si elle existait
+    } else if (data.featuredImageUrl) {
       if (post.featuredImage && post.featuredImage.startsWith('blogs/')) {
         try {
           await FileUploadService.deleteFile(post.featuredImage)
         } catch (error) {
-          // Log l'erreur mais ne pas faire échouer la mise à jour
           logger.warn("Erreur lors de la suppression de l'ancienne image:", error)
         }
       }
       featuredImagePath = data.featuredImageUrl
-    }
-    // Si pas d'image du tout (ni fichier ni URL)
-    else if (data.featuredImageUrl === '') {
-      // L'utilisateur veut supprimer l'image
+    } else if (data.featuredImageUrl === '') {
       if (post.featuredImage && post.featuredImage.startsWith('blogs/')) {
         try {
           await FileUploadService.deleteFile(post.featuredImage)
@@ -219,6 +229,10 @@ export default class BlogPostsController {
     }
 
     try {
+      // Sauvegarder l'état avant modification
+      const wasPublished = post.published
+      const shouldSchedule = data.publishedAt !== undefined && data.publishedAt !== null
+
       // Mettre à jour l'article
       await post
         .merge({
@@ -227,9 +241,8 @@ export default class BlogPostsController {
           excerpt: data.excerpt,
           content: data.content,
           featuredImage: featuredImagePath,
-          published: data.published,
-          publishedAt:
-            !data.published && data.publishedAt ? DateTime.fromJSDate(data.publishedAt) : null,
+          published: data.published !== undefined ? data.published : post.published,
+          publishedAt: data.publishedAt ? DateTime.fromJSDate(data.publishedAt) : null,
         })
         .save()
 
@@ -238,13 +251,33 @@ export default class BlogPostsController {
         const tagIds = data.tags.map((id) => parseInt(id.toString())).filter((id) => !isNaN(id))
         await post.related('tags').sync(tagIds)
       } else {
-        // Si aucun tag, détacher tous les tags
         await post.related('tags').sync([])
       }
 
-      session.flash('success', 'Article mis à jour avec succès')
+      // Gérer les notifications/programmation
+      // Cas 1: Article qui passe de brouillon à publié (première publication) et n'a pas encore été notifié
+      if (post.published && !wasPublished && !shouldSchedule && !post.hasBeenNotified) {
+        await BlogSchedulerService.notifySubscribersOfNewPost(post)
+        await post.markAsNotified()
+        session.flash('success', 'Article publié et abonnés notifiés')
+      }
+      // Cas 2: Article programmé
+      else if (post.published && !post.hasBeenNotified && shouldSchedule) {
+        await BlogSchedulerService.schedulePost(post)
+        const publishDate = DateTime.fromJSDate(data.publishedAt!)
+        session.flash(
+          'success',
+          `Article programmé pour le ${publishDate.toFormat('dd/MM/yyyy à HH:mm')}`
+        )
+      }
+      // Cas 3: Mise à jour simple (déjà publié ou remis en brouillon)
+      else {
+        session.flash('success', 'Article mis à jour avec succès')
+      }
+
       return response.redirect().back()
     } catch (error) {
+      logger.error("Erreur lors de la mise à jour de l'article:", error)
       session.flash('error', "Erreur lors de la mise à jour de l'article")
       return response.redirect().back()
     }
@@ -268,7 +301,6 @@ export default class BlogPostsController {
         }
       }
 
-      // Supprimer l'article (les relations avec les tags seront supprimées automatiquement)
       await post.delete()
 
       session.flash('success', 'Article supprimé avec succès')
@@ -279,6 +311,7 @@ export default class BlogPostsController {
       return response.redirect().back()
     }
   }
+
   async toggleStatus({ params, session, response, logger, bouncer }: HttpContext) {
     const autorize = await bouncer.with('BlogPolicy').allows('toggleStatus')
     if (!autorize) {
@@ -286,13 +319,35 @@ export default class BlogPostsController {
     }
     try {
       const post = await BlogPost.findOrFail(params.id)
+
+      const wasPublished = post.published
+
+      // Si l'article est publié et a une date de publication future, annuler la programmation
+      if (
+        post.published &&
+        !post.hasBeenNotified &&
+        post.publishedAt &&
+        post.publishedAt > DateTime.now()
+      ) {
+        post.publishedAt = null
+      }
+
+      // Toggle le statut
       post.published = !post.published
       await post.save()
-      session.flash('success', `Le post a ete ${post.published ? 'publier' : 'desactiver'}`)
+
+      // Si on vient de publier pour la première fois et n'a pas encore été notifié
+      if (post.published && !wasPublished && !post.hasBeenNotified) {
+        await BlogSchedulerService.notifySubscribersOfNewPost(post)
+        session.flash('success', 'Article publié et abonnés notifiés')
+      } else {
+        session.flash('success', `Article ${post.published ? 'publié' : 'mis en brouillon'}`)
+      }
+
       return response.redirect().back()
     } catch (e) {
       logger.warn("une erreur est survenue lors du changement de status de l'article", e)
-      session.flash('error', "Le post n'est pas trouver")
+      session.flash('error', "Le post n'est pas trouvé")
       return response.redirect().back()
     }
   }

@@ -1,6 +1,6 @@
 import { BaseModel, beforeCreate, column } from '@adonisjs/lucid/orm'
 import { DateTime } from 'luxon'
-import string from '@adonisjs/core/helpers/string'
+import crypto from 'node:crypto'
 
 export default class NewsletterSubscriber extends BaseModel {
   @column({ isPrimary: true })
@@ -15,10 +15,13 @@ export default class NewsletterSubscriber extends BaseModel {
   declare isActive: boolean
 
   @column()
-  declare token: string // pour désabonnement
+  declare token: string
 
   @column.dateTime({ autoCreate: true })
   declare subscribedAt: DateTime
+
+  @column.dateTime()
+  declare unsubscribedAt: DateTime | null
 
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare confirmedAt: DateTime | null
@@ -30,6 +33,6 @@ export default class NewsletterSubscriber extends BaseModel {
   declare updatedAt: DateTime
   @beforeCreate()
   static assignToken(subscriber: NewsletterSubscriber) {
-    subscriber.token = string.generateRandom(32).toLowerCase().replace(/[^a-z0-9]/g, '')
+    subscriber.token = crypto.randomBytes(32).toString('hex')
   }
 }

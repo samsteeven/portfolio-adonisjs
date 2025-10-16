@@ -20,8 +20,8 @@ export default class PortfoliosController {
         recentPosts.map((post) =>
           post.serialize({
             relations: {
-              author: { fields: ['username'] },
-              tags: { fields: ['name', 'slug', 'color'] },
+              author: { fields: { pick: ['username'] } },
+              tags: { fields: { pick: ['name', 'slug', 'color'] } },
             },
           })
         )

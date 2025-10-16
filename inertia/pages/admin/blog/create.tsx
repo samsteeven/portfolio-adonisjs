@@ -231,7 +231,7 @@ export default function CreateBlogPost({ tags }: CreateProps) {
                         className="rounded border-gray-300"
                       />
                       <Label htmlFor="published" className="text-sm">
-                        Publier immédiatement
+                        Article publié
                       </Label>
                     </div>
 
@@ -251,8 +251,21 @@ export default function CreateBlogPost({ tags }: CreateProps) {
                         {errors.publishedAt && (
                           <p className="text-sm text-red-600 mt-2">{errors.publishedAt}</p>
                         )}
+                        <p className="text-xs text-gray-500 mt-1">
+                          Laisser vide pour publier immédiatement
+                        </p>
                       </div>
                     )}
+
+                    <div className="text-xs text-gray-500 bg-gray-50 p-3 rounded">
+                      <strong>Statut actuel:</strong> {data.published ? 'Publié' : 'Brouillon'}
+                      {data.publishedAt && new Date(data.publishedAt) > new Date() && (
+                        <>
+                          {' '}
+                          - Programmé pour le {new Date(data.publishedAt).toLocaleString('fr-FR')}
+                        </>
+                      )}
+                    </div>
                   </div>
                 </Card>
 

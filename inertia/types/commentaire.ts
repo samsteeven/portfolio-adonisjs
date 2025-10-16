@@ -1,5 +1,3 @@
-// types/commentaire.ts
-
 import { AuthenticatedUser } from '~/types/index'
 
 export interface CommentaireType {
@@ -54,32 +52,4 @@ export interface CommentaireStats {
   anonymes: number
   recents: number
   tauxReaction: string
-}
-
-export interface CreateCommentaireData {
-  message: string
-  name?: string
-  email?: string
-}
-
-export interface UpdateReactionData {
-  reaction: string | null
-}
-
-export interface CommentaireFilters {
-  search?: string
-  hasReaction?: boolean
-  page?: number
-  limit?: number
-}
-
-export interface ReactionEmojis {
-  positive: string[]
-  neutral: string[]
-  negative: string[]
-}
-
-export interface TopReaction {
-  emoji: string
-  count: number
 }

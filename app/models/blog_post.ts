@@ -38,6 +38,9 @@ export default class BlogPost extends BaseModel {
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 
+  @column.dateTime()
+  declare notifiedAt: DateTime | null
+
   @belongsTo(() => User)
   declare author: BelongsTo<typeof User>
 
@@ -72,5 +75,40 @@ export default class BlogPost extends BaseModel {
       .preload('author')
       .preload('tags')
       .firstOrFail()
+  }
+
+  // Articles de blog similaires (même tags)
+  public async relatedPosts(id: number) {
+    return this.tags?.length > 0
+      ? await BlogPost.query()
+          .where('published', true)
+          .where('id', '!=', id)
+          .whereHas('tags', (tagQuery) => {
+            tagQuery.whereIn(
+              'tags.id',
+              this.tags.map((tag) => tag.id)
+            )
+          })
+          .preload('author')
+          .preload('tags')
+          .limit(3)
+      : []
+  }
+
+  /**
+   * Vérifie si l'article a déjà été notifié aux abonnés
+   */
+  get hasBeenNotified(): boolean {
+    return this.notifiedAt !== null
+  }
+
+  /**
+   * Marquer l'article comme notifié
+   */
+  public async markAsNotified() {
+    if (!this.notifiedAt) {
+      this.notifiedAt = DateTime.now()
+      await this.save()
+    }
   }
 }

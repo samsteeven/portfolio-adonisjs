@@ -2,6 +2,7 @@ import vine from '@vinejs/vine'
 
 const validateSlug = vine
   .string()
+  .trim()
   .minLength(3)
   .maxLength(255)
   .regex(/^[a-z0-9-]+$/)
@@ -19,12 +20,13 @@ export const createBlogPostValidator = vine.compile(
     title: vine.string().minLength(3).maxLength(255),
     slug: vine
       .string()
+      .trim()
       .minLength(3)
       .maxLength(255)
       .regex(/^[a-z0-9-]+$/)
       .unique({ table: 'blog_posts', column: 'slug' }),
-    excerpt: vine.string().minLength(10).maxLength(500),
-    content: vine.string(),
+    excerpt: vine.string().trim().minLength(10).maxLength(500),
+    content: vine.string().trim(),
     featuredImage: vine
       .file({
         size: '5mb',
@@ -40,10 +42,10 @@ export const createBlogPostValidator = vine.compile(
 
 export const updateBlogPostValidator = vine.compile(
   vine.object({
-    title: vine.string().minLength(3).maxLength(255),
+    title: vine.string().trim().minLength(3).maxLength(255),
     slug: validateSlug.clone().optional(),
-    excerpt: vine.string().minLength(10).maxLength(500),
-    content: vine.string().minLength(50),
+    excerpt: vine.string().trim().minLength(10).maxLength(500),
+    content: vine.string().trim().minLength(50),
     featuredImage: vine
       .file({
         size: '5mb',

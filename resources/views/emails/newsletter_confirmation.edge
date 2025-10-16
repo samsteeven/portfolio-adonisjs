@@ -1,41 +1,249 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Bienvenue dans ma newsletter</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      line-height: 1.6;
+      color: #374151;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #f9fafb;
+    }
+    .container {
+      background: white;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 40px 20px;
+      text-align: center;
+    }
+    .header h1 {
+      margin: 0 0 10px 0;
+      font-size: 28px;
+      font-weight: 700;
+    }
+    .header p {
+      margin: 0;
+      opacity: 0.95;
+      font-size: 16px;
+    }
+    .header-icon {
+      font-size: 50px;
+      margin-bottom: 15px;
+    }
+    .content {
+      padding: 40px 30px;
+    }
+    .welcome-text {
+      font-size: 18px;
+      color: #111827;
+      margin-bottom: 20px;
+      line-height: 1.8;
+    }
+    .benefits {
+      background: #f9fafb;
+      padding: 25px;
+      border-radius: 12px;
+      margin: 30px 0;
+    }
+    .benefits h2 {
+      margin: 0 0 20px 0;
+      font-size: 20px;
+      color: #4f46e5;
+      text-align: center;
+      font-weight: 600;
+    }
+    .benefits ul {
+      margin: 0;
+      padding-left: 0;
+      list-style: none;
+    }
+    .benefits li {
+      margin: 15px 0;
+      padding-left: 30px;
+      position: relative;
+      color: #4b5563;
+      font-size: 15px;
+    }
+    .benefits li::before {
+      content: "✓";
+      position: absolute;
+      left: 0;
+      top: 0;
+      color: #4ade80;
+      font-weight: bold;
+      font-size: 18px;
+    }
+    .btn-container {
+      text-align: center;
+      margin: 35px 0;
+    }
+    .btn {
+      display: inline-block;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 16px 32px;
+      text-decoration: none;
+      border-radius: 50px;
+      font-weight: 600;
+      font-size: 16px;
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+      transition: all 0.3s ease;
+      border: none;
+      cursor: pointer;
+    }
+    .btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 20px rgba(102, 126, 234, 0.5);
+    }
+    .info-box {
+      background: #eff6ff;
+      border-left: 4px solid #3b82f6;
+      padding: 20px;
+      margin: 25px 0;
+      border-radius: 0 10px 10px 0;
+    }
+    .info-box p {
+      margin: 0;
+      color: #1e40af;
+      font-size: 15px;
+      text-align: center;
+    }
+    .info-box.warning {
+      background: #fffbeb;
+      border-left-color: #f59e0b;
+    }
+    .info-box.warning p {
+      color: #92400e;
+    }
+    .email-info {
+      text-align: center;
+      color: #6b7280;
+      font-size: 14px;
+      margin: 25px 0;
+      padding: 15px;
+      background: #f9fafb;
+      border-radius: 10px;
+    }
+    .footer {
+      background: #f9fafb;
+      padding: 25px 30px;
+      text-align: center;
+      border-top: 1px solid #e5e7eb;
+    }
+    .footer p {
+      margin: 8px 0;
+      font-size: 14px;
+      color: #6b7280;
+    }
+    .unsubscribe {
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid #e5e7eb;
+    }
+    .unsubscribe a {
+      color: #9ca3af;
+      text-decoration: none;
+      font-size: 13px;
+    }
+    .unsubscribe a:hover {
+      text-decoration: underline;
+    }
+    .copyright {
+      margin-top: 20px;
+      font-size: 12px;
+      color: #9ca3af;
+    }
+    @media (max-width: 600px) {
+      body {
+        padding: 10px;
+      }
+      .content {
+        padding: 30px 20px;
+      }
+      .benefits {
+        padding: 20px;
+      }
+    }
+  </style>
 </head>
-<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
-        <h1 style="color: white; margin: 0;">Bienvenue !</h1>
-        <p style="color: #f0f0f0; margin: 10px 0 0 0;">Merci de vous être abonné à ma newsletter</p>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="header-icon">📬</div>
+      <h1>Bienvenue !</h1>
+      <p>Merci de vous être inscrit à notre newsletter</p>
     </div>
 
-    <div style="background: white; padding: 30px; border: 1px solid #ddd; border-top: none; border-radius: 0 0 10px 10px;">
-        <p>Salut {{ email }}!</p>
+    <div class="content">
+      <p class="welcome-text">
+        Bonjour,
+      </p>
 
-        <p>Merci de vous être abonné à ma newsletter. Vous recevrez désormais mes derniers articles et actualités directement dans votre boîte mail.</p>
+      <p class="welcome-text">
+        Nous sommes ravis de vous compter parmi nos abonnés ! Vous recevrez désormais nos derniers articles, actualités et contenus exclusifs directement dans votre boîte mail.
+      </p>
 
-        <p><strong>À quoi vous attendre :</strong></p>
-        <ul>
-            <li>Mes derniers articles de blog</li>
-            <li>Des conseils et astuces de développement</li>
-            <li>Mes projets en cours</li>
-            <li>Des ressources utiles</li>
-        </ul>
-        <div style="text-align: center; margin: 30px 0;">
-            <a href="{{ appUrl }}/blog"
-               style="background: #667eea; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">
-                Découvrir le blog
-            </a>
-        </div>
-
-        <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
-
-        <p style="font-size: 12px; color: #666; text-align: center;">
-            Vous recevez cet email car vous vous êtes abonné à ma newsletter.<br>
-            <a href="{{ appUrl }}/newsletter/unsubscribe/{{ token }}?email={{ email }}" style="color: #666;">Se désabonner</a>
+      @if(confirmUrl)
+      <div class="info-box warning">
+        <p>
+          ⚠️ <strong>Action requise :</strong> Pour finaliser votre inscription, veuillez confirmer votre adresse email en cliquant sur le bouton ci-dessous.
         </p>
+      </div>
+
+      <div class="btn-container">
+        <a href="{{ confirmUrl }}" class="btn">
+          ✓ Confirmer mon inscription
+        </a>
+      </div>
+      @else
+      <div class="info-box">
+        <p>
+          ✅ Votre inscription est confirmée ! Vous êtes prêt à recevoir nos contenus.
+        </p>
+      </div>
+      @endif
+
+      <div class="benefits">
+        <h2>Ce que vous allez recevoir</h2>
+        <ul>
+          <li>📚 Nos derniers articles de blog</li>
+          <li>💡 Des conseils et astuces exclusifs</li>
+          <li>🎯 Des contenus soigneusement sélectionnés</li>
+          <li>🎁 Des offres spéciales réservées aux abonnés</li>
+        </ul>
+      </div>
+
+      <div class="email-info">
+        <p>Vous recevez cet email à l'adresse :</p>
+        <p style="font-weight: 600; margin-top: 5px;">{{ email }}</p>
+        <p style="font-size: 13px; margin-top: 10px; color: #9ca3af;">
+          Inscrit le {{ formatDate(new Date().toISOString(), 'full') }}
+        </p>
+      </div>
     </div>
+
+    <div class="footer">
+      <p>
+        Vous pouvez vous désabonner à tout moment si vous ne souhaitez plus recevoir nos emails.
+      </p>
+
+      <div class="unsubscribe">
+        <a href="{{ unsubscribeUrl }}">Se désabonner</a>
+      </div>
+
+      <p class="copyright">
+        © {{ new Date().getFullYear() }} Tous droits réservés
+      </p>
+    </div>
+  </div>
 </body>
 </html>

@@ -2,11 +2,15 @@ import NewsletterSubscriber from '#models/newsletter_suscriber'
 import { HttpContext } from '@adonisjs/core/http'
 import { DateTime } from 'luxon'
 import vine from '@vinejs/vine'
-import mail from '@adonisjs/mail/services/main'
-import env from '#start/env'
 import { errors as mailErrors } from '@adonisjs/mail'
 import db from '@adonisjs/lucid/services/db'
+import queue from '@rlanz/bull-queue/services/main'
+import NewsletterJob from '#jobs/newsletter_job'
+
 export default class NewsletterController {
+  /**
+   * S'abonner à la newsletter
+   */
   async subscribe({ request, response, session, logger }: HttpContext) {
     const { email } = await request.validateUsing(
       vine.compile(
@@ -26,6 +30,7 @@ export default class NewsletterController {
       )
     )
 
+    // Vérifier si déjà abonné
     const existing = await NewsletterSubscriber.query().where('email', email).first()
 
     if (existing && existing.isActive) {
@@ -35,66 +40,92 @@ export default class NewsletterController {
 
     try {
       await db.transaction(async (trx) => {
-        const newsletter = await NewsletterSubscriber.updateOrCreate(
+        // Créer ou mettre à jour l'abonné
+        const subscriber = await NewsletterSubscriber.updateOrCreate(
           { email: email },
           {
             email,
             isActive: true,
-            confirmedAt: DateTime.now(), // ou null si double opt-in
+            confirmedAt: DateTime.now(),
           },
           { client: trx }
         )
-        await mail.send((message) => {
-          message
-            .to(email)
-            .from(env.get('MAIL_FROM_ADDRESS'), env.get('MAIL_FROM_NAME'))
-            .subject("Confirmation d'inscription à la newsletter")
-            .htmlView('emails/newsletter_confirmation', {
-              email,
-              token: newsletter.token,
-            })
-        })
+
+        await queue.dispatch(
+          NewsletterJob,
+          {
+            email: email,
+            token: subscriber.token,
+          },
+          {
+            attempts: 5,
+            backoff: {
+              type: 'exponential',
+              delay: 10000,
+            },
+          }
+        )
       })
 
-      session.flash('success', 'Inscription réussie à la newsletter !')
+      session.flash('success', 'Inscription réussie ! Vérifiez votre email pour confirmer.')
       return response.redirect().back()
     } catch (e) {
       if (e instanceof mailErrors.E_MAIL_TRANSPORT_ERROR) {
+        logger.error('Erreur transport mail:', e)
         session.flash('error', "Erreur lors de l'envoi de l'email. Veuillez réessayer plus tard.")
         return response.redirect().back()
       }
+
+      logger.error("Erreur lors de l'inscription:", e)
       session.flash(
         'error',
         "Erreur lors de l'inscription à la newsletter. Veuillez réessayer plus tard."
       )
-      logger.error(e)
       return response.redirect().back()
     }
   }
 
-  async unsubscribe({ params, request, inertia }: HttpContext) {
-    let subscriber = await NewsletterSubscriber.query()
-      .where('token', params.token)
-      .where('isActive', true)
-      .first()
-
-    // If subscriber not found with just token, check with email as well (for backward compatibility)
-    if (!subscriber && request.qs().email) {
-      subscriber = await NewsletterSubscriber.query()
+  /**
+   * Se désabonner de la newsletter
+   */
+  async unsubscribe({ params, request, inertia, logger }: HttpContext) {
+    try {
+      let subscriber = await NewsletterSubscriber.query()
         .where('token', params.token)
-        .where('email', request.qs().email)
-        .where('isActive', true)
+        .where('is_active', true)
         .first()
+
+      // Backward compatibility: chercher avec email si fourni
+      if (!subscriber && request.qs().email) {
+        subscriber = await NewsletterSubscriber.query()
+          .where('token', params.token)
+          .where('email', request.qs().email)
+          .where('is_active', true)
+          .first()
+      }
+
+      if (!subscriber) {
+        return inertia.render('unsubscribe_status', {
+          success: false,
+          message: "Vous n'êtes pas abonné ou le lien est invalide",
+        })
+      }
+
+      // Désactiver l'abonnement
+      subscriber.isActive = false
+      subscriber.unsubscribedAt = DateTime.now()
+      await subscriber.save()
+
+      return inertia.render('unsubscribe_status', {
+        success: true,
+        message: 'Vous avez été désabonné avec succès de la newsletter',
+      })
+    } catch (error) {
+      logger.error('Erreur lors du désabonnement:', error)
+      return inertia.render('unsubscribe_status', {
+        success: false,
+        message: 'Une erreur est survenue. Veuillez réessayer plus tard.',
+      })
     }
-
-    if (!subscriber) {
-      return inertia.render('unsubscribe_status', { isSubscribed: false })
-    }
-
-    subscriber.isActive = false
-    subscriber.token = ''
-    await subscriber.save()
-
-    return inertia.render('unsubscribe_status', { isSubscribed: true })
   }
 }

@@ -33,7 +33,7 @@ export default class CommentairesController {
       },
       relations: {
         user: {
-          fields: ['id', 'name', 'email', 'username', 'avatar', 'provider'],
+          fields: { pick: ['id', 'name', 'email', 'username', 'avatar', 'provider'] },
         },
       },
     })
@@ -218,7 +218,7 @@ export default class CommentairesController {
               },
               relations: {
                 user: {
-                  fields: ['username', 'avatar', 'provider'],
+                  fields: { pick: ['username', 'avatar', 'provider'] },
                 },
               },
             }),
@@ -290,7 +290,7 @@ export default class CommentairesController {
       commentaire: commentaire.serialize({
         relations: {
           user: {
-            fields: ['id', 'name', 'email', 'username', 'avatar', 'provider'],
+            fields: { pick: ['id', 'name', 'email', 'username', 'avatar', 'provider'] },
           },
         },
       }),

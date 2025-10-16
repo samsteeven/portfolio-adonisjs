@@ -25,7 +25,7 @@ export default class TagsController {
         vine.object({
           name: vine.string(),
           color: vine.string(),
-          description: vine.string(),
+          description: vine.string().nullable(),
         })
       )
     )
@@ -59,7 +59,7 @@ export default class TagsController {
         vine.object({
           name: vine.string().optional(),
           color: vine.string().optional(),
-          description: vine.string().optional(),
+          description: vine.string().optional().nullable(),
         })
       )
     )

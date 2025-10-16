@@ -41,7 +41,7 @@ export interface InertiaProps {
 
 // Type pour l'utilisateur authentifié
 export interface AuthenticatedUser {
-  id?: number
+  id: number
   username: string
   email: string
   role: UserRole
@@ -59,5 +59,5 @@ export interface AuthenticatedUser {
     bio?: string
   }
   createdAt: Date | string
-  updatedAt?: Date | string
+  updatedAt: Date | string
 }

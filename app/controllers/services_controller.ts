@@ -25,7 +25,7 @@ export default class ServicesController {
     return inertia.render('services/index', {
       services: services.map((service) =>
         service.serialize({
-          fields: ['id', 'title', 'description', 'price', 'publicUrl', 'slug'],
+          fields: { pick: ['id', 'title', 'description', 'price', 'publicUrl', 'slug'] },
         })
       ),
     })

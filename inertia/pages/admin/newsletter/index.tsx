@@ -13,7 +13,8 @@ interface Subscriber {
   email: string
   isActive: boolean
   subscribedAt: string
-  confirmedAt?: string
+  unsubscribedAt: string | null
+  confirmedAt: string | null
   token: string
 }
 
@@ -168,7 +169,7 @@ export default function NewsletterAdmin({ subscribers }: NewsletterAdminProps) {
   const confirmBulkDelete = () => {
     setBulkDeleteModal((prev) => ({ ...prev, isLoading: true }))
 
-    router.delete('/admin/newsletter/bulk', {
+    router.delete('/admin/newsletter/bulk/delete', {
       data: { ids: selectedEmails },
       preserveScroll: true,
       onSuccess: () => {
@@ -417,6 +418,9 @@ export default function NewsletterAdmin({ subscribers }: NewsletterAdminProps) {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Confirmation
                     </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Désabonnement
+                    </th>
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Actions
                     </th>
@@ -472,6 +476,16 @@ export default function NewsletterAdmin({ subscribers }: NewsletterAdminProps) {
                           </div>
                         ) : (
                           <span className="text-gray-400">Non confirmé</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-500">
+                        {subscriber.unsubscribedAt ? (
+                          <div className="flex items-center">
+                            <Calendar className="w-4 h-4 mr-1" />
+                            {isclient ? formatLocalDate(subscriber.unsubscribedAt) : '...'}
+                          </div>
+                        ) : (
+                          <span className="text-gray-400">Abonné</span>
                         )}
                       </td>
                       <td className="px-6 py-4 text-right">

@@ -82,10 +82,12 @@ export default class ProjectsController {
       project: project.serialize({
         relations: {
           technologies: {
-            fields: ['id', 'name', 'category', 'imgPathPublicUrl', 'lienOrigin'],
+            fields: { pick: ['id', 'name', 'category', 'imgPathPublicUrl', 'lienOrigin'] },
           },
           images: {
-            fields: ['id', 'imagePath', 'imagePublicUrl', 'order', 'isPrimary', 'createdAt'],
+            fields: {
+              pick: ['id', 'imagePath', 'imagePublicUrl', 'order', 'isPrimary', 'createdAt'],
+            },
           },
         },
       }),
@@ -103,10 +105,10 @@ export default class ProjectsController {
       project: project.serialize({
         relations: {
           technologies: {
-            fields: ['id', 'name', 'category', 'imgPathPublicUrl'],
+            fields: { pick: ['id', 'name', 'category', 'imgPathPublicUrl'] },
           },
           images: {
-            fields: ['id', 'imagePath', 'imagePublicUrl', 'order', 'isPrimary'],
+            fields: { pick: ['id', 'imagePath', 'imagePublicUrl', 'order', 'isPrimary'] },
           },
         },
       }),

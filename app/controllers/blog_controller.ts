@@ -52,30 +52,16 @@ export default class BlogController {
         return response.redirect().back()
       }
       // Articles similaires (même tags)
-      const relatedPosts =
-        post.tags?.length > 0
-          ? await BlogPost.query()
-              .where('published', true)
-              .where('id', '!=', post.id)
-              .whereHas('tags', (tagQuery) => {
-                tagQuery.whereIn(
-                  'tags.id',
-                  post.tags.map((tag) => tag.id)
-                )
-              })
-              .preload('author')
-              .preload('tags')
-              .limit(3)
-          : []
+      const relatedPosts = await post.relatedPosts(post.id)
 
       return inertia.render('show_blog', {
         post: post.serialize({
           relations: {
             author: {
-              fields: ['id', 'username'],
+              fields: { pick: ['id', 'username'] },
             },
             tags: {
-              fields: ['id', 'name', 'slug', 'color'],
+              fields: { pick: ['id', 'name', 'slug', 'color'] },
             },
           },
         }),
@@ -83,7 +69,7 @@ export default class BlogController {
           p.serialize({
             relations: {
               tags: {
-                fields: ['name', 'slug', 'color'],
+                fields: { pick: ['id', 'name', 'slug', 'color'] },
               },
             },
           })

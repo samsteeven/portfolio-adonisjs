@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { Form } from '@inertiajs/react'
-import { Mail, Send, Check, X, Sparkles, Shield, Zap } from 'lucide-react'
+import { Mail, Send, Check, Sparkles, Shield, Zap, X } from 'lucide-react'
 import { RoughAnnotate } from '@/components/RoughAnnotate'
+import { Form } from '@inertiajs/react'
 
 interface NewsletterSignupProps {
   errors?: {
@@ -90,7 +90,7 @@ export default function Newsletter_signup({ success, className = '' }: Newslette
                 }}
                 onSuccess={() => setIsSubmitted(true)}
               >
-                {({ errors, processing }) => (
+                {({ errors, processing, isDirty }) => (
                   <>
                     <div className="relative group">
                       <input
@@ -118,7 +118,7 @@ export default function Newsletter_signup({ success, className = '' }: Newslette
                       />
                       <button
                         type="submit"
-                        disabled={processing}
+                        disabled={processing || !isDirty}
                         className="absolute right-2 top-1/2 transform -translate-y-1/2 p-3 bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 disabled:from-gray-600 disabled:to-gray-600 rounded-xl transition-all duration-200 hover:shadow-lg hover:shadow-pink-500/25 group/btn"
                       >
                         {processing ? (

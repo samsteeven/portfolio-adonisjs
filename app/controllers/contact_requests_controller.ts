@@ -8,14 +8,17 @@ import {
   replyToContactRequestValidator,
 } from '#validators/contact_request'
 import { inject } from '@adonisjs/core'
-import mail from '@adonisjs/mail/services/main'
-import env from '#start/env'
 import ContactRequestAuthorization from '#services/bouncer/bouncer_technology_service'
 import { UserRole } from '#enums/user_role'
+import queue from '@rlanz/bull-queue/services/main'
+import SendContactRequestNotification from '#jobs/send_contact_request_notification'
+import SendContactConfirmation from '#jobs/send_contact_confirmation'
+import SendContactReply from '#jobs/send_contact_reply'
 
 @inject()
 export default class ContactRequestsController {
   constructor(private ContactRequestAuthorizationService: ContactRequestAuthorization) {}
+
   /**
    * Afficher le formulaire de contact public
    */
@@ -23,7 +26,6 @@ export default class ContactRequestsController {
     let selectedService = null
     let slug = request.qs().selectedService
 
-    // Si un service est spécifié dans l'URL, le récupérer
     if (slug) {
       selectedService = await Service.query()
         .where('slug', slug)
@@ -31,7 +33,6 @@ export default class ContactRequestsController {
         .first()
     }
 
-    // Récupérer tous les services actifs pour le dropdown optionnel
     const services = await Service.query()
       .apply((scopes) => scopes.active())
       .apply((scopes) => scopes.ordered())
@@ -49,6 +50,7 @@ export default class ContactRequestsController {
    */
   async store({ request, response, session }: HttpContext) {
     const data = await request.validateUsing(createContactRequestValidator)
+
     try {
       // Vérifier que le service existe s'il est spécifié
       if (data.serviceId) {
@@ -65,44 +67,33 @@ export default class ContactRequestsController {
         serviceId: data.serviceId || null,
       })
 
-      // Charger la relation service pour l'email
-      await contactRequest.load('service')
+      // Dispatcher les jobs d'envoi d'emails en arrière-plan
+      // Priorité haute pour la notification admin
+      await queue.dispatch(
+        SendContactRequestNotification,
+        { contactRequestId: contactRequest.id },
+        {
+          priority: 1, // Haute priorité
+          attempts: 5,
+          backoff: {
+            type: 'exponential',
+            delay: 10000, // 10s, 40s, 90s...
+          },
+        }
+      )
 
-      // Envoyer un email de notification à l'admin
-      try {
-        await mail.send((message) => {
-          message
-            .to(env.get('MAIL_FROM_ADDRESS'))
-            .from(contactRequest.email)
-            .subject(
-              `Nouvelle demande de contact${contactRequest.service ? ` - ${contactRequest.service.title}` : ''}`
-            )
-            .htmlView('emails/new_contact_request', {
-              contactRequest: contactRequest.serialize(),
-              service: contactRequest.service?.serialize() || null,
-            })
-        })
-      } catch (emailError) {
-        console.error('Erreur envoi email admin:', emailError)
-        // Ne pas faire échouer la demande si l'email échoue
-      }
-
-      // Envoyer un email de confirmation au demandeur
-      try {
-        await mail.send((message) => {
-          message
-            .to(contactRequest.email)
-            .from(env.get('MAIL_FROM_ADDRESS'))
-            .subject('Confirmation de votre demande de contact')
-            .htmlView('emails/contact_confirmation', {
-              contactRequest: contactRequest.serialize(),
-              service: contactRequest.service?.serialize() || null,
-            })
-        })
-      } catch (emailError) {
-        console.error('Erreur envoi email confirmation:', emailError)
-        // Ne pas faire échouer la demande si l'email échoue
-      }
+      // Priorité normale pour la confirmation client
+      await queue.dispatch(
+        SendContactConfirmation,
+        { contactRequestId: contactRequest.id },
+        {
+          attempts: 3,
+          backoff: {
+            type: 'exponential',
+            delay: 5000,
+          },
+        }
+      )
 
       session.flash(
         'success',
@@ -126,13 +117,14 @@ export default class ContactRequestsController {
   async index({ request, inertia, auth }: HttpContext) {
     const user = auth.user
     const isAdmin = user && user.role === UserRole.ADMIN
+
     if (!isAdmin) {
       return inertia.render('admin/contact-requests/index', {
         isRestricted: true,
       })
     }
-    const filters = await request.validateUsing(contactRequestFilterValidator)
 
+    const filters = await request.validateUsing(contactRequestFilterValidator)
     const { page = 1, limit = 15 } = filters
 
     let query = ContactRequest.query().preload('service').orderBy('createdAt', 'desc')
@@ -151,7 +143,6 @@ export default class ContactRequestsController {
       ContactRequest.query().whereNull('serviceId').count('* as total').first(),
     ])
 
-    // Services pour les filtres
     const services = await Service.query()
       .apply((scopes) => scopes.active())
       .apply((scopes) => scopes.ordered())
@@ -182,10 +173,12 @@ export default class ContactRequestsController {
     if (!authorize) {
       return this.ContactRequestAuthorizationService.handleUnauthorized(response, session)
     }
+
     const contactRequest = await ContactRequest.query()
       .where('id', params.id)
       .preload('service')
       .firstOrFail()
+
     // Marquer comme lu si ce n'est pas déjà fait
     await contactRequest.markAsRead()
 
@@ -202,8 +195,10 @@ export default class ContactRequestsController {
     if (!authorize) {
       return this.ContactRequestAuthorizationService.handleUnauthorized(response, session)
     }
+
     const contactRequest = await ContactRequest.findOrFail(params.id)
     const data = await request.validateUsing(updateContactRequestStatusValidator)
+
     try {
       contactRequest.status = data.status
       if (data.adminNotes) {
@@ -241,38 +236,34 @@ export default class ContactRequestsController {
     if (!authorize) {
       return this.ContactRequestAuthorizationService.handleUnauthorized(response, session)
     }
+
     const data = await request.validateUsing(replyToContactRequestValidator)
-    const contactRequest = await ContactRequest.query()
-      .where('id', params.id)
-      .preload('service')
-      .firstOrFail()
+    const contactRequest = await ContactRequest.findOrFail(params.id)
+
     try {
-      // Envoyer l'email de réponse
-      await mail.send((message) => {
-        message
-          .to(contactRequest.email)
-          .from(env.get('MAIL_FROM_ADDRESS'))
-          .replyTo(env.get('MAIL_FROM_ADDRESS'))
-          .subject(data.subject)
-          .htmlView('emails/contact_reply', {
-            contactRequest: contactRequest.serialize(),
-            service: contactRequest.service?.serialize() || null,
-            replyMessage: data.message,
-            adminName: process.env.ADMIN_NAME || "L'équipe",
-          })
-      })
+      // Dispatcher le job d'envoi de réponse
+      await queue.dispatch(
+        SendContactReply,
+        {
+          contactRequestId: contactRequest.id,
+          subject: data.subject,
+          message: data.message,
+          adminNotes: data.adminNotes,
+        },
+        {
+          priority: 1, // Haute priorité pour les réponses
+          attempts: 5,
+          backoff: {
+            type: 'exponential',
+            delay: 10000,
+          },
+        }
+      )
 
-      // Marquer comme répondu et ajouter les notes admin
-      await contactRequest.markAsReplied()
-      if (data.adminNotes) {
-        contactRequest.adminNotes = data.adminNotes
-        await contactRequest.save()
-      }
-
-      session.flash('success', 'Réponse envoyée avec succès')
-      return response.redirect(`/admin/contact-requests/${contactRequest.id}`)
+      session.flash('success', "Réponse mise en file d'envoi avec succès")
+      return response.redirect().back()
     } catch (error) {
-      session.flash('error', "Erreur lors de l'envoi de la réponse")
+      session.flash('error', 'Erreur lors de la mise en queue de la réponse')
       console.error(error)
       return response.redirect().back()
     }
@@ -286,7 +277,9 @@ export default class ContactRequestsController {
     if (!authorize) {
       return this.ContactRequestAuthorizationService.handleUnauthorized(response, session)
     }
+
     const contactRequest = await ContactRequest.findOrFail(params.id)
+
     try {
       await contactRequest.delete()
 
@@ -306,6 +299,7 @@ export default class ContactRequestsController {
     if (!authorize) {
       return this.ContactRequestAuthorizationService.handleUnauthorized(response, session)
     }
+
     try {
       const { ids } = request.only(['ids'])
 

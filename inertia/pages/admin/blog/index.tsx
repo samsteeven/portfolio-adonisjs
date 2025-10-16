@@ -26,6 +26,7 @@ import {
   CheckCircle2,
   AlertCircle,
   ExternalLink,
+  Share2,
 } from 'lucide-react'
 import SafeHTML from '~/components/safeHTML'
 import ConfirmationModal from '~/components/ConfirmationModal'
@@ -95,17 +96,14 @@ export default function BlogPostsIndex({ posts, filters }: BlogPostsIndexProps) 
     if (status) {
       switch (status) {
         case 'published':
-          filtered = filtered.filter(
-            (post) =>
-              post.published && (!post.publishedAt || new Date(post.publishedAt) <= new Date())
-          )
+          filtered = filtered.filter((post) => post.published)
           break
         case 'draft':
           filtered = filtered.filter((post) => !post.published)
           break
         case 'scheduled':
           filtered = filtered.filter(
-            (post) => !post.published && post.publishedAt && new Date(post.publishedAt) > new Date()
+            (post) => post.publishedAt && new Date(post.publishedAt) > new Date()
           )
           break
       }
@@ -124,7 +122,7 @@ export default function BlogPostsIndex({ posts, filters }: BlogPostsIndexProps) 
   }
 
   const getStatusInfo = (published: boolean, publishedAt?: string) => {
-    if (!published && publishedAt && new Date(publishedAt) > new Date()) {
+    if (publishedAt && new Date(publishedAt) > new Date()) {
       return {
         text: 'Programmé',
         color: 'bg-blue-50 text-blue-700 border-blue-200',
@@ -222,13 +220,9 @@ export default function BlogPostsIndex({ posts, filters }: BlogPostsIndexProps) 
   const stats = useMemo(
     () => ({
       total: posts.data.length,
-      published: posts.data.filter(
-        (p) => p.published && (!p.publishedAt || new Date(p.publishedAt) <= new Date())
-      ).length,
+      published: posts.data.filter((p) => p.published).length,
       drafts: posts.data.filter((p) => !p.published).length,
-      scheduled: posts.data.filter(
-        (p) => !p.published && p.publishedAt && new Date(p.publishedAt) > new Date()
-      ).length,
+      scheduled: posts.data.filter((p) => p.publishedAt && new Date(p.publishedAt) > new Date()).length,
     }),
     [posts.data]
   )
@@ -494,6 +488,11 @@ export default function BlogPostsIndex({ posts, filters }: BlogPostsIndexProps) 
                             {post._count.views}
                           </div>
                         )}
+                        {post.notifiedAt && (
+                          <div className="flex items-center gap-1" title="Déjà notifié aux abonnés">
+                            <Share2 className="w-3 h-3 text-green-500" />
+                          </div>
+                        )}
                       </div>
 
                       {/* Tags */}
@@ -659,6 +658,11 @@ export default function BlogPostsIndex({ posts, filters }: BlogPostsIndexProps) 
                             <div className="flex items-center gap-1">
                               <TrendingUp className="w-3 h-3" />
                               {post._count.views} vues
+                            </div>
+                          )}
+                          {post.notifiedAt && (
+                            <div className="flex items-center gap-1" title="Déjà notifié aux abonnés">
+                              <Share2 className="w-3 h-3 text-green-500" />
                             </div>
                           )}
                         </div>

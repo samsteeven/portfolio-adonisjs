@@ -1,7 +1,7 @@
 import { defineConfig, store, drivers } from '@adonisjs/cache'
 
 const cacheConfig = defineConfig({
-  default: 'database',
+  default: 'redis',
 
   stores: {
     memoryOnly: store().useL1Layer(drivers.memory()),
@@ -9,7 +9,17 @@ const cacheConfig = defineConfig({
     /**
      * Cache data using your Lucid-configured database
      */
-    database: store().useL2Layer(drivers.database({ connectionName: 'mysql' })),
+    database: store().useL2Layer(drivers.database({ connectionName: 'mysql', tableName: 'cache' })),
+
+    /**
+     * Cache data in-memory as the primary store and Redis as the secondary store.
+     * If your application is running on multiple servers, then in-memory caches
+     * need to be synchronized using a bus.
+     */
+    redis: store()
+      .useL1Layer(drivers.memory({ maxSize: '100mb' }))
+      .useL2Layer(drivers.redis({ connectionName: 'main' }))
+      .useBus(drivers.redisBus({ connectionName: 'main' })),
   },
 })
 

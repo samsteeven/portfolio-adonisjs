@@ -9,7 +9,6 @@ import '~/css/app.css'
 import Newsletter_signup from '~/pages/components/newsletter_signup'
 import RecentPosts from '~/pages/components/articles_recents'
 
-// Ajouter l'interface pour typer les props
 interface HomeProps {
   recentPosts?: BlogPost[]
 }

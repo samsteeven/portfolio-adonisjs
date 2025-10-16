@@ -257,30 +257,38 @@ export default function EditBlogPost({ post, tags }: EditProps) {
                       </Label>
                     </div>
 
-                    {!post.published &&
-                      post.publishedAt &&
-                      new Date(post.publishedAt) > new Date() && (
-                        <div>
-                          <Label htmlFor="publishedAt" className="text-sm font-medium">
-                            Date de publication
-                          </Label>
-                          <Input
-                            id="publishedAt"
-                            type="datetime-local"
-                            value={formatDateTimeLocal(post.publishedAt)}
-                            onChange={(e) => setData('publishedAt', e.target.value)}
-                            className="mt-1"
-                            min={new Date().toISOString().slice(0, 16)}
-                            disabled={processing}
-                          />
-                          {errors.publishedAt && (
-                            <p className="text-sm text-red-600">{errors.publishedAt}</p>
-                          )}
-                        </div>
-                      )}
+                    {new Date(post.publishedAt) >= new Date() && (
+                      <div>
+                        <Label htmlFor="publishedAt" className="text-sm font-medium">
+                          Date de publication
+                        </Label>
+                        <Input
+                          id="publishedAt"
+                          type="datetime-local"
+                          value={formatDateTimeLocal(data.publishedAt)}
+                          onChange={(e) => setData('publishedAt', e.target.value)}
+                          className="mt-1"
+                          min={new Date().toISOString().slice(0, 16)}
+                          disabled={processing}
+                        />
+                        {errors.publishedAt && (
+                          <p className="text-sm text-red-600">{errors.publishedAt}</p>
+                        )}
+                        <p className="text-xs text-gray-500 mt-1">
+                          Laisser vide pour publier immédiatement
+                        </p>
+                      </div>
+                    )}
 
                     <div className="text-xs text-gray-500 bg-gray-50 p-3 rounded">
-                      <strong>Statut actuel:</strong> {post.published ? 'Publié' : 'Brouillon'}
+                      <strong>Statut actuel:</strong> {data.published ? 'Publié' : 'Brouillon'}
+                      {data.publishedAt && new Date(data.publishedAt) > new Date() && (
+                        <>
+                          {' '}
+                          - Programmé pour le {new Date(data.publishedAt).toLocaleString('fr-FR')}
+                        </>
+                      )}
+                      {post.notifiedAt && <> - Déjà notifié aux abonnés</>}
                     </div>
                   </div>
                 </Card>
