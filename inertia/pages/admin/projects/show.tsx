@@ -495,7 +495,7 @@ export default function ShowProject({ project }: ProjectShowProps) {
                     </div>
                   )}
 
-                  {allImages[currentImageIndex]?.isPrimary && (
+                  {Boolean(allImages[currentImageIndex]?.isPrimary) && (
                     <div className="mt-3 flex items-center justify-center gap-2 text-sm text-yellow-700 bg-yellow-50 px-3 py-2 rounded-lg border border-yellow-200 max-w-max mx-auto">
                       <Star className="w-4 h-4" />
                       Image principale du projet

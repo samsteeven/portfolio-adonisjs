@@ -66,15 +66,17 @@ export default class NewsletterController {
     return response.redirect('/admin/newsletter/subscribers')
   }
 
-  async toggleStatus({ params, request, response, bouncer, session }: HttpContext) {
+  async toggleStatus({ params, response, bouncer, session }: HttpContext) {
     const autorize = await bouncer.with('NewsletterPolicy').allows('toggleStatus')
     if (!autorize) {
       return this.newsletterAuthorization.handleUnauthorized(response, session)
     }
     const subscriber = await NewsletterSubscriber.findOrFail(params.id)
-    const { isActive } = request.only(['isActive'])
 
-    subscriber.isActive = isActive
+    let isActive = subscriber.isActive
+    subscriber.isActive = !isActive
+    isActive ? (subscriber.unsubscribedAt = DateTime.now()) : (subscriber.unsubscribedAt = null)
+
     await subscriber.save()
 
     return response.redirect().back()

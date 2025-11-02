@@ -199,9 +199,7 @@ export default function NewsletterAdmin({ subscribers }: NewsletterAdminProps) {
 
     router.patch(
       `/admin/newsletter/${statusChangeModal.subscriberId}`,
-      {
-        isActive: !statusChangeModal.currentStatus,
-      },
+      {},
       {
         preserveScroll: true,
         onSuccess: () => {

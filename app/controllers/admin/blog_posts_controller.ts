@@ -111,7 +111,9 @@ export default class BlogPostsController {
 
       // Attacher les tags
       if (data.tags && Array.isArray(data.tags) && data.tags.length > 0) {
-        const tagIds = data.tags.map((id) => parseInt(id.toString())).filter((id) => !isNaN(id))
+        const tagIds = data.tags
+          .map((id) => Number.parseInt(id.toString()))
+          .filter((id) => !Number.isNaN(id))
         if (tagIds.length > 0) {
           await post.related('tags').attach(tagIds)
         }
@@ -129,7 +131,6 @@ export default class BlogPostsController {
       // Si l'article est publié immédiatement (sans date programmée) et n'a pas encore été notifié
       else if (data.published && !shouldSchedule) {
         await BlogSchedulerService.notifySubscribersOfNewPost(post)
-        await post.markAsNotified()
         session.flash('success', 'Article créé et publié avec succès')
       }
       // Sinon c'est un brouillon
@@ -248,7 +249,9 @@ export default class BlogPostsController {
 
       // Synchroniser les tags
       if (data.tags && Array.isArray(data.tags)) {
-        const tagIds = data.tags.map((id) => parseInt(id.toString())).filter((id) => !isNaN(id))
+        const tagIds = data.tags
+          .map((id) => Number.parseInt(id.toString()))
+          .filter((id) => !Number.isNaN(id))
         await post.related('tags').sync(tagIds)
       } else {
         await post.related('tags').sync([])
@@ -258,7 +261,6 @@ export default class BlogPostsController {
       // Cas 1: Article qui passe de brouillon à publié (première publication) et n'a pas encore été notifié
       if (post.published && !wasPublished && !shouldSchedule && !post.hasBeenNotified) {
         await BlogSchedulerService.notifySubscribersOfNewPost(post)
-        await post.markAsNotified()
         session.flash('success', 'Article publié et abonnés notifiés')
       }
       // Cas 2: Article programmé

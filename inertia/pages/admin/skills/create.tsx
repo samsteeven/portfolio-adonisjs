@@ -23,6 +23,7 @@ export default function CreateSkill({ categories }: { categories: string[] }) {
   } = useImageUpload({
     maxSize: 2,
     allowedTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'],
+    onImageChange: (file) => setData('imagePath', file),
     onError: (error) => toast.error(error),
   })
 

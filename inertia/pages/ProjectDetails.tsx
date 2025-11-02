@@ -1,4 +1,3 @@
-'use client'
 import SafeHTML from '~/components/safeHTML'
 import ArrowAnimation from '@/components/ArrowAnimation'
 import TransitionLink from '@/components/TransitionLink'
@@ -7,18 +6,19 @@ import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/all'
 import { ArrowLeft, ExternalLink, Github } from 'lucide-react'
 import { useRef } from 'react'
-import { PROJECTS } from '@/data'
+import { ProjectType } from '~/types/projets'
+
 interface Props {
-  slug: string
+  project: ProjectType
 }
 
 gsap.registerPlugin(useGSAP, ScrollTrigger)
 
-export default function ProjectDetails({ slug }: Props) {
+export default function ProjectDetails({ project }: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
 
-  const project = PROJECTS.find((pj) => pj.slug === slug)
   if (!project) return null
+
   useGSAP(
     () => {
       if (!containerRef.current) return
@@ -49,7 +49,6 @@ export default function ProjectDetails({ slug }: Props) {
         filter: 'blur(3px)',
         autoAlpha: 0,
         scale: 0.9,
-        // position: 'sticky',
         scrollTrigger: {
           trigger: '#info',
           start: 'bottom bottom',
@@ -75,13 +74,22 @@ export default function ProjectDetails({ slug }: Props) {
             start: () => (i ? 'top bottom' : 'top 50%'),
             end: 'bottom top',
             scrub: true,
-            // invalidateOnRefresh: true, // to make it responsive
           },
         })
       })
     },
     { scope: containerRef }
   )
+
+  // Trier les images par ordre et prioriser les images primaires
+  const sortedImages = [...project.images].sort((a, b) => {
+    if (a.isPrimary && !b.isPrimary) return -1
+    if (!a.isPrimary && b.isPrimary) return 1
+    return a.order - b.order
+  })
+
+  // Extraire les noms des technologies
+  const techStackNames = project.technologies.map((tech) => tech.name)
 
   return (
     <section className="pt-5 pb-14">
@@ -99,22 +107,24 @@ export default function ProjectDetails({ slug }: Props) {
               </h1>
 
               <div className="fade-in-later opacity-0 flex gap-2">
-                {project.sourceCode && (
+                {project.githubPath && (
                   <a
-                    href={project.sourceCode}
+                    href={project.githubPath}
                     target="_blank"
                     rel="noreferrer noopener"
                     className="hover:text-primary"
+                    aria-label="View source code on GitHub"
                   >
                     <Github size={30} />
                   </a>
                 )}
-                {project.liveUrl && (
+                {project.demoPath && (
                   <a
-                    href={project.liveUrl}
+                    href={project.demoPath}
                     target="_blank"
                     rel="noreferrer noopener"
                     className="hover:text-primary"
+                    aria-label="View live demo"
                   >
                     <ExternalLink size={30} />
                   </a>
@@ -125,25 +135,28 @@ export default function ProjectDetails({ slug }: Props) {
             <div className="max-w-[635px] space-y-7 pb-20 mx-auto">
               <div className="fade-in-later">
                 <p className="text-muted-foreground font-anton mb-3">Year</p>
-
                 <div className="text-lg">{project.year}</div>
               </div>
-              <div className="fade-in-later">
-                <p className="text-muted-foreground font-anton mb-3">Tech & Technique</p>
 
-                <div className="text-lg">{project.techStack.join(', ')}</div>
-              </div>
-              <div className="fade-in-later">
-                <p className="text-muted-foreground font-anton mb-3">Description</p>
-
-                <div className="text-lg prose-xl markdown-text">
-                  <SafeHTML html={project.description} />
+              {techStackNames.length > 0 && (
+                <div className="fade-in-later">
+                  <p className="text-muted-foreground font-anton mb-3">Tech & Technique</p>
+                  <div className="text-lg">{techStackNames.join(', ')}</div>
                 </div>
-              </div>
+              )}
+
+              {project.description && (
+                <div className="fade-in-later">
+                  <p className="text-muted-foreground font-anton mb-3">Description</p>
+                  <div className="text-lg prose-xl markdown-text">
+                    <SafeHTML html={project.description} />
+                  </div>
+                </div>
+              )}
+
               {project.role && (
                 <div className="fade-in-later">
                   <p className="text-muted-foreground font-anton mb-3">My Role</p>
-
                   <div className="text-lg">
                     <SafeHTML html={project.role} />
                   </div>
@@ -155,31 +168,35 @@ export default function ProjectDetails({ slug }: Props) {
           </div>
         </div>
 
-        <div
-          className="fade-in-later relative flex flex-col gap-2 max-w-[800px] mx-auto"
-          id="images"
-        >
-          {project.images.map((image) => (
-            <div
-              key={image}
-              className="group relative w-full aspect-[750/400] bg-background-light"
-              style={{
-                backgroundImage: `url(${image})`,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center 50%',
-                backgroundRepeat: 'no-repeat',
-              }}
-            >
-              <a
-                href={image}
-                target="_blank"
-                className="absolute top-4 right-4 bg-background/70 text-foreground size-12 inline-flex justify-center items-center transition-all opacity-0 hover:bg-primary hover:text-primary-foreground group-hover:opacity-100"
+        {sortedImages.length > 0 && (
+          <div
+            className="fade-in-later relative flex flex-col gap-2 max-w-[800px] mx-auto"
+            id="images"
+          >
+            {sortedImages.map((image) => (
+              <div
+                key={image.id}
+                className="group relative w-full aspect-[750/400] bg-background-light"
+                style={{
+                  backgroundImage: `url(${image.imagePublicUrl})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center 50%',
+                  backgroundRepeat: 'no-repeat',
+                }}
               >
-                <ExternalLink />
-              </a>
-            </div>
-          ))}
-        </div>
+                <a
+                  href={image.imagePublicUrl}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  className="absolute top-4 right-4 bg-background/70 text-foreground size-12 inline-flex justify-center items-center transition-all opacity-0 hover:bg-primary hover:text-primary-foreground group-hover:opacity-100"
+                  aria-label="View full size image"
+                >
+                  <ExternalLink />
+                </a>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </section>
   )

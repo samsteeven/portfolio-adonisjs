@@ -2,7 +2,6 @@ import { cn } from '@/utils'
 import { useState } from 'react'
 import { MoveUpLeft, MoveUpRight } from 'lucide-react'
 import { Link, router, usePage } from '@inertiajs/react'
-import { GENERAL_INFO, SOCIAL_LINKS } from '@/data'
 import { RoughAnnotate } from '@/components/RoughAnnotate'
 import { InertiaProps } from '~/types'
 
@@ -45,6 +44,14 @@ const MENU_LINKS = [
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const { auth } = usePage<InertiaProps>().props
+  const { portfolioOwner } = usePage<InertiaProps>().props
+
+  const SOCIAL_LINKS = [
+    { name: 'github', url: portfolioOwner?.subInfo?.profilGithub || 'https://github.com/' },
+    { name: 'linkedin', url: portfolioOwner?.subInfo?.profilLinkedin || 'https://linkedin.com/' },
+    { name: 'discord', url: portfolioOwner?.subInfo?.profilDiscord || 'https://discord.com/' },
+    { name: 'twitter', url: portfolioOwner?.subInfo?.profilTwitter || 'https://twitter.com/' },
+  ]
 
   return (
     <>
@@ -83,8 +90,8 @@ const Navbar = () => {
 
       <div
         className={cn(
-          'fixed top-0 right-0 h-[100dvh] w-[500px] max-w-[calc(100vw-3rem)] transform translate-x-full transition-transform duration-700 z-[3] overflow-hidden gap-y-14',
-          'flex flex-col lg:justify-center py-10',
+          'fixed top-0 right-0 h-[100dvh] w-[500px] max-w-[calc(100vw-3rem)] transform translate-x-full transition-transform duration-700 z-[3]',
+          'flex flex-col',
           { 'translate-x-0': isMenuOpen }
         )}
       >
@@ -97,63 +104,72 @@ const Navbar = () => {
           )}
         ></div>
 
-        <div className="grow flex md:items-center w-full max-w-[300px] mx-8 sm:mx-auto">
-          <div className="flex gap-16 sm:grid sm:grid-cols-2 sm:grid-rows-2 sm:gap-10 lg:justify-between max-lg:flex-col w-full">
-            <div className="sm:col-span-1">
-              <p className="text-muted-foreground mb-5 md:mb-8">SOCIAL</p>
-              <ul className="space-y-3">
-                {SOCIAL_LINKS.map((link) => (
-                  <li key={link.name}>
-                    <a
-                      href={link.url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-lg capitalize hover:underline"
-                    >
-                      {link.name}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="sm:col-span-1">
-              <p className="text-muted-foreground mb-5 md:mb-8">MENU</p>
-              <ul className="space-y-3">
-                {MENU_LINKS.map((link, idx) => (
-                  <li key={link.name}>
-                    <button
-                      onClick={() => {
-                        router.visit(link.url, { replace: false })
-                        setIsMenuOpen(false)
-                      }}
-                      className="group text-xl flex items-center gap-3"
-                    >
-                      <span
-                        className={cn(
-                          'size-3.5 bg-white/20 rounded-full flex items-center justify-center group-hover:scale-[200%] transition-all',
-                          COLORS[idx]
-                        )}
+        {/* Contenu scrollable */}
+        <div className="flex-1 overflow-y-auto overflow-x-hidden py-8 px-6 sm:px-8">
+          <div className="min-h-full flex flex-col justify-center max-w-[300px] mx-auto space-y-10 sm:space-y-14">
+            {/* Section Social & Menu */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-10 sm:gap-8">
+              {/* Social Links */}
+              <div>
+                <p className="text-muted-foreground text-sm mb-4">SOCIAL</p>
+                <ul className="space-y-2.5">
+                  {SOCIAL_LINKS.map((link) => (
+                    <li key={link.name}>
+                      <a
+                        href={link.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-base sm:text-lg capitalize hover:underline inline-block"
                       >
-                        {link.url.startsWith('/#') ? (
-                          <MoveUpLeft
-                            size={8}
-                            className="scale-0 rotate-[-80deg] group-hover:scale-100 transition-all"
-                          />
-                        ) : (
-                          <MoveUpRight
-                            size={8}
-                            className="scale-0 group-hover:scale-100 transition-all"
-                          />
-                        )}
-                      </span>
-                      {link.name}
-                    </button>
-                  </li>
-                ))}
-              </ul>
+                        {link.name}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Menu Links */}
+              <div>
+                <p className="text-muted-foreground text-sm mb-4">MENU</p>
+                <ul className="space-y-2.5">
+                  {MENU_LINKS.map((link, idx) => (
+                    <li key={link.name}>
+                      <button
+                        onClick={() => {
+                          router.visit(link.url, { replace: false })
+                          setIsMenuOpen(false)
+                        }}
+                        className="group text-base sm:text-lg flex items-center gap-2.5"
+                      >
+                        <span
+                          className={cn(
+                            'size-3 sm:size-3.5 bg-white/20 rounded-full flex items-center justify-center group-hover:scale-[200%] transition-all flex-shrink-0',
+                            COLORS[idx]
+                          )}
+                        >
+                          {link.url.startsWith('/#') ? (
+                            <MoveUpLeft
+                              size={7}
+                              className="scale-0 rotate-[-80deg] group-hover:scale-100 transition-all"
+                            />
+                          ) : (
+                            <MoveUpRight
+                              size={7}
+                              className="scale-0 group-hover:scale-100 transition-all"
+                            />
+                          )}
+                        </span>
+                        <span className="truncate">{link.name}</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
-            <div className="sm:row-span-2 sm:col-span-2">
-              <button className="md:mt-10 inline-block">
+
+            {/* Bouton Connexion */}
+            <div className="pt-4 sm:pt-6">
+              <button className="inline-block">
                 <RoughAnnotate strokeWidth={4} color="#22d3ee">
                   <Link href={auth?.user ? '/admin/dashboard' : '/auth/login'}>
                     {auth?.user ? 'Mon Compte' : 'Se connecter'}
@@ -161,12 +177,15 @@ const Navbar = () => {
                 </RoughAnnotate>
               </button>
             </div>
-          </div>
-        </div>
 
-        <div className="w-full max-w-[300px] mx-8 sm:mx-auto">
-          <p className="text-muted-foreground mb-4">GET IN TOUCH</p>
-          <a href={`mailto:${GENERAL_INFO.email}`}>{GENERAL_INFO.email}</a>
+            {/* Contact */}
+            <div className="pt-4 border-t border-foreground/10">
+              <p className="text-muted-foreground text-sm mb-3">GET IN TOUCH</p>
+              <Link href={'/contact'} className="text-base sm:text-lg hover:underline break-all">
+                {portfolioOwner?.email}
+              </Link>
+            </div>
+          </div>
         </div>
       </div>
     </>

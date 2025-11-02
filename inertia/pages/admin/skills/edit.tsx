@@ -30,6 +30,7 @@ export default function EditSkill({ skill, categories }: Props) {
     maxSize: 2,
     allowedTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'],
     initialPreview: skill.imagePathPublicUrl || null,
+    onImageChange: (file) => setData('imagePath', file),
     onError: (error) => toast.error(error),
   })
 
@@ -37,7 +38,7 @@ export default function EditSkill({ skill, categories }: Props) {
     name: skill.name,
     category: skill.category,
     description: skill.description || '',
-    imagePath: null as File | null,
+    imagePath: skill.imagePathPublicUrl as File | string | null,
     isActive: skill.isActive,
   })
 

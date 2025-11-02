@@ -1,21 +1,33 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Mail, Send, Check, Sparkles, Shield, Zap, X } from 'lucide-react'
 import { RoughAnnotate } from '@/components/RoughAnnotate'
-import { Form } from '@inertiajs/react'
+import { Form, usePage } from '@inertiajs/react'
+import { InertiaProps } from '~/types'
 
 interface NewsletterSignupProps {
-  errors?: {
-    email?: string
-  }
-  success?: boolean
   className?: string
 }
 
-export default function Newsletter_signup({ success, className = '' }: NewsletterSignupProps) {
-  const [isSubmitted, setIsSubmitted] = useState(success || false)
+export default function Newsletter_signup({ className = '' }: NewsletterSignupProps) {
+  const { newsletterSuccess } = usePage<InertiaProps>().props
+  const [isSubmitted, setIsSubmitted] = useState(false)
+
+  // Mettre à jour l'état de soumission si on reçoit un succès du backend
+  useEffect(() => {
+    if (newsletterSuccess) {
+      setIsSubmitted(true)
+
+      // Optionnel : Réinitialiser après 10 secondes
+      const timer = setTimeout(() => {
+        setIsSubmitted(false)
+      }, 10000)
+
+      return () => clearTimeout(timer)
+    }
+  }, [newsletterSuccess])
 
   return (
-    <div className={`relative  ${className}`}>
+    <div className={`relative ${className}`}>
       {/* Background Effects */}
       <div className="absolute inset-0 overflow-hidden rounded-3xl">
         <div className="absolute top-0 right-0 w-32 h-32 bg-pink-500/10 rounded-full blur-2xl"></div>
@@ -86,9 +98,7 @@ export default function Newsletter_signup({ success, className = '' }: Newslette
                 disableWhileProcessing
                 options={{
                   preserveScroll: true,
-                  preserveState: true,
                 }}
-                onSuccess={() => setIsSubmitted(true)}
               >
                 {({ errors, processing, isDirty }) => (
                   <>
@@ -119,7 +129,7 @@ export default function Newsletter_signup({ success, className = '' }: Newslette
                       <button
                         type="submit"
                         disabled={processing || !isDirty}
-                        className="absolute right-2 top-1/2 transform -translate-y-1/2 p-3 bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 disabled:from-gray-600 disabled:to-gray-600 rounded-xl transition-all duration-200 hover:shadow-lg hover:shadow-pink-500/25 group/btn"
+                        className="absolute right-2 top-1/2 transform -translate-y-1/2 p-3 bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 disabled:from-gray-600 disabled:to-gray-600 rounded-xl transition-all duration-200 hover:shadow-lg hover:shadow-pink-500/25 group/btn disabled:cursor-not-allowed"
                       >
                         {processing ? (
                           <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
@@ -177,6 +187,13 @@ export default function Newsletter_signup({ success, className = '' }: Newslette
               <p className="text-sm text-gray-400 mt-6">
                 Pensez à vérifier vos spams si vous ne recevez rien dans les prochains jours.
               </p>
+
+              <button
+                onClick={() => setIsSubmitted(false)}
+                className="mt-6 text-sm text-pink-400 hover:text-pink-300 underline transition-colors"
+              >
+                S'abonner avec un autre email
+              </button>
             </div>
           )}
         </div>

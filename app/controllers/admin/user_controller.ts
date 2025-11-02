@@ -45,7 +45,9 @@ export default class UserController {
 
     const userData = await request.validateUsing(createUserSchema)
     const photo = userData.subInfo?.photoPath
+    const cv = userData.subInfo?.cv
     let photoUrl: string | undefined
+    let cvUrl: string | undefined
 
     if (photo) {
       try {
@@ -56,19 +58,39 @@ export default class UserController {
       }
     }
 
+    if (cv) {
+      try {
+        cvUrl = await FileUploadService.uploadCV(cv, userData.username)
+      } catch (error) {
+        session.flash('error', error.message)
+        return response.redirect().back()
+      }
+    }
+
     try {
       await this.userService.createUser({
         ...userData,
-        subInfo: { ...userData.subInfo, photoPath: photoUrl },
+        subInfo: {
+          ...userData.subInfo,
+          photoPath: photoUrl,
+          cv: cvUrl,
+        },
       })
 
       session.flash('success', 'Utilisateur créé avec succès')
       return response.redirect().back()
     } catch (error) {
+      // Nettoyer les fichiers uploadés en cas d'erreur
       if (photoUrl) {
         const fileName = photoUrl.split('/').pop()
         if (fileName) await FileUploadService.deleteFile(fileName)
       }
+
+      if (cvUrl) {
+        const fileName = cvUrl.split('/').pop()
+        if (fileName) await FileUploadService.deleteFile(fileName)
+      }
+
       logger.error(error)
       session.flash('error', "Erreur lors de la création de l'utilisateur" + error.message)
       return response.redirect().back()
@@ -100,7 +122,7 @@ export default class UserController {
   }
 
   /**
-   * Met à jour un utilisateur
+   *Met à jour un utilisateur
    */
   async update({ request, response, params, session, bouncer, auth, logger }: HttpContext) {
     const authResult = await this.bouncerUserService.canUpdateUser(bouncer, params.id)
@@ -109,10 +131,11 @@ export default class UserController {
     }
 
     const userData = await request.validateUsing(updateUserSchema, { meta: { userId: params.id } })
-    const { photoPath: photo, ...otherSubInfo } = userData.subInfo || {}
+    const { photoPath: photo, cv, ...otherSubInfo } = userData.subInfo || {}
 
     try {
       let photoUrl: string | undefined
+      let cvUrl: string | undefined
 
       // Gérer le remplacement de photo si nécessaire
       if (photo) {
@@ -122,7 +145,15 @@ export default class UserController {
         photoUrl = await FileUploadService.replaceProfilePhoto(photo, oldPhotoPath)
       }
 
-      // Mettre à jour l'utilisateur
+      // Gérer le remplacement du CV si nécessaire
+      if (cv) {
+        const existingUser = await this.userService.findUser(params.id)
+        const oldCVPath = existingUser?.subInfo?.cv
+
+        cvUrl = await FileUploadService.replaceCV(cv, oldCVPath, existingUser.username)
+      }
+
+      // Mettre àjour l'utilisateur
       await this.userService.updateUser(
         params.id,
         {
@@ -130,6 +161,7 @@ export default class UserController {
           subInfo: {
             ...otherSubInfo,
             ...(photoUrl && { photoPath: photoUrl }), // Seulement si nouvelle photo
+            ...(cvUrl && { cv: cvUrl }), // Seulement si nouveau CV
           },
         },
         auth.user
@@ -138,7 +170,7 @@ export default class UserController {
       return response.redirect().back()
     } catch (error) {
       logger.error(error)
-      session.flash('error', 'Erreur lors de la mise a jour du compte')
+      session.flash('error', 'Erreur lors de la mise a jour ducompte')
       return response.redirect().back()
     }
   }

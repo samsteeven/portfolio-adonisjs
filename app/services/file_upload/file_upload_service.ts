@@ -32,6 +32,45 @@ export default class FileUploadService {
   }
 
   /**
+   * Uploadun fichier CV
+   */
+  static async uploadCV(cv: MultipartFile, username: string = cuid()): Promise<string> {
+    const fileName = `cvs/cv_${username}.${cv.extname}`
+
+    try {
+      // Pour les fichiers PDF/DOC, on les upload directement sans traitement
+      await cv.moveToDisk(fileName, { visibility: 'private' })
+      return fileName
+    } catch (error) {
+      logger.error("Erreur lors de l'upload du CV:", error)
+      throw new Error(`Impossible d'uploader le CV: ${error.message}`)
+    }
+  }
+
+  /**
+   * Remplace un CV
+   */
+  static async replaceCV(
+    newCV: MultipartFile,
+    oldCVPath: string | null,
+    username?: string
+  ): Promise<string> {
+    // Upload du nouveau CV
+    const newCVPath = await this.uploadCV(newCV, username)
+
+    // Supprimer l'ancien CV si elle existe
+    if (oldCVPath) {
+      try {
+        await this.deleteFile(oldCVPath)
+      } catch (error) {
+        logger.warn("Impossible de supprimer l'ancien CV:", error)
+      }
+    }
+
+    return newCVPath
+  }
+
+  /**
    * Supprime un fichier
    */
   static async deleteFile(fileName: string): Promise<boolean> {

@@ -34,6 +34,12 @@ export default class SubInfo extends BaseModel {
   @column()
   declare bio: string | null
 
+  @column({ columnName: 'bio2' })
+  declare bio2: string | null
+
+  @column()
+  declare cv: string | null
+
   @belongsTo(() => User)
   declare user: BelongsTo<typeof User>
 
@@ -51,5 +57,14 @@ export default class SubInfo extends BaseModel {
     }
     // await drive.use('fs').getUrl(this.photoPath)
     return `/admin/uploads/${this.photoPath}`
+  }
+
+  @computed()
+  public get cvPublicUrl(): string | null {
+    if (!this.cv) return null
+    if (this.cv.startsWith('https://')) {
+      return this.cv
+    }
+    return `/admin/uploads/${this.cv}`
   }
 }

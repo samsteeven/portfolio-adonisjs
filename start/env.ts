@@ -16,12 +16,13 @@ export default await Env.create(new URL('../', import.meta.url), {
   PORT: Env.schema.number(),
   APP_KEY: Env.schema.string(),
   HOST: Env.schema.string({ format: 'host' }),
-  APP_URL: Env.schema.string(),
   LOG_LEVEL: Env.schema.string(),
   MAIL_FROM_ADDRESS: Env.schema.string({ format: 'email' }),
   MAIL_FROM_NAME: Env.schema.string(),
   ADMIN_EMAIL: Env.schema.string({ format: 'email' }),
-
+  DB_CONNECTION: Env.schema.enum(['mysql', 'sqlite'] as const),
+  APP_URL: Env.schema.string(),
+  GITHUB_TOKEN: Env.schema.string.optional(),
   /*
   |----------------------------------------------------------
   | Variables for configuring session package
@@ -83,5 +84,5 @@ export default await Env.create(new URL('../', import.meta.url), {
 
   REDIS_HOST: Env.schema.string({ format: 'host' }),
   REDIS_PORT: Env.schema.number(),
-  REDIS_PASSWORD: Env.schema.string.optional()
+  REDIS_PASSWORD: Env.schema.string.optional(),
 })

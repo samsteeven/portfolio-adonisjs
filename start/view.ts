@@ -2,6 +2,7 @@ import edge from 'edge.js'
 import { edgeIconify } from 'edge-iconify'
 import { DateTime } from 'luxon'
 import DOMPurify from 'isomorphic-dompurify'
+import env from '#start/env'
 
 /**
  * Register a plugin
@@ -11,14 +12,15 @@ edge.use(edgeIconify)
 /**
  * Define a global property
  */
-edge.global('appUrl', 'http://' + process.env.HOST + ':' + process.env.PORT)
+const url = env.get('NODE_ENV') === 'development' ? 'http://localhost:3333' : env.get('APP_URL')
+edge.global('appUrl', url)
 
 /**
  * Helper pour formater les dates dans les templates Edge
  */
 edge.global('formatDate', (date: string | Date | DateTime, format: string = 'full') => {
   let luxonDate: DateTime
-  
+
   if (date instanceof Date) {
     luxonDate = DateTime.fromJSDate(date)
   } else if (typeof date === 'string') {
@@ -28,12 +30,12 @@ edge.global('formatDate', (date: string | Date | DateTime, format: string = 'ful
   } else {
     return 'Date invalide'
   }
-  
+
   // Si la date n'est pas valide, retourner une chaîne vide
   if (!luxonDate.isValid) {
     return 'Date invalide'
   }
-  
+
   // Formats prédéfinis
   switch (format) {
     case 'short':
@@ -57,7 +59,7 @@ edge.global('formatDate', (date: string | Date | DateTime, format: string = 'ful
  */
 edge.global('safeHTML', (html: string) => {
   if (!html) return ''
-  
+
   // Configuration identique à celle du composant React SafeHTML
   const config = {
     ALLOWED_TAGS: [

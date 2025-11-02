@@ -73,8 +73,8 @@ export default class TechnologyController {
         data.imgPath,
         'technologies',
         {
-          width: 300,
-          height: 300,
+          width: 58,
+          height: 58,
           fit: 'contain', // Préserve le ratio
           quality: 90,
           format: 'png',
@@ -166,8 +166,8 @@ export default class TechnologyController {
           oldImagePath,
           'technologies',
           {
-            width: 300,
-            height: 300,
+            width: 58,
+            height: 58,
             fit: 'contain',
             quality: 90,
             format: 'webp',

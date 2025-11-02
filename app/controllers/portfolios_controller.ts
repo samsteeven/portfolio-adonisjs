@@ -1,35 +1,34 @@
 import type { HttpContext } from '@adonisjs/core/http'
-import BlogPost from '#models/blog_post'
-import { DateTime } from 'luxon'
+import PortfolioService from '#services/portfolio_service'
 
 export default class PortfoliosController {
+  /**
+   * Page d'accueil du portfolio
+   */
   async index({ inertia }: HttpContext) {
-    // Récupérer les 6 articles les plus récents
-    const recentPosts = await BlogPost.query()
-      .where('published', true)
-      .where((builder) => {
-        builder.whereNull('published_at').orWhere('published_at', '<=', DateTime.now().toSQL())
-      })
-      .preload('author')
-      .preload('tags')
-      .orderBy('created_at', 'desc')
-      .limit(5)
-
     return inertia.render('home', {
-      recentPosts: inertia.defer(() =>
-        recentPosts.map((post) =>
-          post.serialize({
-            relations: {
-              author: { fields: { pick: ['username'] } },
-              tags: { fields: { pick: ['name', 'slug', 'color'] } },
-            },
-          })
-        )
-      ),
+      // Technologies pour le composant Skills
+      technologies: inertia.defer(() => PortfolioService.getTechnologies()),
+
+      // Compétences/Expériences pour le composant Experiences
+      skills: await PortfolioService.getSkills(),
+
+      // Projets pour le composant ProjectList
+      projects: await PortfolioService.getProjects(),
+
+      // Articles récents pour le composant RecentPosts
+      recentPosts: inertia.defer(() => PortfolioService.getRecentPosts(5)),
     })
   }
 
+  /**
+   * Page de détail d'un projet
+   */
   async projectShow({ params, inertia }: HttpContext) {
-    return inertia.render('ProjectDetails', { slug: params.slug })
+    const project = await PortfolioService.getProjectBySlug(params.slug)
+
+    return inertia.render('ProjectDetails', {
+      project,
+    })
   }
 }

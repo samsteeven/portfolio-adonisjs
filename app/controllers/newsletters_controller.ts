@@ -67,7 +67,9 @@ export default class NewsletterController {
         )
       })
 
-      session.flash('success', 'Inscription réussie ! Vérifiez votre email pour confirmer.')
+      session.flash('success', 'Inscription réussie ! Vérifiez votre email.')
+      // Flash un flag spécifique pour la newsletter
+      session.flash('newsletterSuccess', true)
       return response.redirect().back()
     } catch (e) {
       if (e instanceof mailErrors.E_MAIL_TRANSPORT_ERROR) {

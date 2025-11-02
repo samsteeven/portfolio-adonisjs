@@ -19,6 +19,13 @@ const subInfoSchema = vine.object({
     .optional(),
   phone: vine.string().use(phoneRule({})).optional(),
   bio: vine.string().optional(),
+  bio2: vine.string().optional(),
+  cv: vine
+    .file({
+      size: '5mb',
+      extnames: ['pdf'],
+    })
+    .optional(),
 })
 
 /**
@@ -98,6 +105,8 @@ export type CreateUserDTO = {
     photoPath?: string
     phone?: string
     bio?: string
+    bio2?: string
+    cv?: string
   }
 }
 

@@ -20,8 +20,7 @@ export default class GeolocationService {
    */
   static async getLocationFromIP(ipAddress: string): Promise<LocationData | null> {
     try {
-      // IP-API.com permet 1000 requêtes par heure gratuitement
-      const response = await fetch(`http://ip-api.com/json/${ipAddress}`)
+      const response = await fetch(`https://ipapi.co/json/${ipAddress}`)
 
       if (!response.ok) {
         console.warn(

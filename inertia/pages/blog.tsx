@@ -1,4 +1,4 @@
-import { Head, Link } from '@inertiajs/react'
+import { Head, Link, router } from '@inertiajs/react'
 import {
   Calendar,
   Clock,
@@ -284,7 +284,12 @@ export default function BlogIndex({ posts, currentTag }: BlogIndexProps) {
 
                         {/* Featured Image */}
                         {post.photoPathPublicUrl && (
-                          <div className="lg:col-span-1">
+                          <div
+                            className="lg:col-span-1 hover:cursor-pointer"
+                            onClick={() => {
+                              router.visit(`/blog/${post.slug}`)
+                            }}
+                          >
                             <div className="relative aspect-[4/3] rounded-2xl overflow-hidden border border-gray-700/30">
                               <img
                                 src={post.photoPathPublicUrl || ''}

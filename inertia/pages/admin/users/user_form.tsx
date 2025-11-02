@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Form, Link } from '@inertiajs/react'
 import {
   ArrowLeft,
@@ -19,17 +19,20 @@ import { AuthenticatedUser } from '~/types'
 import { toast } from 'sonner'
 import { useImageUpload } from '~/utils/hooks/use_image_upload'
 import { isValidPhoneNumber } from 'react-phone-number-input'
+import TinyMCEEditor from '~/components/TinyMCEEditor'
+import CVUpload from '~/components/CVUpload'
 
 interface UserFormProps {
   user?: AuthenticatedUser
   isEditing?: boolean
 }
-export interface FormPayload<T> {
-  data: T
-}
 
 export default function UserForm({ user, isEditing = false }: UserFormProps) {
   const [showPassword, setShowPassword] = useState(false)
+  const [bio2Content, setBio2Content] = useState(user?.subInfo?.bio2 || '')
+  const [bio2Changed, setBio2Changed] = useState(false)
+  const bio2InputRef = useRef<HTMLInputElement>(null)
+
   const formAction = isEditing && user?.id ? `/admin/users/${user.id}` : '/admin/users'
   const formMethod = isEditing ? 'patch' : 'post'
 
@@ -52,10 +55,25 @@ export default function UserForm({ user, isEditing = false }: UserFormProps) {
     initialPreview: user?.subInfo?.photoPathPublicUrl || null,
   })
 
+  // Synchroniser le contenu bio2 avec l'input hidden
+  useEffect(() => {
+    if (bio2InputRef.current) {
+      bio2InputRef.current.value = bio2Content
+    }
+  }, [bio2Content])
+
+  // Réinitialiser bio2 quand l'utilisateur change
+  useEffect(() => {
+    setBio2Content(user?.subInfo?.bio2 || '')
+    setBio2Changed(false)
+  }, [user?.subInfo?.bio2])
+
   // Fonction pour réinitialiser le formulaire et les états
   const resetForm = (resetFunction: () => void) => {
     resetFunction()
-    removeImage() // Supprimer la prévisualisation de l'image
+    removeImage()
+    setBio2Content(user?.subInfo?.bio2 || '')
+    setBio2Changed(false)
   }
 
   const title = isEditing ? "Modifier l'utilisateur" : 'Nouvel utilisateur'
@@ -115,6 +133,8 @@ export default function UserForm({ user, isEditing = false }: UserFormProps) {
           onSuccess={() => {
             if (!isEditing) {
               removeImage()
+              setBio2Content('')
+              setBio2Changed(false)
             }
           }}
           encType="multipart/form-data"
@@ -273,7 +293,6 @@ export default function UserForm({ user, isEditing = false }: UserFormProps) {
                     </label>
                     <div className="relative">
                       <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-                        {/* GitHub SVG icon */}
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
                           fill="currentColor"
@@ -308,7 +327,6 @@ export default function UserForm({ user, isEditing = false }: UserFormProps) {
                     </label>
                     <div className="relative">
                       <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-                        {/* LinkedIn SVG icon */}
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
                           fill="currentColor"
@@ -345,7 +363,6 @@ export default function UserForm({ user, isEditing = false }: UserFormProps) {
                     </label>
                     <div className="relative">
                       <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-                        {/* Twitter/X SVG icon */}
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
                           fill="currentColor"
@@ -380,7 +397,6 @@ export default function UserForm({ user, isEditing = false }: UserFormProps) {
                     </label>
                     <div className="relative">
                       <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-                        {/* Discord SVG icon */}
                         <svg
                           viewBox="0 0 256 199"
                           fill="currentColor"
@@ -416,7 +432,6 @@ export default function UserForm({ user, isEditing = false }: UserFormProps) {
                     </label>
                     <div className="relative">
                       <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-                        {/* Envelope SVG icon */}
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
                           fill="none"
@@ -471,7 +486,6 @@ export default function UserForm({ user, isEditing = false }: UserFormProps) {
                           ref={fileInputRef}
                           onChange={(e) => {
                             handleInputChange(e)
-                            // Le fichier sera automatiquement soumis avec le form
                           }}
                           accept="image/png, image/jpeg, image/jpg, image/gif, image/webp"
                           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
@@ -489,7 +503,6 @@ export default function UserForm({ user, isEditing = false }: UserFormProps) {
                               onClick={(e) => {
                                 e.stopPropagation()
                                 removeImage()
-                                // Reset the file input
                                 if (fileInputRef.current) {
                                   fileInputRef.current.value = ''
                                 }
@@ -544,6 +557,15 @@ export default function UserForm({ user, isEditing = false }: UserFormProps) {
                       <p className="mt-1 text-sm text-red-600">{errors['subInfo.phone']}</p>
                     )}
                   </div>
+
+                  {/* CV Upload */}
+                  <div className="lg:col-span-2">
+                    <CVUpload
+                      currentCVUrl={user?.subInfo?.cvPublicUrl}
+                      error={errors?.['subInfo.cv']}
+                      name="subInfo[cv]"
+                    />
+                  </div>
                 </div>
 
                 <div className="lg:col-span-3 xl:col-span-4">
@@ -564,6 +586,34 @@ export default function UserForm({ user, isEditing = false }: UserFormProps) {
                     <p className="mt-1 text-sm text-red-600">{errors['subInfo.bio']}</p>
                   )}
                 </div>
+
+                {/* New bio2 field with rich text editor */}
+                <div className="lg:col-span-3 xl:col-span-4">
+                  <label htmlFor="bio2" className="block text-sm font-medium text-gray-700 mb-2">
+                    Bio 2 (Texte enrichi)
+                  </label>
+                  <input
+                    type="hidden"
+                    ref={bio2InputRef}
+                    id="bio2"
+                    name="subInfo[bio2]"
+                    defaultValue={user?.subInfo?.bio2 || ''}
+                  />
+                  <TinyMCEEditor
+                    key={user?.id || 'new-user'}
+                    value={bio2Content}
+                    onEditorChange={(content) => {
+                      setBio2Content(content)
+                      // Marquer comme modifié si le contenu est différent de l'original
+                      setBio2Changed(content !== (user?.subInfo?.bio2 || ''))
+                    }}
+                    placeholder="Contenu détaillé avec mise en forme"
+                    height={300}
+                  />
+                  {errors?.['subInfo.bio2'] && (
+                    <p className="mt-1 text-sm text-red-600">{errors['subInfo.bio2']}</p>
+                  )}
+                </div>
               </div>
 
               {/* Actions */}
@@ -577,9 +627,9 @@ export default function UserForm({ user, isEditing = false }: UserFormProps) {
                 </Link>
                 <button
                   type="submit"
-                  disabled={!isDirty || processing}
+                  disabled={(!isDirty && !bio2Changed) || processing}
                   className={`w-full sm:w-auto px-4 py-2 sm:px-6 sm:py-2.5 bg-blue-600 text-white rounded-lg flex items-center justify-center gap-2 transition-colors ${
-                    processing || !isDirty
+                    processing || (!isDirty && !bio2Changed)
                       ? 'opacity-50 cursor-not-allowed'
                       : 'hover:bg-blue-700 hover:cursor-pointer'
                   }`}

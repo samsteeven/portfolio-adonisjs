@@ -52,7 +52,7 @@ export default function AdminServiceEdit({ service }: Props) {
     allowedTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/svg+xml', 'image/webp'],
     onError: (error) => toast.error(error),
     onImageChange: (file) => setData('image', file),
-    initialPreview: service.image,
+    initialPreview: service.publicUrl,
   })
 
   const handleSubmit = (e: React.FormEvent) => {

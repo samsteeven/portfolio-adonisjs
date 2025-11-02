@@ -95,7 +95,13 @@
       transition: all 0.2s ease;
       border: none;
       cursor: pointer;
-      width: 100%;
+      width: auto;
+      margin: 20px auto;
+      min-width: 200px;
+    }
+    
+    .btn-container {
+      text-align: center;
       margin: 20px 0;
     }
     .btn:hover {
@@ -153,7 +159,9 @@
         </div>
       </div>
 
-      <a href="{{`/blog/${post.slug}`}}" class="btn">Lire l'article complet</a>
+      <div class="btn-container">
+        <a href="{{ appUrl + `/blog/${post.slug}`}}" class="btn">Lire l'article complet</a>
+      </div>
 
       <div style="text-align: center; color: #6b7280; font-size: 14px; margin-top: 25px;">
         Posté dans {{ post.tags.length }} catégories

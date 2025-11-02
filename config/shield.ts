@@ -30,7 +30,7 @@ const shieldConfig = defineConfig({
         "'self'",
         'ws:', // WebSocket pour Vite HMR en dev
         'wss:',
-        'https://api.github.com/repos/tajmirul/portfolio-2.0', // ✅ Pour l'API GitHub
+        'https://api.github.com/repos/samsteeven/mon_portfolio', // ✅ Pour l'API GitHub
         'https://api.ipify.org',
         'https://ipapi.co/json/',
       ],

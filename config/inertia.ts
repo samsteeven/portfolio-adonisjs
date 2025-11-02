@@ -4,6 +4,7 @@ import User from '#models/user'
 import { HttpContext } from '@adonisjs/core/http'
 import Commentaire from '#models/commentaire'
 import NewsletterSubscriber from '#models/newsletter_suscriber'
+import PortfolioService from '#services/portfolio_service'
 
 const inertiaConfig = defineConfig({
   /**
@@ -20,6 +21,9 @@ const inertiaConfig = defineConfig({
    * Data that should be shared with all rendered pages
    */
   sharedData: {
+    // Partager les données du propriétaire du portfolio (globales)
+    portfolioOwner: async () => await PortfolioService.getPortfolioOwnerData(),
+    githubStats: async () => await PortfolioService.getRepoStats(),
     auth: async (ctx) => {
       const user = ctx.auth.use('web').user
       let usersCount = null
@@ -46,6 +50,7 @@ const inertiaConfig = defineConfig({
     },
     error: (ctx) => ctx.session.flashMessages.get('error'),
     success: (ctx) => ctx.session.flashMessages.get('success'),
+    newsletterSuccess: (ctx) => ctx.session.flashMessages.get('newsletterSuccess'),
   },
 
   /**

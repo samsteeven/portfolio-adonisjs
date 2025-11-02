@@ -154,8 +154,8 @@ export default function AdminLayout({
   return (
     <>
       <HeadLayout title={`${title} - Admin Portfolio`} description={description} />
-      <Sonner className="text-black bg-gray-200" position="top-center" />
-      <div className="min-h-screen visible-scrollbar transition-colors duration-300 bg-gradient-to-br from-gray-50 to-gray-100">
+      <Sonner className="text-black bg-gray-200" position="top-center" richColors />
+      <div className="min-h-screen transition-colors duration-300 bg-gradient-to-br from-gray-50 to-gray-100">
         {/* Header - Layout optimisé */}
         <header
           className={cn(

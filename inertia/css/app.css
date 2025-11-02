@@ -38,6 +38,8 @@
   color: var(--color-foreground);
   font-family: var(--font-sans), serif;
   min-height: 100%;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 .main-layout .container {
@@ -70,10 +72,6 @@
 .main-layout ::selection {
   background-color: color-mix(in oklab, var(--color-primary) 25%, transparent);
   color: var(--color-foreground);
-}
-
-.invisible-scrollbar::-webkit-scrollbar {
-  display: none;
 }
 
 

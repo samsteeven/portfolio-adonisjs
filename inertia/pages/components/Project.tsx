@@ -1,14 +1,15 @@
 import TransitionLink from '@/components/TransitionLink'
 import { cn } from '@/utils'
-import { Project } from '~/types'
 import { useGSAP } from '@gsap/react'
 import gsap from 'gsap'
 import { useEffect, useRef, useState } from 'react'
 import { ensureGsapScrollTrigger } from '~/utils/gsap_client'
+import { ProjectType } from '~/types/projets'
+import { getProjectThumbnail } from '~/utils/others'
 
 interface Props {
   index: number
-  projet: Project
+  projet: ProjectType
   selectedProject: string | null
   onMouseEnter: (_slug: string) => void
 }
@@ -32,7 +33,7 @@ const Projet = ({ index, projet, selectedProject, onMouseEnter }: Props) => {
   })
 
   const handleMouseEnter = contextSafe?.(() => {
-    if (!ready) return
+    if (!ready || window.innerWidth < 768) return
     onMouseEnter(projet.slug)
 
     const arrowLine = externalLinkSVGRef.current?.querySelector('#arrow-line') as SVGPathElement
@@ -76,8 +77,8 @@ const Projet = ({ index, projet, selectedProject, onMouseEnter }: Props) => {
     >
       {selectedProject === null && (
         <img
-          src={projet.thumbnail}
-          alt="Project"
+          src={getProjectThumbnail(projet)}
+          alt={projet.title}
           width="300"
           height="200"
           className={cn('w-full object-cover mb-6 aspect-[3/2] object-top')}
@@ -111,11 +112,11 @@ const Projet = ({ index, projet, selectedProject, onMouseEnter }: Props) => {
               </svg>
             </span>
           </h4>
-          <div className="mt-2 flex flex-wrap gap-3 text-muted-foreground text-xs">
-            {projet.techStack.slice(0, 3).map((tech, idx, stackArr) => (
-              <div className="gap-3 flex items-center" key={tech}>
-                <span className="">{tech}</span>
-                {idx !== stackArr.length - 1 && (
+          <div className="mt-2 flex flex-wrap gap-3 text-muted-foreground text-xs sm:text-sm">
+            {projet.technologies.slice(0, 3).map((tech, idx, techArr) => (
+              <div className="gap-3 flex items-center" key={tech.id}>
+                <span>{tech.name}</span>
+                {idx !== techArr.length - 1 && (
                   <span className="inline-block size-2 rounded-full bg-background-light"></span>
                 )}
               </div>

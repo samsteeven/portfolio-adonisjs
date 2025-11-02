@@ -48,6 +48,7 @@ export default function ContactIndex({ selectedService, services = [], success, 
   )
   const [currentCountry, setCurrentCountry] = useState<CountryCode>('CM')
   const { auth } = usePage<InertiaProps>().props
+
   // Sync contextualService with selectedService prop changes
   useEffect(() => {
     if (selectedService) {
@@ -55,7 +56,7 @@ export default function ContactIndex({ selectedService, services = [], success, 
     }
   }, [selectedService])
 
-  const { data, setData, post, processing, errors, reset } = useForm<FormData>({
+  const { data, setData, post, processing, errors, reset } = useForm({
     firstName: '',
     lastName: '',
     email: '',
@@ -68,7 +69,7 @@ export default function ContactIndex({ selectedService, services = [], success, 
   // Update serviceId when contextualService changes
   useEffect(() => {
     setData('serviceId', contextualService?.id)
-  }, [contextualService])
+  }, [contextualService, setData])
 
   // Fetch country based on IP address
   useEffect(() => {
@@ -136,7 +137,9 @@ export default function ContactIndex({ selectedService, services = [], success, 
     window.history.replaceState({}, '', newUrl.toString())
   }
 
-  const getFieldError = (field: keyof FormData) => errors[field]
+  const getFieldError = (field: keyof FormData): string | undefined => {
+    return errors[field as keyof typeof errors] as string | undefined
+  }
 
   return (
     <>
@@ -257,7 +260,10 @@ export default function ContactIndex({ selectedService, services = [], success, 
               )}
 
               {/* Formulaire */}
-              <div className="relative bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-sm border border-gray-700/50 rounded-3xl p-8 space-y-6 overflow-hidden">
+              <form
+                onSubmit={handleSubmit}
+                className="relative bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-sm border border-gray-700/50 rounded-3xl p-8 space-y-6 overflow-hidden"
+              >
                 {/* Background glow */}
                 <div className="absolute inset-0 bg-gradient-to-r from-pink-500/5 via-transparent to-purple-500/5 rounded-3xl pointer-events-none"></div>
 
@@ -354,7 +360,7 @@ export default function ContactIndex({ selectedService, services = [], success, 
                   <PhoneInput
                     value={data.phone}
                     onChange={(value) => setData('phone', value || '')}
-                    onCountryChange={(country) => setCurrentCountry(country as CountryCode)} // ✅ FIX 11: Track country changes
+                    onCountryChange={(country) => setCurrentCountry(country as CountryCode)}
                     placeholder="Entrez votre numéro de téléphone"
                     defaultCountry={currentCountry}
                     international
@@ -396,9 +402,8 @@ export default function ContactIndex({ selectedService, services = [], success, 
 
                 {/* Bouton d'envoi */}
                 <button
-                  onClick={handleSubmit}
+                  type="submit"
                   disabled={processing}
-                  type="button"
                   className="group relative w-full overflow-hidden bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 disabled:from-gray-600 disabled:to-gray-600 disabled:cursor-not-allowed text-white rounded-xl font-medium transition-all duration-300 hover:shadow-lg hover:shadow-pink-500/25 border border-pink-500/20"
                 >
                   <div className="relative flex items-center justify-center gap-2 px-6 py-4">
@@ -420,7 +425,7 @@ export default function ContactIndex({ selectedService, services = [], success, 
                     <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 pointer-events-none"></div>
                   )}
                 </button>
-              </div>
+              </form>
             </div>
 
             {/* Sidebar */}
@@ -436,7 +441,7 @@ export default function ContactIndex({ selectedService, services = [], success, 
                     {services.slice(0, 4).map((service) => (
                       <button
                         key={service.id}
-                        onClick={() => handleSelectService(service)} // ✅ FIX 12: Use new handler
+                        onClick={() => handleSelectService(service)}
                         type="button"
                         className="group w-full text-left p-4 hover:bg-gray-800/50 rounded-2xl transition-all duration-200 border border-gray-700/30 hover:border-pink-500/50"
                       >

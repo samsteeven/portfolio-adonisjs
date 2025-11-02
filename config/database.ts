@@ -1,8 +1,9 @@
 import env from '#start/env'
 import { defineConfig } from '@adonisjs/lucid'
+import Env from '#start/env'
 
 const dbConfig = defineConfig({
-  connection: 'mysql',
+  connection: Env.get('DB_CONNECTION', 'sqlite'),
   connections: {
     mysql: {
       client: 'mysql2',
@@ -24,6 +25,17 @@ const dbConfig = defineConfig({
           })
         },
       },
+    },
+    sqlite: {
+      client: 'sqlite3',
+      connection: {
+        filename: './database/mybd.sqlite',
+      },
+      migrations: {
+        naturalSort: true,
+        paths: ['database/migrations'],
+      },
+      useNullAsDefault: true,
     },
   },
 })

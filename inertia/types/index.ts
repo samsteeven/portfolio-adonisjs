@@ -29,13 +29,16 @@ export interface Project {
 // Types pour les props d'Inertia
 export interface InertiaProps {
   errors?: Record<string, string>
+  portfolioOwner?: AuthenticatedUser
   auth?: {
     user: AuthenticatedUser
     usersCount: number
     commentsCount: number | null
     subscribersCount: number | null
   }
-
+  error?: string
+  success?: string
+  newsletterSuccess?: boolean
   [key: string]: any
 }
 
@@ -57,6 +60,9 @@ export interface AuthenticatedUser {
     photoPathPublicUrl?: string
     phone?: string
     bio?: string
+    bio2?: string
+    cv?: string
+    cvPublicUrl: string | null
   }
   createdAt: Date | string
   updatedAt: Date | string
