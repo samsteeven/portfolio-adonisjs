@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Mail, Send, Check, Sparkles, Shield, Zap, X } from 'lucide-react'
 import { RoughAnnotate } from '@/components/RoughAnnotate'
 import { Form, usePage } from '@inertiajs/react'
@@ -11,6 +11,20 @@ interface NewsletterSignupProps {
 export default function Newsletter_signup({ className = '' }: NewsletterSignupProps) {
   const { newsletterSuccess } = usePage<InertiaProps>().props
   const [isSubmitted, setIsSubmitted] = useState(false)
+  const sectionRef = useRef<HTMLDivElement>(null)
+
+  // Gérer le scroll vers la section quand on arrive avec #newsletter
+  useEffect(() => {
+    if (window.location.hash === '#newsletter' && sectionRef.current) {
+      // Attendre que la page soit complètement chargée
+      setTimeout(() => {
+        sectionRef.current?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start',
+        })
+      }, 100)
+    }
+  }, [])
 
   // Mettre à jour l'état de soumission si on reçoit un succès du backend
   useEffect(() => {
@@ -27,17 +41,14 @@ export default function Newsletter_signup({ className = '' }: NewsletterSignupPr
   }, [newsletterSuccess])
 
   return (
-    <div className={`relative ${className}`}>
+    <div id="newsletter" ref={sectionRef} className={`relative scroll-mt-20 ${className}`}>
       {/* Background Effects */}
       <div className="absolute inset-0 overflow-hidden rounded-3xl">
         <div className="absolute top-0 right-0 w-32 h-32 bg-pink-500/10 rounded-full blur-2xl"></div>
         <div className="absolute bottom-0 left-0 w-24 h-24 bg-purple-500/10 rounded-full blur-2xl"></div>
       </div>
 
-      <div
-        id="newsletter"
-        className="relative bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-sm border border-gray-700/50 rounded-2xl p-8 lg:p-12 overflow-hidden"
-      >
+      <div className="relative bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-sm border border-gray-700/50 rounded-2xl p-8 lg:p-12 overflow-hidden">
         {/* Gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-r from-pink-500/5 via-transparent to-purple-500/5 rounded-3xl"></div>
 

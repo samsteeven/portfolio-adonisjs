@@ -50,6 +50,7 @@ const inertiaConfig = defineConfig({
     },
     error: (ctx) => ctx.session.flashMessages.get('error'),
     success: (ctx) => ctx.session.flashMessages.get('success'),
+    warn: (ctx) => ctx.session.flashMessages.get('warn'),
     newsletterSuccess: (ctx) => ctx.session.flashMessages.get('newsletterSuccess'),
   },
 

@@ -18,10 +18,58 @@ const BottomNavbar = ({
 }) => {
   const { url } = usePage()
   const [mounted, setMounted] = useState(false)
+  const [isVisible, setIsVisible] = useState(true)
+  const [lastScrollY, setLastScrollY] = useState(0)
 
   useEffect(() => {
     setMounted(true)
   }, [])
+
+  // Gestion du scroll
+  useEffect(() => {
+    let ticking = false
+
+    const handleScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const currentScrollY = window.scrollY
+
+          // Seuil minimum pour éviter les petits mouvements
+          const scrollThreshold = 10
+
+          if (Math.abs(currentScrollY - lastScrollY) < scrollThreshold) {
+            ticking = false
+            return
+          }
+
+          // Si on scroll vers le bas et qu'on est pas tout en haut
+          if (currentScrollY > lastScrollY && currentScrollY > 100) {
+            setIsVisible(false)
+          }
+          // Si on scroll vers le haut
+          else if (currentScrollY < lastScrollY) {
+            setIsVisible(true)
+          }
+          // Si on est tout en haut
+          else if (currentScrollY < 100) {
+            setIsVisible(true)
+          }
+
+          setLastScrollY(currentScrollY)
+          ticking = false
+        })
+
+        ticking = true
+      }
+    }
+
+    window.addEventListener('scroll', handleScroll, { passive: true })
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll)
+    }
+  }, [lastScrollY])
+
   const shouldShow = () => {
     const currentPath = url
     return !hideOnPaths.some((path) => currentPath.startsWith(path))
@@ -32,7 +80,7 @@ const BottomNavbar = ({
   }
 
   const isActive = (item: { url: string }) => {
-    if (!mounted) return false // Évite le mismatch pendant l'hydratation
+    if (!mounted) return false
     if (item.url === '/') {
       return url === '/'
     }
@@ -77,6 +125,8 @@ const BottomNavbar = ({
         className={cn(
           'fixed bottom-4 left-1/2 -translate-x-1/2 z-50',
           'w-fit max-w-[90vw]',
+          'transition-all duration-300 ease-in-out',
+          isVisible ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0 pointer-events-none',
           className
         )}
       >

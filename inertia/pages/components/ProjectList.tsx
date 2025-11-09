@@ -123,7 +123,7 @@ const ProjectList = ({ projects = [] }: ProjectListProps) => {
   }, [projects, selectedProject])
 
   return (
-    <section className="pb-section mb-56" id="selected-projects">
+    <section className="pb-section mb-56 scroll-mt-80" id="selected-projects">
       <div className="container">
         <SectionTitle title="SELECTED PROJECTS" />
         {projects.length > 0 ? (

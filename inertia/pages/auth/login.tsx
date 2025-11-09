@@ -1,4 +1,4 @@
-import { Form } from '@inertiajs/react'
+import { Form, router } from '@inertiajs/react'
 import { useState } from 'react'
 import { HeadLayout } from '~/layout/HeadLayout'
 import { Label } from '@/components/ui/label'
@@ -76,7 +76,10 @@ export default function Login() {
           <div className="w-full max-w-md">
             {/* Header */}
             <div className="text-center mb-8">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-black rounded-2xl mb-6">
+              <div
+                className="inline-flex items-center hover:cursor-pointer justify-center w-16 h-16 bg-black rounded-2xl mb-6"
+                onClick={() => router.visit('/')}
+              >
                 <Code className="w-8 h-8 text-white" />
               </div>
               <h1 className="text-3xl font-bold text-gray-900 mb-2">Connexion</h1>

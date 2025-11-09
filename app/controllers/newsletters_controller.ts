@@ -34,7 +34,7 @@ export default class NewsletterController {
     const existing = await NewsletterSubscriber.query().where('email', email).first()
 
     if (existing && existing.isActive) {
-      session.flash('error', 'Vous êtes déjà abonné à la newsletter')
+      session.flash('warn', 'Vous êtes déjà abonné à la newsletter')
       return response.redirect().back()
     }
 

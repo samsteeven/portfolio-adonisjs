@@ -1,5 +1,5 @@
 import sharp from 'sharp'
-import fs from 'fs/promises'
+import fs from 'node:fs/promises'
 import logger from '@adonisjs/core/services/logger'
 
 export interface ImageResizeOptions {
@@ -56,21 +56,42 @@ export default class ImageProcessingService {
   }> {
     try {
       const fileBuffer = await fs.readFile(filePath)
+      const metadata = await sharp(fileBuffer).metadata()
+      const isPortrait = (metadata.height || 0) > (metadata.width || 0)
 
       const [thumbnail, medium, large] = await Promise.all([
-        // Thumbnail (200x200)
-        sharp(fileBuffer).resize(200, 200, { fit: 'cover' }).webp({ quality: 80 }).toBuffer(),
-
-        // Medium (400x400)
+        // Thumbnail - Qualité maximale car c'est la plus petite
         sharp(fileBuffer)
-          .resize(400, 400, { fit: 'contain', background: { r: 255, g: 255, b: 255, alpha: 0 } })
-          .webp({ quality: 90 })
+          .resize(isPortrait ? 400 : 500, isPortrait ? 500 : 400, {
+            fit: 'inside',
+            withoutEnlargement: true,
+            // Améliore la netteté pour les petites tailles
+            kernel: sharp.kernel.lanczos3,
+          })
+          .sharpen({ sigma: 0.5 }) // Ajoute de la netteté après le resize
+          .webp({
+            quality: 92, // Qualité plus élevée pour le thumbnail
+            smartSubsample: false, // Meilleure qualité des couleurs
+          })
           .toBuffer(),
 
-        // Large (800x800)
+        // Medium
         sharp(fileBuffer)
-          .resize(800, 800, { fit: 'contain', background: { r: 255, g: 255, b: 255, alpha: 0 } })
-          .webp({ quality: 90 })
+          .resize(400, 400, {
+            fit: 'inside',
+            withoutEnlargement: true,
+            kernel: sharp.kernel.lanczos3,
+          })
+          .webp({ quality: 88 })
+          .toBuffer(),
+
+        // Large - Peut avoir une qualité légèrement inférieure
+        sharp(fileBuffer)
+          .resize(800, 800, {
+            fit: 'inside',
+            withoutEnlargement: true,
+          })
+          .webp({ quality: 85 })
           .toBuffer(),
       ])
 

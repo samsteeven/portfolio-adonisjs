@@ -77,9 +77,10 @@ export default function AdminLayout({
 
   //toasts
   useEffect(() => {
-    const { error, success } = props || {}
+    const { error, success, warn } = props || {}
 
     if (success) toast.success(success)
+    if (warn) toast.warning(warn)
 
     if (error) toast.error(error)
   }, [props.error, props.success])

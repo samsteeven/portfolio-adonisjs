@@ -322,7 +322,7 @@ export default function ServicesIndex({ services }: Props) {
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <button
                 onClick={() => router.visit('/contact')}
-                className="group relative px-8 py-4 bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white rounded-2xl font-semibold transition-all duration-300 hover:shadow-2xl hover:shadow-pink-500/25 border border-pink-500/20 overflow-hidden"
+                className="group relative px-6 py-3 sm:px-8 sm:py-4 bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white rounded-2xl font-semibold transition-all duration-300 hover:shadow-2xl hover:shadow-pink-500/25 border border-pink-500/20 overflow-hidden"
               >
                 <div className="relative flex items-center gap-2">
                   <MessageCircle className="h-5 w-5" />

@@ -17,5 +17,7 @@ export const getProjectMainImage = (project: ProjectType): string | null => {
 // Obtenir l'image principale (isPrimary) ou la première image
 export const getProjectThumbnail = (project: ProjectType) => {
   const primaryImage = project.images?.find((img) => img.isPrimary)
-  return primaryImage?.imagePublicUrl || project.images?.[0]?.imagePublicUrl || '/placeholder.jpg'
+  return (
+    project.images?.[0]?.thumbnailPublicUrl || primaryImage?.imagePublicUrl || '/placeholder.jpg'
+  )
 }

@@ -32,4 +32,9 @@ export default class ProjectImage extends BaseModel {
   public get imagePublicUrl(): string {
     return `/admin/uploads/${this.imagePath}`
   }
+  @computed()
+  public get thumbnailPublicUrl(): string {
+    const fileName = this.imagePath.split('/').pop() || ''
+    return `/admin/uploads/projects/thumbnails/${fileName}`
+  }
 }

@@ -52,7 +52,12 @@ export default class ProjectService {
     if (images && images.length > 0) {
       const imagePromises = images.map(async (imageFile, index) => {
         if (imageFile.isValid) {
-          const imagePath = await ProjectUploadService.uploadTechnologyImage(imageFile, 'projects')
+          const imagePath = await ProjectUploadService.uploadTechnologyImage(
+            imageFile,
+            'projects',
+            {},
+            true
+          )
           return ProjectImage.create({
             projectId: project.id,
             imagePath,
@@ -100,7 +105,7 @@ export default class ProjectService {
         .where('projectId', project.id)
 
       for (const imageToDelete of imagesToDelete) {
-        await ProjectUploadService.deleteFile(imageToDelete.imagePath)
+        await ProjectUploadService.deleteFile(imageToDelete.imagePath, true)
         await imageToDelete.delete()
       }
     }
@@ -117,7 +122,12 @@ export default class ProjectService {
 
       const imagePromises = images.map(async (imageFile, index) => {
         if (imageFile.isValid) {
-          const imagePath = await ProjectUploadService.uploadTechnologyImage(imageFile, 'projects')
+          const imagePath = await ProjectUploadService.uploadTechnologyImage(
+            imageFile,
+            'projects',
+            {},
+            true
+          )
           return ProjectImage.create({
             projectId: project.id,
             imagePath,
@@ -153,7 +163,7 @@ export default class ProjectService {
 
     // Delete all associated images
     for (const image of project.images) {
-      await ProjectUploadService.deleteFile(image.imagePath)
+      await ProjectUploadService.deleteFile(image.imagePath, true)
       await image.delete()
     }
 

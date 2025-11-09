@@ -107,7 +107,9 @@ export default class PortfolioService {
                 fields: { pick: ['id', 'name', 'imgPath'] },
               },
               images: {
-                fields: { pick: ['id', 'imagePath', 'isPrimary', 'imagePublicUrl'] },
+                fields: {
+                  pick: ['id', 'imagePath', 'isPrimary', 'imagePublicUrl', 'thumbnailPublicUrl'],
+                },
               },
             },
           })
@@ -234,7 +236,7 @@ export default class PortfolioService {
     })
   }
 
-  static async getRepoStats(owner = 'samsteeven', repo = 'mon_portfolio') {
+  static async getRepoStats(owner = 'samsteeven', repo = 'mon_potfolio') {
     return cache.getOrSet({
       key: CACHE_KEYS.GITHUB_STATS,
       factory: async () => {
@@ -262,8 +264,8 @@ export default class PortfolioService {
           const data: any = await response.json()
 
           return {
-            stars: data.stargazers_count ?? 0,
-            forks: data.forks_count ?? 0,
+            stars: data.stargazers_count,
+            forks: data.forks_count,
           }
         } catch (error) {
           console.error('Error fetching GitHub stats:', error)
@@ -271,6 +273,9 @@ export default class PortfolioService {
         }
       },
     })
+  }
+  static async invalidateRepoStats() {
+    await cache.delete({ key: CACHE_KEYS.GITHUB_STATS })
   }
 
   /**
@@ -338,6 +343,7 @@ export default class PortfolioService {
       this.invalidateSkills(),
       this.invalidateProjects(),
       this.invalidateRecentPosts(),
+      this.invalidateRepoStats(),
     ])
   }
 

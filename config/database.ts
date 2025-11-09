@@ -29,7 +29,7 @@ const dbConfig = defineConfig({
     sqlite: {
       client: 'sqlite3',
       connection: {
-        filename: './database/mybd.sqlite',
+        filename: env.get('DB_DATABASE', './database/mybd.sqlite'),
       },
       migrations: {
         naturalSort: true,

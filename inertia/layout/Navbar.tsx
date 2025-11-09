@@ -55,45 +55,49 @@ const Navbar = () => {
 
   return (
     <>
-      <div className="sticky top-0 z-[4]">
-        <button
-          className={cn('group size-12 absolute top-5 right-5 md:right-10 z-[2]')}
-          onClick={() => setIsMenuOpen(!isMenuOpen)}
-        >
-          <span
-            className={cn(
-              'inline-block w-3/5 h-0.5 bg-foreground rounded-full absolute left-1/2 -translate-x-1/2 top-1/2 duration-300 -translate-y-[5px] ',
-              {
-                'rotate-45 -translate-y-1/2': isMenuOpen,
-                'md:group-hover:rotate-12': !isMenuOpen,
-              }
-            )}
-          ></span>
-          <span
-            className={cn(
-              'inline-block w-3/5 h-0.5 bg-foreground rounded-full absolute left-1/2 -translate-x-1/2 top-1/2 duration-300 translate-y-[5px] ',
-              {
-                '-rotate-45 -translate-y-1/2': isMenuOpen,
-                'md:group-hover:-rotate-12': !isMenuOpen,
-              }
-            )}
-          ></span>
-        </button>
-      </div>
+      {/* Bouton hamburger - fixe en haut à droite */}
+      <button
+        className={cn('fixed top-5 right-5 md:right-10 z-[5] size-12 group')}
+        onClick={() => setIsMenuOpen(!isMenuOpen)}
+        aria-label={isMenuOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
+      >
+        <span
+          className={cn(
+            'inline-block w-3/5 h-0.5 bg-foreground rounded-full absolute left-1/2 -translate-x-1/2 top-1/2 duration-300 -translate-y-[5px]',
+            {
+              'rotate-45 -translate-y-1/2': isMenuOpen,
+              'md:group-hover:rotate-12': !isMenuOpen,
+            }
+          )}
+        ></span>
+        <span
+          className={cn(
+            'inline-block w-3/5 h-0.5 bg-foreground rounded-full absolute left-1/2 -translate-x-1/2 top-1/2 duration-300 translate-y-[5px]',
+            {
+              '-rotate-45 -translate-y-1/2': isMenuOpen,
+              'md:group-hover:-rotate-12': !isMenuOpen,
+            }
+          )}
+        ></span>
+      </button>
 
+      {/* Overlay */}
       <div
-        className={cn('overlay fixed inset-0 z-[2] bg-black/70 transition-all duration-150', {
+        className={cn('fixed inset-0 z-[3] bg-black/70 transition-all duration-150', {
           'opacity-0 invisible pointer-events-none': !isMenuOpen,
         })}
         onClick={() => setIsMenuOpen(false)}
+        aria-hidden="true"
       ></div>
 
-      <div
+      {/* Menu sidebar */}
+      <nav
         className={cn(
-          'fixed top-0 right-0 h-[100dvh] w-[500px] max-w-[calc(100vw-3rem)] transform translate-x-full transition-transform duration-700 z-[3]',
+          'fixed top-0 right-0 h-[100dvh] w-[500px] max-w-[calc(100vw-3rem)] transform translate-x-full transition-transform duration-700 z-[4]',
           'flex flex-col',
           { 'translate-x-0': isMenuOpen }
         )}
+        aria-label="Menu principal"
       >
         <div
           className={cn(
@@ -102,6 +106,7 @@ const Navbar = () => {
               'translate-x-0': isMenuOpen,
             }
           )}
+          aria-hidden="true"
         ></div>
 
         {/* Contenu scrollable */}
@@ -139,7 +144,7 @@ const Navbar = () => {
                           router.visit(link.url, { replace: false })
                           setIsMenuOpen(false)
                         }}
-                        className="group text-base sm:text-lg flex items-center gap-2.5"
+                        className="group text-base sm:text-lg flex items-center gap-2.5 w-full text-left"
                       >
                         <span
                           className={cn(
@@ -187,7 +192,7 @@ const Navbar = () => {
             </div>
           </div>
         </div>
-      </div>
+      </nav>
     </>
   )
 }

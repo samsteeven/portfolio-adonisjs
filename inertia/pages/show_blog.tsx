@@ -208,7 +208,7 @@ export default function BlogShow({ post, relatedPosts = [] }: BlogShowProps) {
             </section>
           )}
           {/* Newsletter Signup */}
-          <div className="max-w-4xl mx-auto px-6 py-16">
+          <div className="max-w-4xl mx-auto px-1 md:px-6 py-16">
             <Newsletter_signup />
           </div>
         </div>

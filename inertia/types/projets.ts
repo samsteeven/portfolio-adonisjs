@@ -20,6 +20,7 @@ interface ProjectImage {
   id: number
   imagePath: string
   imagePublicUrl: string
+  thumbnailPublicUrl: string
   order: number
   isPrimary: boolean
 }

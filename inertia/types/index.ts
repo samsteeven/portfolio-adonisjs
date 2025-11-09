@@ -26,7 +26,6 @@ export interface Project {
   sourceCode?: string
 }
 
-// Types pour les props d'Inertia
 export interface InertiaProps {
   errors?: Record<string, string>
   portfolioOwner?: AuthenticatedUser
@@ -38,6 +37,7 @@ export interface InertiaProps {
   }
   error?: string
   success?: string
+  warn?: string
   newsletterSuccess?: boolean
   [key: string]: any
 }

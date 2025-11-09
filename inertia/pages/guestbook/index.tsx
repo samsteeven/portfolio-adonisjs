@@ -12,7 +12,6 @@ import {
   Mail,
   Phone,
   Calendar,
-  Globe,
   LogIn,
 } from 'lucide-react'
 import { CommentaireType } from '~/types/commentaire'
@@ -49,7 +48,6 @@ interface GuestbookProps {
 }
 
 export default function Guestbook({ comments: deferredComments, reactions, user }: GuestbookProps) {
-  // Form pour utilisateur authentifié
   const {
     data: authData,
     setData: setAuthData,
@@ -61,7 +59,6 @@ export default function Guestbook({ comments: deferredComments, reactions, user 
     message: '',
   })
 
-  // Form pour visiteur invité
   const {
     data: guestData,
     setData: setGuestData,
@@ -74,7 +71,7 @@ export default function Guestbook({ comments: deferredComments, reactions, user 
     guestName: '',
     guestEmail: '',
     guestPhone: '',
-    website: '', // Honeypot field
+    website: '',
   })
 
   const [showReactionPicker, setShowReactionPicker] = useState<number | null>(null)
@@ -94,7 +91,6 @@ export default function Guestbook({ comments: deferredComments, reactions, user 
         try {
           const response = await fetch('https://ipapi.co/json/')
           const data = await response.json()
-
           if (data && data.country_code) {
             setDefaultCountry(data.country_code)
           }
@@ -102,7 +98,6 @@ export default function Guestbook({ comments: deferredComments, reactions, user 
           console.error('Failed to fetch country:', error)
         }
       }
-
       fetchCountry()
     }
   }, [auth?.user])
@@ -119,12 +114,10 @@ export default function Guestbook({ comments: deferredComments, reactions, user 
 
   const handleGuestSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    // Validate phone number if provided
     if (guestData.guestPhone && !isValidPhoneNumber(guestData.guestPhone, defaultCountry)) {
       toast.error('Erreur lors de la validation du numéro de téléphone')
       return
     }
-
     postGuest('/guestbook/guest', {
       onSuccess: () => {
         resetGuest()
@@ -138,7 +131,7 @@ export default function Guestbook({ comments: deferredComments, reactions, user 
     const date = new Date(dateString)
     return date.toLocaleDateString('fr-FR', {
       day: 'numeric',
-      month: 'long',
+      month: 'short',
       year: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
@@ -147,17 +140,12 @@ export default function Guestbook({ comments: deferredComments, reactions, user 
 
   const handleReactionClick = async (commentaireId: number, emoji: string) => {
     setShowReactionPicker(null)
-
     router.patch(
       `/admin/comments/${commentaireId}/reaction`,
-      {
-        reaction: emoji,
-      },
+      { reaction: emoji },
       {
         preserveScroll: true,
-        onError: () => {
-          console.error("Erreur lors de l'ajout de la réaction")
-        },
+        onError: () => console.error("Erreur lors de l'ajout de la réaction"),
       }
     )
   }
@@ -165,29 +153,22 @@ export default function Guestbook({ comments: deferredComments, reactions, user 
   const handleRemoveReaction = async (commentaireId: number) => {
     router.patch(
       `/admin/comments/${commentaireId}/reaction`,
-      {
-        reaction: null,
-      },
+      { reaction: null },
       {
         preserveScroll: true,
-        onError: () => {
-          console.error('Erreur lors de la suppression de la réaction')
-        },
+        onError: () => console.error('Erreur lors de la suppression de la réaction'),
       }
     )
   }
 
   const handleAuthClick = (provider: 'github' | 'google', url: string) => {
     if (authLoading) return
-
     setAuthLoading(provider)
     window.location.replace(url)
   }
 
-  // Check if user is admin
   const isAdmin = user?.data && user.data.role === UserRole.ADMIN
 
-  // Fermer le picker d'emojis quand on clique ailleurs
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as HTMLElement
@@ -195,7 +176,6 @@ export default function Guestbook({ comments: deferredComments, reactions, user 
         setShowReactionPicker(null)
       }
     }
-
     if (showReactionPicker) {
       document.addEventListener('mousedown', handleClickOutside)
       return () => document.removeEventListener('mousedown', handleClickOutside)
@@ -206,32 +186,34 @@ export default function Guestbook({ comments: deferredComments, reactions, user 
     <>
       <Head title="Livre d'or - Portfolio" />
 
-      <div className="min-h-screen text-white pt-12">
-        <div className="max-w-4xl mx-auto px-6 py-12">
+      <div className="min-h-screen text-white pt-20 pb-12">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
           {/* Header */}
-          <div className="mb-12">
-            <h1 className="text-4xl md:text-5xl font-bold mb-4">
-              Rendez votre visite <br />
+          <div className="mb-8 sm:mb-12">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-3 sm:mb-4 leading-tight">
+              Rendez votre visite <br className="hidden sm:block" />
               <span className="text-pink-500">mémorable !</span>
             </h1>
-            <p className="text-gray-400 text-lg mb-8 max-w-2xl">
+            <p className="text-gray-400 text-base sm:text-lg mb-6 sm:mb-8">
               Laissez une impression durable ! Signez mon livre d'or et faites-moi savoir que vous
-              êtes passé. Connectez-vous ou laissez vos coordonnées pour partager votre message.
+              êtes passé.
             </p>
 
-            {/* Message de bienvenue pour les utilisateurs connectés */}
+            {/* Message de bienvenue */}
             {user?.data && (
-              <div className="mb-8 p-4 bg-gray-800/50 rounded-lg border border-gray-700">
-                <p className="text-green-400 mb-2">✨ Bienvenue, {user.data.username} !</p>
-                <p className="text-gray-400 text-sm">
+              <div className="mb-6 sm:mb-8 p-4 bg-gray-800/50 rounded-lg border border-gray-700">
+                <p className="text-green-400 mb-2 text-sm sm:text-base">
+                  ✨ Bienvenue, {user.data.username} !
+                </p>
+                <p className="text-gray-400 text-xs sm:text-sm">
                   Vous êtes connecté et pouvez maintenant laisser un message.
                 </p>
-                <div className="mt-3 flex items-center gap-4">
+                <div className="mt-3 flex flex-wrap items-center gap-3 sm:gap-4">
                   <Link
                     href={user.guard === 'web' ? '/admin/auth/logout' : '/auth/guestbook/logout'}
                     method="post"
                     replace
-                    className="text-sm text-gray-400 hover:text-white transition-colors hover:cursor-pointer"
+                    className="text-xs sm:text-sm text-gray-400 hover:text-white transition-colors"
                   >
                     Se déconnecter
                   </Link>
@@ -242,13 +224,13 @@ export default function Guestbook({ comments: deferredComments, reactions, user 
               </div>
             )}
 
-            {/* Options de connexion pour les non-connectés */}
+            {/* Options de connexion */}
             {!user?.data && (
-              <div className="mb-8">
-                <div className="flex flex-col sm:flex-row gap-4 mb-6">
+              <div className="mb-6 sm:mb-8">
+                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-4 sm:mb-6">
                   <button
                     onClick={() => setFormType('guest')}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                    className={`flex items-center justify-center gap-2 px-4 py-2.5 sm:py-2 rounded-lg transition-colors text-sm sm:text-base ${
                       formType === 'guest'
                         ? 'bg-pink-600 text-white'
                         : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
@@ -259,7 +241,7 @@ export default function Guestbook({ comments: deferredComments, reactions, user 
                   </button>
                   <button
                     onClick={() => setFormType('auth')}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                    className={`flex items-center justify-center gap-2 px-4 py-2.5 sm:py-2 rounded-lg transition-colors text-sm sm:text-base ${
                       formType === 'auth'
                         ? 'bg-pink-600 text-white'
                         : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
@@ -270,18 +252,18 @@ export default function Guestbook({ comments: deferredComments, reactions, user 
                   </button>
                 </div>
 
-                {/* Boutons de connexion sociale */}
+                {/* Boutons OAuth */}
                 {formType === 'auth' && (
                   <div className="mb-6">
-                    <p className="text-white mb-4">Connectez-vous avec :</p>
-                    <div className="flex flex-wrap gap-4">
+                    <p className="text-white mb-4 text-sm sm:text-base">Connectez-vous avec :</p>
+                    <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                       <button
                         onClick={() => handleAuthClick('github', '/oauth/github/redirect')}
                         disabled={authLoading !== null}
-                        className={`flex items-center gap-3 px-6 py-3 rounded-lg transition-colors ${
+                        className={`flex items-center justify-center gap-3 px-6 py-3 rounded-lg transition-colors text-sm sm:text-base ${
                           authLoading !== null
                             ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
-                            : 'bg-gray-800 hover:bg-gray-700 text-white hover:cursor-pointer'
+                            : 'bg-gray-800 hover:bg-gray-700 text-white'
                         }`}
                       >
                         {authLoading === 'github' ? (
@@ -295,10 +277,10 @@ export default function Guestbook({ comments: deferredComments, reactions, user 
                       <button
                         onClick={() => handleAuthClick('google', '/oauth/google/redirect')}
                         disabled={authLoading !== null}
-                        className={`flex items-center gap-3 px-6 py-3 rounded-lg transition-colors ${
+                        className={`flex items-center justify-center gap-3 px-6 py-3 rounded-lg transition-colors text-sm sm:text-base ${
                           authLoading !== null
                             ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
-                            : 'bg-gray-800 hover:bg-gray-700 text-white hover:cursor-pointer'
+                            : 'bg-gray-800 hover:bg-gray-700 text-white'
                         }`}
                       >
                         {authLoading === 'google' ? (
@@ -332,16 +314,16 @@ export default function Guestbook({ comments: deferredComments, reactions, user 
             )}
           </div>
 
-          {/* Formulaire pour utilisateur authentifié */}
+          {/* Formulaire authentifié */}
           {user?.data && (
-            <div className="mb-12">
+            <div className="mb-8 sm:mb-12">
               <form onSubmit={handleAuthSubmit} className="space-y-4">
                 <textarea
                   value={authData.message}
                   onChange={(e) => setAuthData('message', e.target.value)}
                   placeholder="Écrivez votre message..."
                   rows={4}
-                  className="w-full px-4 py-3 border focus:border-none bg-gray-800 border-gray-700 rounded-lg focus:ring-2 focus:ring-pink-500  resize-none text-white placeholder-gray-400"
+                  className="w-full px-4 py-3 border bg-gray-800 border-gray-700 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent resize-none text-white placeholder-gray-400 text-sm sm:text-base"
                 />
                 {authErrors.message && <p className="text-red-400 text-sm">{authErrors.message}</p>}
 
@@ -349,16 +331,17 @@ export default function Guestbook({ comments: deferredComments, reactions, user 
                   <button
                     type="submit"
                     disabled={authProcessing || !authData.message.trim()}
-                    className={`flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-all ${
+                    className={`flex items-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg font-medium transition-all text-sm sm:text-base ${
                       authProcessing || !authData.message.trim()
                         ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
-                        : 'bg-pink-600 hover:bg-pink-500 text-white hover:cursor-pointer'
+                        : 'bg-pink-600 hover:bg-pink-500 text-white'
                     }`}
                   >
                     {authProcessing ? (
                       <>
                         <Loader2 className="w-4 h-4 animate-spin" />
-                        Publication...
+                        <span className="hidden sm:inline">Publication...</span>
+                        <span className="sm:hidden">...</span>
                       </>
                     ) : (
                       <>
@@ -372,11 +355,10 @@ export default function Guestbook({ comments: deferredComments, reactions, user 
             </div>
           )}
 
-          {/* Formulaire pour visiteur invité */}
+          {/* Formulaire invité */}
           {!user?.data && formType === 'guest' && (
-            <div className="mb-12">
+            <div className="mb-8 sm:mb-12">
               <form onSubmit={handleGuestSubmit} className="space-y-4">
-                {/* Honeypot field - caché pour les utilisateurs */}
                 <input
                   type="text"
                   name="website"
@@ -387,10 +369,10 @@ export default function Guestbook({ comments: deferredComments, reactions, user 
                   autoComplete="off"
                 />
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
-                      <User className="w-4 h-4 inline mr-2" />
+                    <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-2">
+                      <User className="w-3 h-3 sm:w-4 sm:h-4 inline mr-2" />
                       Nom complet *
                     </label>
                     <input
@@ -399,54 +381,57 @@ export default function Guestbook({ comments: deferredComments, reactions, user 
                       onChange={(e) => setGuestData('guestName', e.target.value)}
                       placeholder="Votre nom complet"
                       required
-                      className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent text-white placeholder-gray-400"
+                      className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent text-white placeholder-gray-400 text-sm sm:text-base"
                     />
                     {guestErrors.guestName && (
-                      <p className="text-red-400 text-sm mt-1">{guestErrors.guestName}</p>
+                      <p className="text-red-400 text-xs sm:text-sm mt-1">
+                        {guestErrors.guestName}
+                      </p>
                     )}
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
-                      <Mail className="w-4 h-4 inline mr-2" />
+                    <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-2">
+                      <Mail className="w-3 h-3 sm:w-4 sm:h-4 inline mr-2" />
                       Email (optionnel)
                     </label>
                     <input
-                      id="email"
                       type="email"
                       value={guestData.guestEmail}
                       onChange={(e) => setGuestData('guestEmail', e.target.value)}
                       placeholder="votre@email.com"
-                      autoComplete={'email'}
-                      className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent text-white placeholder-gray-400"
+                      autoComplete="email"
+                      className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent text-white placeholder-gray-400 text-sm sm:text-base"
                     />
                     {guestErrors.guestEmail && (
-                      <p className="text-red-400 text-sm mt-1">{guestErrors.guestEmail}</p>
+                      <p className="text-red-400 text-xs sm:text-sm mt-1">
+                        {guestErrors.guestEmail}
+                      </p>
                     )}
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    <Phone className="w-4 h-4 inline mr-2" />
+                  <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-2">
+                    <Phone className="w-3 h-3 sm:w-4 sm:h-4 inline mr-2" />
                     Téléphone (optionnel)
                   </label>
                   <PhoneInput
                     value={guestData.guestPhone}
                     onChange={(value) => setGuestData('guestPhone', value || '')}
-                    placeholder="Entrez votre numéro de téléphone"
+                    placeholder="Entrez votre numéro"
                     defaultCountry={defaultCountry}
                     international
-                    className="w-full [&_input]:px-4 [&_input]:py-3 [&_input]:bg-gray-800 [&_input]:border-gray-700 [&_input]:text-white [&_input]:placeholder-gray-400 [&_input]:focus:ring-2 [&_input]:focus:ring-pink-500 [&_input]:focus:border-transparent [&_input]:rounded-lg [&_button]:bg-gray-800 [&_button]:border-gray-700 [&_button]:hover:bg-gray-700"
+                    className="w-full text-sm sm:text-base [&_input]:px-3 sm:[&_input]:px-4 [&_input]:py-2.5 sm:[&_input]:py-3 [&_input]:bg-gray-800 [&_input]:border-gray-700 [&_input]:text-white [&_input]:placeholder-gray-400 [&_input]:focus:ring-2 [&_input]:focus:ring-pink-500 [&_input]:focus:border-transparent [&_input]:rounded-lg [&_button]:bg-gray-800 [&_button]:border-gray-700 [&_button]:hover:bg-gray-700"
                   />
                   {guestErrors.guestPhone && (
-                    <p className="text-red-400 text-sm mt-1">{guestErrors.guestPhone}</p>
+                    <p className="text-red-400 text-xs sm:text-sm mt-1">{guestErrors.guestPhone}</p>
                   )}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    <MessageCircle className="w-4 h-4 inline mr-2" />
+                  <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-2">
+                    <MessageCircle className="w-3 h-3 sm:w-4 sm:h-4 inline mr-2" />
                     Votre message *
                   </label>
                   <textarea
@@ -455,10 +440,10 @@ export default function Guestbook({ comments: deferredComments, reactions, user 
                     placeholder="Laissez-moi un message..."
                     rows={4}
                     required
-                    className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent resize-none text-white placeholder-gray-400"
+                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent resize-none text-white placeholder-gray-400 text-sm sm:text-base"
                   />
                   {guestErrors.message && (
-                    <p className="text-red-400 text-sm mt-1">{guestErrors.message}</p>
+                    <p className="text-red-400 text-xs sm:text-sm mt-1">{guestErrors.message}</p>
                   )}
                 </div>
 
@@ -468,21 +453,23 @@ export default function Guestbook({ comments: deferredComments, reactions, user 
                     disabled={
                       guestProcessing || !guestData.message.trim() || !guestData.guestName.trim()
                     }
-                    className={`flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-all ${
+                    className={`flex items-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg font-medium transition-all text-sm sm:text-base ${
                       guestProcessing || !guestData.message.trim() || !guestData.guestName.trim()
                         ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
-                        : 'bg-pink-600 hover:bg-pink-500 text-white hover:cursor-pointer'
+                        : 'bg-pink-600 hover:bg-pink-500 text-white'
                     }`}
                   >
                     {guestProcessing ? (
                       <>
                         <Loader2 className="w-4 h-4 animate-spin" />
-                        Envoi en cours...
+                        <span className="hidden sm:inline">Envoi...</span>
+                        <span className="sm:hidden">...</span>
                       </>
                     ) : (
                       <>
                         <Send className="w-4 h-4" />
-                        Envoyer le message
+                        <span className="hidden sm:inline">Envoyer le message</span>
+                        <span className="sm:hidden">Envoyer</span>
                       </>
                     )}
                   </button>
@@ -491,66 +478,57 @@ export default function Guestbook({ comments: deferredComments, reactions, user 
             </div>
           )}
 
-          {/* Liste des commentaires avec Deferred */}
+          {/* Commentaires */}
           <WhenVisible data="comments" fallback={<Fallback message="commentaires" />}>
             {() => {
               const comments = deferredComments as CommentsData
               return (
                 <div className="space-y-6">
                   {comments?.data?.map((comment) => (
-                    <div key={comment.id} className="flex items-start gap-4 group">
-                      {/* Avatar ou initiales */}
+                    <div key={comment.id} className="flex gap-3 sm:gap-4 group">
                       <div className="flex-shrink-0">
                         {comment.user?.subInfo ? (
                           <img
                             src={comment.user.subInfo.photoPath}
                             alt={comment.displayName || comment.user.username}
-                            className="w-12 h-12 rounded-full object-cover"
+                            className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover"
                           />
                         ) : (
-                          <div className="w-12 h-12 bg-gray-700 rounded-full flex items-center justify-center">
-                            <span className="text-white font-semibold text-sm">
+                          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-700 rounded-full flex items-center justify-center">
+                            <span className="text-white font-semibold text-xs sm:text-sm">
                               {getInitials(comment.displayName || comment.guestName || 'V')}
                             </span>
                           </div>
                         )}
                       </div>
 
-                      {/* Contenu du commentaire */}
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between mb-1">
-                          <div className="flex items-center gap-2">
-                            <span className="font-semibold text-white">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="font-semibold text-white text-sm sm:text-base truncate">
                               {comment.displayName || comment.guestName}
                             </span>
                             {comment.commentType === 'guest' && (
-                              <span className="text-xs bg-gray-700 px-2 py-0.5 rounded text-gray-300">
+                              <span className="text-xs bg-gray-700 px-2 py-0.5 rounded text-gray-300 flex-shrink-0">
                                 Visiteur
                               </span>
                             )}
                             {comment.user?.provider && (
-                              <span className="text-xs text-gray-500">
+                              <span className="text-xs text-gray-500 hidden sm:inline">
                                 (via {comment.user.provider})
-                              </span>
-                            )}
-                            {comment.fullLocation && (
-                              <span className="text-xs text-gray-500 flex items-center gap-1">
-                                <MapPin className="w-3 h-3" />
-                                {comment.fullLocation}
                               </span>
                             )}
                           </div>
 
                           <div className="flex items-center gap-2">
-                            {/* Current reaction with remove button */}
                             {comment.reaction && (
                               <div className="flex items-center gap-1 px-2 py-1 bg-gray-800 rounded border border-gray-700">
-                                <span className="text-lg">{comment.reaction}</span>
+                                <span className="text-base sm:text-lg">{comment.reaction}</span>
                                 {isAdmin && (
                                   <button
                                     onClick={() => handleRemoveReaction(comment.id)}
                                     className="text-gray-400 hover:text-red-400 transition-colors"
-                                    title="Supprimer la réaction"
+                                    title="Supprimer"
                                   >
                                     <X className="w-3 h-3" />
                                   </button>
@@ -558,95 +536,117 @@ export default function Guestbook({ comments: deferredComments, reactions, user 
                               </div>
                             )}
 
-                            {/* Add reaction button */}
                             {isAdmin && (
                               <div className="relative">
                                 <button
-                                  onClick={() =>
+                                  onClick={() => {
                                     setShowReactionPicker(
                                       showReactionPicker === comment.id ? null : comment.id
                                     )
-                                  }
+                                  }}
                                   className="emoji-button p-1 text-gray-400 hover:text-pink-400 transition-colors"
-                                  title="Ajouter une réaction"
                                 >
                                   <Smile className="w-4 h-4" />
                                 </button>
 
-                                {/* Picker d'emojis */}
                                 {showReactionPicker === comment.id && (
-                                  <div className="absolute right-0 top-full mt-2 p-3 bg-gray-800 border border-gray-700 rounded-lg shadow-lg z-10 w-64 emoji-picker">
-                                    <div className="space-y-3">
-                                      <div>
-                                        <p className="text-xs font-medium text-gray-400 mb-2">
-                                          Positives
-                                        </p>
-                                        <div className="flex flex-wrap gap-1">
-                                          {reactions.positive.map((emoji) => (
-                                            <button
-                                              key={emoji}
-                                              onClick={() => handleReactionClick(comment.id, emoji)}
-                                              className="p-1 hover:bg-gray-700 rounded text-lg transition-colors"
-                                            >
-                                              {emoji}
-                                            </button>
-                                          ))}
+                                  <>
+                                    {/* Version mobile : plein écran en bas */}
+                                    <div className="sm:hidden fixed inset-x-0 bottom-0 z-50 emoji-picker">
+                                      <div
+                                        className="absolute inset-0 bg-black/50"
+                                        onClick={() => setShowReactionPicker(null)}
+                                      />
+                                      <div className="relative bg-gray-800 border-t border-gray-700 rounded-t-2xl p-4 max-h-[60vh] overflow-y-auto">
+                                        <div className="flex justify-between items-center mb-4">
+                                          <h3 className="text-white font-medium">
+                                            Ajouter une réaction
+                                          </h3>
+                                          <button
+                                            onClick={() => setShowReactionPicker(null)}
+                                            className="text-gray-400 hover:text-white"
+                                          >
+                                            <X className="w-5 h-5" />
+                                          </button>
                                         </div>
-                                      </div>
-
-                                      <div>
-                                        <p className="text-xs font-medium text-gray-400 mb-2">
-                                          Neutres
-                                        </p>
-                                        <div className="flex flex-wrap gap-1">
-                                          {reactions.neutral.map((emoji) => (
-                                            <button
-                                              key={emoji}
-                                              onClick={() => handleReactionClick(comment.id, emoji)}
-                                              className="p-1 hover:bg-gray-700 rounded text-lg transition-colors"
-                                            >
-                                              {emoji}
-                                            </button>
-                                          ))}
-                                        </div>
-                                      </div>
-
-                                      <div>
-                                        <p className="text-xs font-medium text-gray-400 mb-2">
-                                          Négatives
-                                        </p>
-                                        <div className="flex flex-wrap gap-1">
-                                          {reactions.negative.map((emoji) => (
-                                            <button
-                                              key={emoji}
-                                              onClick={() => handleReactionClick(comment.id, emoji)}
-                                              className="p-1 hover:bg-gray-700 rounded text-lg transition-colors"
-                                            >
-                                              {emoji}
-                                            </button>
+                                        <div className="space-y-4">
+                                          {Object.entries({
+                                            Positives: reactions.positive,
+                                            Neutres: reactions.neutral,
+                                            Négatives: reactions.negative,
+                                          }).map(([label, emojis]) => (
+                                            <div key={label}>
+                                              <p className="text-xs font-medium text-gray-400 mb-2">
+                                                {label}
+                                              </p>
+                                              <div className="flex flex-wrap gap-2">
+                                                {emojis.map((emoji) => (
+                                                  <button
+                                                    key={emoji}
+                                                    onClick={() =>
+                                                      handleReactionClick(comment.id, emoji)
+                                                    }
+                                                    className="p-2 hover:bg-gray-700 rounded-lg text-2xl transition-colors"
+                                                  >
+                                                    {emoji}
+                                                  </button>
+                                                ))}
+                                              </div>
+                                            </div>
                                           ))}
                                         </div>
                                       </div>
                                     </div>
-                                  </div>
+
+                                    {/* Version desktop : dropdown */}
+                                    <div className="hidden sm:block absolute right-0 top-full mt-2 p-3 bg-gray-800 border border-gray-700 rounded-lg shadow-lg z-50 w-64 emoji-picker max-h-[300px] overflow-y-auto">
+                                      <div className="space-y-3">
+                                        {Object.entries({
+                                          Positives: reactions.positive,
+                                          Neutres: reactions.neutral,
+                                          Négatives: reactions.negative,
+                                        }).map(([label, emojis]) => (
+                                          <div key={label}>
+                                            <p className="text-xs font-medium text-gray-400 mb-2">
+                                              {label}
+                                            </p>
+                                            <div className="flex flex-wrap gap-1">
+                                              {emojis.map((emoji) => (
+                                                <button
+                                                  key={emoji}
+                                                  onClick={() =>
+                                                    handleReactionClick(comment.id, emoji)
+                                                  }
+                                                  className="p-1 hover:bg-gray-700 rounded text-lg transition-colors"
+                                                >
+                                                  {emoji}
+                                                </button>
+                                              ))}
+                                            </div>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  </>
                                 )}
                               </div>
                             )}
                           </div>
                         </div>
 
-                        <p className="text-gray-300 mb-2 whitespace-pre-wrap">{comment.message}</p>
+                        <p className="text-gray-300 mb-2 whitespace-pre-wrap text-sm sm:text-base break-words">
+                          {comment.message}
+                        </p>
 
-                        <div className="flex items-center gap-4 text-sm text-gray-500">
+                        <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-gray-500">
                           <time className="flex items-center gap-1" dateTime={comment.createdAt}>
-                            <Calendar className="w-3 h-3" />
-                            {formatDate(comment.createdAt)}
+                            <Calendar className="w-3 h-3 flex-shrink-0" />
+                            <span className="truncate">{formatDate(comment.createdAt)}</span>
                           </time>
-                          {comment.country && (
-                            <span className="flex items-center gap-1">
-                              <Globe className="w-3 h-3" />
-                              {comment.city && `${comment.city}, `}
-                              {comment.country}
+                          {comment.fullLocation && (
+                            <span className="flex items-center gap-1 truncate">
+                              <MapPin className="w-3 h-3 flex-shrink-0" />
+                              <span className="truncate">{comment.fullLocation}</span>
                             </span>
                           )}
                         </div>
@@ -654,12 +654,13 @@ export default function Guestbook({ comments: deferredComments, reactions, user 
                     </div>
                   ))}
 
-                  {/* Message si aucun commentaire */}
                   {(!comments?.data || comments.data.length === 0) && (
                     <div className="text-center py-12">
-                      <MessageCircle className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-                      <p className="text-gray-400">Aucun message pour le moment.</p>
-                      <p className="text-gray-500 text-sm">
+                      <MessageCircle className="w-10 h-10 sm:w-12 sm:h-12 text-gray-600 mx-auto mb-4" />
+                      <p className="text-gray-400 text-sm sm:text-base">
+                        Aucun message pour le moment.
+                      </p>
+                      <p className="text-gray-500 text-xs sm:text-sm">
                         Soyez le premier à signer ce livre d'or !
                       </p>
                     </div>

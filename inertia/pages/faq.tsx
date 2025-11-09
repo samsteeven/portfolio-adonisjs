@@ -57,7 +57,7 @@ const techStack = [
         name: 'Inertia.js',
         description: 'Pont moderne entre backend et frontend',
         icon: '🌉',
-        level: 'Intermédiaire',
+        level: 'Avancé',
       },
     ],
   },
@@ -78,37 +78,43 @@ const techStack = [
         name: 'Lucid ORM',
         description: 'ORM élégant pour base de données',
         icon: '🗃️',
-        level: 'Intermédiaire',
+        level: 'Avancé',
       },
       {
-        name: 'MySql',
+        name: 'MySQL',
         description: 'Base de données relationnelle robuste',
         icon: '🐬',
         level: 'Avancé',
       },
       {
-        name: 'Node.js',
-        description: 'Runtime JavaScript côté serveur',
-        icon: '🟢',
-        level: 'Expert',
+        name: 'Redis',
+        description: 'Stockage clé-valeur en mémoire',
+        icon: '🔗',
+        level: 'Intermédiaire',
       },
     ],
   },
   {
-    category: 'Design & UX',
+    category: 'Libraries & UI',
     icon: <Palette className="w-5 h-5" />,
     color: 'from-purple-500 to-pink-500',
     bgColor: 'bg-purple-500/10',
     borderColor: 'border-purple-500/20',
     tools: [
       {
-        name: 'Figma',
-        description: "Design d'interfaces et prototypage",
-        icon: '🎨',
+        name: 'FramerMotion',
+        description: 'Animations et gestions de mouvement',
+        icon: '🎬',
         level: 'Avancé',
       },
       {
-        name: 'Lucide Icons',
+        name: 'GSAP',
+        description: 'Animations performantes',
+        icon: '💚',
+        level: 'Avancé',
+      },
+      {
+        name: 'Lucide React',
         description: 'Icônes SVG modernes et cohérentes',
         icon: '✨',
         level: 'Expert',
@@ -147,8 +153,8 @@ const techStack = [
         level: 'Expert',
       },
       {
-        name: 'npm/pnpm',
-        description: 'Gestionnaires de paquets Node.js',
+        name: 'npm',
+        description: 'Gestionnaire de paquets Node.js',
         icon: '📦',
         level: 'Avancé',
       },
@@ -372,7 +378,7 @@ export default function FaqPage({ faqs = mockFaqs }: FaqPageProps) {
                   >
                     {/* Category Header */}
                     <div className="flex items-center gap-3 mb-6">
-                      <div className={`p-2 bg-gradient-to-r ${category.color} rounded-xl`}>
+                      <div className={`p-2 bg-gradient-to-r${category.color} rounded-xl`}>
                         {category.icon}
                       </div>
                       <h3 className="text-xl font-bold text-white">{category.category}</h3>
@@ -415,7 +421,7 @@ export default function FaqPage({ faqs = mockFaqs }: FaqPageProps) {
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="flex items-center gap-3 p-4 bg-gray-800/30 rounded-xl">
-                  <div className="p-2 bg-blue-500/20 rounded-lg">
+                  <div className="p-2 bg-blue-500/20rounded-lg">
                     <Globe className="w-4 h-4 text-blue-400" />
                   </div>
                   <div>
@@ -459,7 +465,7 @@ export default function FaqPage({ faqs = mockFaqs }: FaqPageProps) {
             opacity: 1;
             transform: translateY(0);
           }
-        }
+}
       `}</style>
     </div>
   )
