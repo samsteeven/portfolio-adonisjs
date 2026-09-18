@@ -27,3 +27,4 @@ storage
 .lingma
 
 database/mybd.sqlite
+.env.test
