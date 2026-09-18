@@ -13,7 +13,7 @@ import CommentAuthorization from '#services/bouncer/bouncer_technology_service'
 
 @inject()
 export default class CommentairesController {
-  constructor(private CommentAuthorizationService: CommentAuthorization) {}
+  constructor(private CommentAuthorizationService: CommentAuthorization) { }
 
   /**
    * Afficher les commentaires côté admin avec filtres et pagination
@@ -124,7 +124,7 @@ export default class CommentairesController {
   /**
    * Créer un nouveau commentaire (visiteur invité)
    */
-  async storeGuest({ request, response, session }: HttpContext) {
+  async storeGuest({ request, response, session, logger }: HttpContext) {
     const data = await request.validateUsing(createGuestCommentValidator)
     try {
       // Récupération des données de géolocalisation
@@ -162,7 +162,7 @@ export default class CommentairesController {
       }
 
       session.flash('error', 'Erreur lors de la publication de votre message')
-      console.error('Erreur création commentaire invité:', error)
+      logger.error({ err: error }, 'Erreur création commentaire invité')
       return response.redirect().back()
     }
   }
@@ -170,7 +170,7 @@ export default class CommentairesController {
   /**
    * Ajouter ou modifier une réaction (admin uniquement)
    */
-  async addReaction({ params, request, response, bouncer, session }: HttpContext) {
+  async addReaction({ params, request, response, bouncer, session, logger }: HttpContext) {
     const authorize = await bouncer.with('CommentairePolicy').allows('addReaction')
     if (!authorize) {
       return this.CommentAuthorizationService.handleUnauthorized(response, session)
@@ -184,7 +184,7 @@ export default class CommentairesController {
 
       return response.redirect().back()
     } catch (error) {
-      console.error('Erreur ajout réaction:', error)
+      logger.error({ err: error }, 'Erreur ajout réaction')
       return response.redirect().back()
     }
   }

@@ -28,3 +28,5 @@ storage
 
 database/mybd.sqlite
 .env.test
+mon_portfolio
+dump.rdb

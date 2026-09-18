@@ -10,7 +10,7 @@ import BlogSchedulerService from '#services/scheduler/blog_scheduler_service'
 
 @inject()
 export default class BlogPostsController {
-  constructor(private blogPostAuthorization: BlogPostAthorizationService) {}
+  constructor(private readonly blogPostAuthorization: BlogPostAthorizationService) {}
 
   async index({ request, inertia }: HttpContext) {
     const page = request.input('page', 1)
@@ -193,7 +193,7 @@ export default class BlogPostsController {
 
     if (data.featuredImage) {
       try {
-        if (post.featuredImage && post.featuredImage.startsWith('blogs/')) {
+        if (post.featuredImage?.startsWith('blogs/')) {
           featuredImagePath = await FileUploadService.replaceTechnologyImage(
             data.featuredImage,
             post.featuredImage,
@@ -242,7 +242,7 @@ export default class BlogPostsController {
           excerpt: data.excerpt,
           content: data.content,
           featuredImage: featuredImagePath,
-          published: data.published !== undefined ? data.published : post.published,
+          published: data.published ?? post.published,
           publishedAt: data.publishedAt ? DateTime.fromJSDate(data.publishedAt) : null,
         })
         .save()
@@ -295,7 +295,7 @@ export default class BlogPostsController {
 
     try {
       // Supprimer l'image associée si elle existe et est un fichier local
-      if (post.featuredImage && post.featuredImage.startsWith('blogs/')) {
+      if (post.featuredImage?.startsWith('blogs/')) {
         try {
           await FileUploadService.deleteFile(post.featuredImage)
         } catch (unlinkError) {

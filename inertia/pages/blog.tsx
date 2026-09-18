@@ -27,7 +27,7 @@ interface BlogIndexProps {
   currentTag?: string
 }
 
-export default function BlogIndex({ posts, currentTag }: BlogIndexProps) {
+export default function BlogIndex({ posts, currentTag }: Readonly<BlogIndexProps>) {
   const [isclient, setIsClient] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
 
